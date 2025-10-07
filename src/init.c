@@ -2,10 +2,10 @@
 #include <Rinternals.h>
 #include <R_ext/Rdynload.h>
 
-extern SEXP snic(SEXP, SEXP, SEXP, SEXP, SEXP);
+extern SEXP snic(SEXP, SEXP, SEXP, SEXP, SEXP, SEXP);
 
 static const R_CallMethodDef CallEntries[] = {
-    {"snic", (DL_FUNC) &snic, 5},
+    {"snic", (DL_FUNC) &snic, 6},
     {NULL, NULL, 0}
 };
 

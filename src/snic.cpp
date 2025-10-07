@@ -27,8 +27,21 @@ struct NodeCmp {
 };
 
 struct Clu {
-    std::vector<double> ctr;
-    int cnt;
+    std::vector<double> val;
+    double r;
+    double c;
+    int n;
+};
+
+struct Img {
+    const double *m;
+    const int w;
+    const int h;
+    const int b;
+    const int n;
+
+    Img(const double *m_, int w_, int h_, int b_)
+        : m(m_), w(w_), h(h_), b(b_), n(w_ * h_) {}
 };
 
 inline int idx(int r, int c, int w) {
@@ -40,16 +53,16 @@ inline void coord(int pid, int w, int &r, int &c) {
     c = pid % w;
 }
 
-void px_vals(const double *img, int n, int b, int pid, std::vector<double> &out) {
-    out.resize(b);
-    for (int bi = 0; bi < b; ++bi) {
-        out[bi] = img[pid + static_cast<long long>(n) * bi];
+void px_vals(const Img &img, int pid, std::vector<double> &out) {
+    out.resize(img.b);
+    for (int bi = 0; bi < img.b; ++bi) {
+        out[bi] = img.m[pid + static_cast<long long>(img.n) * bi];
     }
 }
 
-bool px_has_na(const double *img, int n, int b, int pid) {
-    for (int bi = 0; bi < b; ++bi) {
-        double val = img[pid + static_cast<long long>(n) * bi];
+bool px_has_na(const Img &img, int pid) {
+    for (int bi = 0; bi < img.b; ++bi) {
+        double val = img.m[pid + static_cast<long long>(img.n) * bi];
         if (ISNAN(val)) {
             return true;
         }
@@ -57,30 +70,45 @@ bool px_has_na(const double *img, int n, int b, int pid) {
     return false;
 }
 
-double dist_eu(const std::vector<double> &a, const std::vector<double> &b) {
+double dist_sq_eu(const std::vector<double> &a, const std::vector<double> &b) {
     double sum = 0.0;
     const int len = static_cast<int>(a.size());
     for (int i = 0; i < len; ++i) {
         double diff = a[i] - b[i];
         sum += diff * diff;
     }
-    return std::sqrt(sum);
+    return sum;
 }
 
-double dist_clu(const double *img, int n, int b, int pid, const Clu &clu,
-                std::vector<double> &buf) {
-    px_vals(img, n, b, pid, buf);
-    return dist_eu(buf, clu.ctr);
-}
-
-void clu_update(Clu &clu, const std::vector<double> &px) {
-    clu.cnt += 1;
-    const double inv_n = 1.0 / static_cast<double>(clu.cnt);
-    const double wt = 1.0 - inv_n;
-    const std::size_t len = clu.ctr.size();
-    for (std::size_t bi = 0; bi < len; ++bi) {
-        clu.ctr[bi] = clu.ctr[bi] * wt + px[bi] * inv_n;
+double dist_sq_clu(const Img &img,
+                   int pid,
+                   const Clu &clu,
+                   std::vector<double> &val,
+                   double spat_scale,
+                   double compactness) {
+    px_vals(img, pid, val);
+    double df_sq = dist_sq_eu(val, clu.val);
+    int r, c;
+    coord(pid, img.w, r, c);
+    double dr = static_cast<double>(r) - clu.r;
+    double dc = static_cast<double>(c) - clu.c;
+    double ratio = 0.0;
+    if (spat_scale > 0.0) {
+        ratio = compactness / spat_scale;
     }
+    return df_sq + ratio * ratio * (dr * dr + dc * dc);
+}
+
+void clu_update(Clu &clu, const std::vector<double> &px, int row, int col) {
+    clu.n += 1;
+    const double inv_n = 1.0 / static_cast<double>(clu.n);
+    const double wt = 1.0 - inv_n;
+    const std::size_t len = clu.val.size();
+    for (std::size_t bi = 0; bi < len; ++bi) {
+        clu.val[bi] = clu.val[bi] * wt + px[bi] * inv_n;
+    }
+    clu.r = clu.r * wt + static_cast<double>(row) * inv_n;
+    clu.c = clu.c * wt + static_cast<double>(col) * inv_n;
 }
 
 void nbr4(int pid, int w, int h, std::vector<int> &nb) {
@@ -134,50 +162,49 @@ void nbr8(int pid, int w, int h, std::vector<int> &nb) {
     }
 }
 
-void update_best_dist(const std::vector<int> &rows,
-                      const std::vector<int> &cols,
-                      const std::vector<char> &chosen,
-                      std::vector<double> &best,
-                      int seed_idx) {
-    const int sr = rows[seed_idx];
-    const int sc = cols[seed_idx];
-    const std::size_t total = rows.size();
+// update the closest distance of each pixel to a given seed
+void update_closest_dist_sq(const std::vector<int> &ids,
+                           const std::vector<char> &chosen,
+                           std::vector<double> &dists_sq,
+                           int seed_idx,
+                           int w) {
+    int sr, sc;
+    coord(ids[seed_idx], w, sr, sc);
+    const std::size_t total = ids.size();
     for (std::size_t i = 0; i < total; ++i) {
         if (chosen[i]) {
             continue;
         }
-        double dr = static_cast<double>(rows[i] - sr);
-        double dc = static_cast<double>(cols[i] - sc);
+        int r, c;
+        coord(ids[i], w, r, c);
+        double dr = static_cast<double>(r - sr);
+        double dc = static_cast<double>(c - sc);
         double dist_sq = dr * dr + dc * dc;
-        if (dist_sq < best[i]) {
-            best[i] = dist_sq;
+        if (dist_sq < dists_sq[i]) {
+            dists_sq[i] = dist_sq;
         }
     }
 }
 
-std::vector<int> seed_init(int w, int h, int k_req, const std::vector<unsigned char> &mask) {
+std::vector<int> seed_init(const Img &img, int k_req, const std::vector<unsigned char> &mask) {
     std::vector<int> seeds;
     if (k_req <= 0) {
         return seeds;
     }
 
-    const int n = w * h;
+    const int w = img.w;
+    const int h = img.h;
+    const int n = img.n;
+
+    // valid pixel ids
     std::vector<int> ids;
     ids.reserve(n);
-    std::vector<int> rows;
-    rows.reserve(n);
-    std::vector<int> cols;
-    cols.reserve(n);
 
     for (int pid = 0; pid < n; ++pid) {
         if (!mask[pid]) {
             continue;
         }
         ids.push_back(pid);
-        int r, c;
-        coord(pid, w, r, c);
-        rows.push_back(r);
-        cols.push_back(c);
     }
 
     const int valid = static_cast<int>(ids.size());
@@ -185,10 +212,13 @@ std::vector<int> seed_init(int w, int h, int k_req, const std::vector<unsigned c
         return seeds;
     }
 
+    // desired number of seeds is at most the number of valid pixels
     const int target = std::min(k_req, valid);
     seeds.reserve(target);
 
     const double pi = std::acos(-1.0);
+
+    // average cluster area in pixel unit
     double area = static_cast<double>(valid) / static_cast<double>(k_req);
     if (!R_finite(area) || area <= 0.0) {
         area = 1.0;
@@ -199,153 +229,206 @@ std::vector<int> seed_init(int w, int h, int k_req, const std::vector<unsigned c
     }
     const double min_dist_sq = min_dist * min_dist;
 
-    std::vector<double> best(ids.size(), std::numeric_limits<double>::infinity());
+    // initialize pixels chosen as seeds to 0 (not chosen)
     std::vector<char> chosen(ids.size(), 0);
 
+    // TODO: center of mass of valid pixels
     const double center_r = (h - 1) / 2.0;
     const double center_c = (w - 1) / 2.0;
 
-    int first_idx = -1;
+    // find the valid pixel closest to the matrix center as the first seed
+    int seed_idx = -1;
     double best_center = std::numeric_limits<double>::infinity();
     for (std::size_t i = 0; i < ids.size(); ++i) {
-        double dr = static_cast<double>(rows[i]) - center_r;
-        double dc = static_cast<double>(cols[i]) - center_c;
+        int r, c;
+        coord(ids[i], w, r, c);
+        double dr = static_cast<double>(r) - center_r;
+        double dc = static_cast<double>(c) - center_c;
         double dist_sq = dr * dr + dc * dc;
         if (dist_sq < best_center) {
             best_center = dist_sq;
-            first_idx = static_cast<int>(i);
+            seed_idx = static_cast<int>(i);
         }
     }
 
-    if (first_idx == -1) {
+    // if no valid pixel is found, return empty seeds
+    if (seed_idx == -1) {
         return seeds;
     }
 
-    seeds.push_back(ids[first_idx]);
-    chosen[first_idx] = 1;
-    update_best_dist(rows, cols, chosen, best, first_idx);
+    // initialize distances to closest seed to infinity
+    std::vector<double> dists_sq(ids.size(), std::numeric_limits<double>::infinity());
 
+    // add the pixel closest to the matrix center as the first seed
+    seeds.push_back(ids[seed_idx]);
+    chosen[seed_idx] = 1;
+
+    // update distances of pixels to a given seed if the new distance is closer
+    update_closest_dist_sq(ids, chosen, dists_sq, seed_idx, w);
+
+    // add the remaining seeds as the pixel farthest from any seed
     while (static_cast<int>(seeds.size()) < target) {
-        int next_idx = -1;
+        seed_idx = -1;
         double farthest = min_dist_sq;
         for (std::size_t i = 0; i < ids.size(); ++i) {
             if (chosen[i]) {
                 continue;
             }
-            if (best[i] >= farthest) {
-                farthest = best[i];
-                next_idx = static_cast<int>(i);
+
+            // find the valid pixel farthest from any seed
+            if (dists_sq[i] >= farthest) {
+                farthest = dists_sq[i];
+                seed_idx = static_cast<int>(i);
             }
         }
 
-        if (next_idx == -1) {
+        if (seed_idx == -1) {
             break;
         }
 
-        seeds.push_back(ids[next_idx]);
-        chosen[next_idx] = 1;
-        update_best_dist(rows, cols, chosen, best, next_idx);
+        // add the chosen pixel as a seed
+        seeds.push_back(ids[seed_idx]);
+        chosen[seed_idx] = 1;
+
+        // update distances of pixels to a given seed if the new distance is closer
+        update_closest_dist_sq(ids, chosen, dists_sq, seed_idx, w);
     }
 
     return seeds;
 }
 
-std::vector<int> snic_cpp(const double *img, int w, int h, int b, int k_req, int nbr_type,
-                          int &k_eff) {
-    if (w <= 0 || h <= 0 || k_req <= 0) {
+std::vector<int> snic_cpp(const Img &img,
+                          int k_req,
+                          int nbr_type,
+                          int &k_eff,
+                          double compactness) {
+    if (img.w <= 0 || img.h <= 0 || k_req <= 0) {
         throw std::runtime_error("`width`, `height`, and `k` must be positive integers");
     }
     if (nbr_type != 4 && nbr_type != 8) {
         throw std::runtime_error("`nbr_type` must be either 4 or 8");
     }
+    if (compactness < 0.0) {
+        compactness = 0.0;
+    }
 
-    const int n = w * h;
+    const int n = img.n;
+    const int w = img.w;
+    const int h = img.h;
+
+    // mask pixels with NA values
     std::vector<unsigned char> mask(n, 1);
     for (int pid = 0; pid < n; ++pid) {
-        if (px_has_na(img, n, b, pid)) {
+        if (px_has_na(img, pid)) {
             mask[pid] = 0;
         }
     }
 
+    // count number of valid pixels
     const int valid = std::accumulate(mask.begin(), mask.end(), 0);
     if (valid == 0) {
         throw std::runtime_error("All pixels contain NA values; SNIC cannot segment.");
     }
 
+    // initialize seeds
     k_eff = std::min(k_req, valid);
-    std::vector<int> seeds = seed_init(w, h, k_eff, mask);
+    std::vector<int> seeds = seed_init(img, k_eff, mask);
+
+    // k_eff is the number of effective seeds
     k_eff = static_cast<int>(seeds.size());
     if (seeds.empty()) {
         throw std::runtime_error("Unable to place seeds on valid pixels.");
     }
 
+    // initialize clusters
     const int m = static_cast<int>(seeds.size());
     std::vector<Clu> clus;
     clus.reserve(m);
-    std::vector<double> buf;
+    std::vector<double> val;
 
+    // for each seed, initialize cluster
     for (int ci = 0; ci < m; ++ci) {
         int pid = seeds[ci];
         Clu clu;
-        px_vals(img, n, b, pid, buf);
-        clu.ctr = buf;
-        clu.cnt = 0;
+        px_vals(img, pid, val);
+        clu.val = val;
+        int seed_r, seed_c;
+        coord(pid, w, seed_r, seed_c);
+        clu.r = static_cast<double>(seed_r);
+        clu.c = static_cast<double>(seed_c);
+        clu.n = 0;
         clus.push_back(clu);
     }
 
+    // initialize segments (output of the algorithm)
+    //   -1: unassigned
     std::vector<int> seg(n, -1);
-    for (int pid = 0; pid < n; ++pid) {
-        if (!mask[pid]) {
-            seg[pid] = -2;
-        }
-    }
 
-    std::vector<double> best(n, std::numeric_limits<double>::infinity());
+    // initialize min-heap with seed pixels
+    std::vector<double> dists_sq(n, std::numeric_limits<double>::infinity());
     std::priority_queue<Node, std::vector<Node>, NodeCmp> pq;
     for (int ci = 0; ci < m; ++ci) {
         int pid = seeds[ci];
-        best[pid] = 0.0;
+        dists_sq[pid] = 0.0;
         pq.push(Node(0.0, pid, ci));
     }
 
+    // initialize neighbors
     std::vector<int> nb;
 
+    // main SNIC loop
     while (!pq.empty()) {
         Node node = pq.top();
         pq.pop();
 
-        int pid = node.pid;
-        int cid = node.cid;
+        int pid = node.pid; // pixel id
+        int cid = node.cid; // cluster id
 
+        // skip if pixel is already assigned
         if (seg[pid] != -1) {
             continue;
         }
+        // skip if pixel is NA
         if (!mask[pid]) {
             continue;
         }
 
-        px_vals(img, n, b, pid, buf);
-        clu_update(clus[cid], buf);
+        // update cluster values and assign pixel to cluster
+        int r, c;
+        coord(pid, w, r, c);
+        px_vals(img, pid, val);
+        clu_update(clus[cid], val, r, c);
         seg[pid] = cid;
 
+        // find neighbors
         if (nbr_type == 8) {
             nbr8(pid, w, h, nb);
         } else {
             nbr4(pid, w, h, nb);
         }
 
+        // calculate spatial scale and compactness
+    const double spat_scale = std::sqrt(static_cast<double>(valid) / static_cast<double>(k_eff));
+
+        // update min-heap with neighbors
         for (std::size_t ni = 0; ni < nb.size(); ++ni) {
             int nid = nb[ni];
+
+            // skip if neighbor pixel is NA
             if (!mask[nid]) {
                 continue;
             }
+
+            // skip if neighbor pixel is already assigned
             if (seg[nid] != -1) {
                 continue;
             }
-            double dst = dist_clu(img, n, b, nid, clus[cid], buf);
-            if (dst < best[nid]) {
-                best[nid] = dst;
-                pq.push(Node(dst, nid, cid));
+
+            // calculate distance to cluster
+            double dist_sq = dist_sq_clu(img, nid, clus[cid], val, spat_scale, compactness);
+            if (dist_sq < dists_sq[nid]) {
+                dists_sq[nid] = dist_sq;
+                pq.push(Node(dist_sq, nid, cid));
             }
         }
     }
@@ -355,7 +438,12 @@ std::vector<int> snic_cpp(const double *img, int w, int h, int b, int k_req, int
 
 } // namespace
 
-extern "C" SEXP snic(SEXP imgSEXP, SEXP wSEXP, SEXP hSEXP, SEXP kSEXP, SEXP nbrtypeSEXP) {
+extern "C" SEXP snic(SEXP imgSEXP,
+                       SEXP wSEXP,
+                       SEXP hSEXP,
+                       SEXP kSEXP,
+                       SEXP nbrtypeSEXP,
+                       SEXP compactSEXP) {
     if (!Rf_isMatrix(imgSEXP) || !Rf_isReal(imgSEXP)) {
         Rf_error("`img` must be a numeric matrix");
     }
@@ -375,12 +463,21 @@ extern "C" SEXP snic(SEXP imgSEXP, SEXP wSEXP, SEXP hSEXP, SEXP kSEXP, SEXP nbrt
         Rf_error("nrow(`img`) must equal `width` * `height`");
     }
 
-    const double *img = REAL(imgSEXP);
+    const double *data = REAL(imgSEXP);
+    Img img(data, w, h, b);
+
+    double compact = 10.0;
+    if (compactSEXP != R_NilValue) {
+        compact = Rf_asReal(compactSEXP);
+        if (!R_finite(compact) || compact < 0.0) {
+            Rf_error("`compactness` must be a non-negative finite number");
+        }
+    }
 
     int k_eff = k_req;
     std::vector<int> seg;
     try {
-        seg = snic_cpp(img, w, h, b, k_req, nbr_type, k_eff);
+        seg = snic_cpp(img, k_req, nbr_type, k_eff, compact);
     } catch (const std::runtime_error &err) {
         Rf_error("%s", err.what());
     }
