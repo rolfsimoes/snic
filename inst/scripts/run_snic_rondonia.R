@@ -1,9 +1,5 @@
 #!/usr/bin/env Rscript
 
-if (!requireNamespace("terra", quietly = TRUE)) {
-    stop("terra package is required. Install it with install.packages(\"terra\").")
-}
-
 library(snic)
 library(terra)
 
@@ -32,26 +28,28 @@ s2_cube <- terra::rast(paths)
 img_matrix <- terra::values(s2_cube, mat = TRUE)
 
 if (anyNA(img_matrix)) {
-    message("Input data contains NA values; SNIC will skip those pixels during segmentation.")
+    message(
+        "Input data contains NA values; SNIC will skip those pixels ",
+        "during segmentation."
+    )
 }
 
-connectivity <- 8L
-
-width <- terra::ncol(s2_cube)
-height <- terra::nrow(s2_cube)
-
-message(sprintf(
-    "Running SNIC on %d pixels (%dx%d) with %d bands (connectivity = %d)...",
-    nrow(img_matrix), width, height, ncol(img_matrix), connectivity
-))
-
+connectivity <- 4L
 k <- 1000L
 compactness <- 200L
 
+message(sprintf(
+    paste0(
+        "Running SNIC on image with %d bands, connectivity = %d, ",
+        "k = %d, compactness = %d..."
+    ),
+    ncol(img_matrix), connectivity, k, compactness
+))
+
 segments <- snic::snic(
     img_matrix,
-    width = width,
-    height = height,
+    width = terra::ncol(s2_cube),
+    height = terra::nrow(s2_cube),
     k = k,
     connectivity = connectivity,
     compactness = compactness
