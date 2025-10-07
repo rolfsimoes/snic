@@ -4,7 +4,7 @@
 \alias{snic}
 \title{Simple Non-Iterative Clustering (SNIC) segmentation}
 \usage{
-snic(img, width, height, k, connectivity = 4L)
+snic(img, width, height, k, connectivity = 4L, compactness = 10)
 }
 \arguments{
 \item{img}{A numeric matrix of dimension nPixels × nBands, where each row
@@ -20,10 +20,14 @@ spatial raster).}
 
 \item{connectivity}{Neighborhood connectivity to use when growing clusters:
 either 4 (von Neumann) or 8 (Moore).}
+
+\item{compactness}{Non-negative numeric value controlling the trade-off
+between color similarity and spatial proximity (default 10). Larger values
+encourage more spatially compact superpixels.}
 }
 \value{
 An integer vector of length equal to the number of pixels, giving the
-  1-based cluster segment assigned to each pixel.
+  1-based superpixel label assigned to each pixel.
 }
 \description{
 Segment an image into superpixels using the SNIC algorithm.  This function

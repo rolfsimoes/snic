@@ -12,21 +12,29 @@
 #' @param k Desired number of superpixels (clusters).
 #' @param connectivity Neighborhood connectivity to use when growing clusters:
 #'   either 4 (von Neumann) or 8 (Moore).
+#' @param compactness Non-negative numeric value controlling the trade-off
+#'   between color similarity and spatial proximity (default 10). Larger values
+#'   encourage more spatially compact superpixels.
 #' @return An integer vector of length equal to the number of pixels, giving the
-#'   1-based cluster segment assigned to each pixel.
+#'   1-based superpixel label assigned to each pixel.
 #' @useDynLib snic, .registration = TRUE, .fixes = "C_"
 #' @export
-snic <- function(img, width, height, k, connectivity = 4L) {
+snic <- function(img, width, height, k, connectivity = 4L, compactness = 10) {
     stopifnot(is.matrix(img), is.numeric(img))
     stopifnot(is.numeric(width), length(width) == 1)
     stopifnot(is.numeric(height), length(height) == 1)
     stopifnot(is.numeric(k), length(k) == 1)
     stopifnot(is.numeric(connectivity), length(connectivity) == 1)
+    stopifnot(is.numeric(compactness), length(compactness) == 1)
     # convert to integers
     width <- as.integer(width)
     height <- as.integer(height)
     k <- as.integer(k)
     connectivity <- as.integer(connectivity)
+    compactness <- as.numeric(compactness)
+    if (!is.finite(compactness) || compactness < 0) {
+        stop("compactness must be a non-negative finite number")
+    }
     if (!is.double(img)) {
         storage.mode(img) <- "double"
     }
@@ -39,6 +47,6 @@ snic <- function(img, width, height, k, connectivity = 4L) {
         stop("width * height must equal the number of rows in img")
     }
     # call the compiled C++ function
-    res <- .Call(C_snic, img, width, height, k, connectivity)
+    res <- .Call(C_snic, img, width, height, k, connectivity, compactness)
     res
 }
