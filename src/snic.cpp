@@ -87,16 +87,23 @@ double dist_sq_clu(const Img &img,
                    double spat_scale,
                    double compactness) {
     px_vals(img, pid, val);
-    double df_sq = dist_sq_eu(val, clu.val);
+    double dval_sq = dist_sq_eu(val, clu.val);
+
+    // squared Euclidean distance of pixel coordinates
     int r, c;
     coord(pid, img.w, r, c);
     double dr = static_cast<double>(r) - clu.r;
     double dc = static_cast<double>(c) - clu.c;
+    double dcoor_sq = dr * dr + dc * dc;
+
+    // compactness term
     double ratio = 0.0;
     if (spat_scale > 0.0) {
         ratio = compactness / spat_scale;
     }
-    return df_sq + ratio * ratio * (dr * dr + dc * dc);
+
+    // total square distance
+    return dval_sq + ratio * ratio * dcoor_sq;
 }
 
 void clu_update(Clu &clu, const std::vector<double> &px, int row, int col) {
@@ -263,7 +270,7 @@ std::vector<int> seed_init(const Img &img, int k_req, const std::vector<unsigned
     seeds.push_back(ids[seed_idx]);
     chosen[seed_idx] = 1;
 
-    // update distances of pixels to a given seed if the new distance is closer
+    // update distances of pixels to a given seed when the new distances are closer
     update_closest_dist_sq(ids, chosen, dists_sq, seed_idx, w);
 
     // add the remaining seeds as the pixel farthest from any seed
@@ -290,7 +297,7 @@ std::vector<int> seed_init(const Img &img, int k_req, const std::vector<unsigned
         seeds.push_back(ids[seed_idx]);
         chosen[seed_idx] = 1;
 
-        // update distances of pixels to a given seed if the new distance is closer
+        // update distances of pixels to a given seed when the new distances are closer
         update_closest_dist_sq(ids, chosen, dists_sq, seed_idx, w);
     }
 
@@ -369,6 +376,8 @@ std::vector<int> snic_cpp(const Img &img,
     std::priority_queue<Node, std::vector<Node>, NodeCmp> pq;
     for (int ci = 0; ci < m; ++ci) {
         int pid = seeds[ci];
+
+        // seeds have distance 0 to themselves
         dists_sq[pid] = 0.0;
         pq.push(Node(0.0, pid, ci));
     }
