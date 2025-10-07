@@ -8,7 +8,7 @@ library(snic)
 library(terra)
 
 # helper to resolve files relative to project root
-project_file <- function(...) file.path("inst", "extdata", "Rondonia-20LKP", ...)
+project_file <- function(...) system.file("S2-20LKP", ..., package = "snic")
 
 band_files <- c(
     "SENTINEL-2_MSI_20LKP_B02_2021-08-10.tif",
@@ -45,13 +45,16 @@ message(sprintf(
     nrow(img_matrix), width, height, ncol(img_matrix), connectivity
 ))
 
-k <- 400L
+k <- 1000L
+compactness <- 200L
+
 segments <- snic::snic(
     img_matrix,
     width = width,
     height = height,
     k = k,
-    connectivity = connectivity
+    connectivity = connectivity,
+    compactness = compactness
 )
 
 seg_raster <- terra::rast(s2_cube[[1]])
@@ -59,10 +62,17 @@ terra::values(seg_raster) <- segments
 terra::varnames(seg_raster) <- "snic"
 
 output_path <- file.path(
-    "inst", "extdata", "Rondonia-20LKP",
+    "~",
     "SENTINEL-2_MSI_20LKP_snic_segments_2021-08-10_2021-08-26.tif"
 )
 
-terra::writeRaster(seg_raster, output_path, overwrite = TRUE, datatype = "INT4U")
+terra::writeRaster(
+    seg_raster,
+    output_path,
+    overwrite = TRUE,
+    datatype = "INT4U"
+)
 
 message("SNIC segmentation written to: ", output_path)
+
+plot(seg_raster)
