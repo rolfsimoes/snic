@@ -12,9 +12,10 @@ Description: Implementation of the Simple Non-Iterative Clustering (SNIC)
     The implementation uses a priority queue (min-heap) to grow compact, 
     homogeneous segments from uniformly distributed seeds.  Supports 
     images with an arbitrary number of spectral bands and returns an integer 
-    vector of segments for each pixel.
+    matrix of segment labels covering the input scene.
 Depends: R (>= 3.5.0)
-Suggests: testthat (>= 3.0.0)
+Suggests: testthat (>= 3.0.0),
+    terra
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
