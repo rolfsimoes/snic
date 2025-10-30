@@ -2,29 +2,23 @@
 % Please edit documentation in R/snic.R
 \name{snic}
 \alias{snic}
-\alias{snic.matrix}
+\alias{snic.array}
 \alias{snic.SpatRaster}
+\alias{snic.default}
 \title{Simple Non-Iterative Clustering (SNIC) segmentation}
 \usage{
-snic(img, ...)
+snic(img, seeds = NULL, compactness = 10, grid_step = 10L, ...)
 
-\method{snic}{matrix}(img, width, height, seeds = NULL, compactness = 10, grid_step = 10L, ...)
+\method{snic}{array}(img, seeds = NULL, compactness = 10, grid_step = 10L, ...)
 
 \method{snic}{SpatRaster}(img, seeds = NULL, compactness = 10, grid_step = 10L, ...)
+
+\method{snic}{default}(img, ...)
 }
 \arguments{
-\item{img}{Image data. For the `matrix` method this should be a numeric
-matrix with one row per pixel and one column per band. For the
-`SpatRaster` method (from `terra`), the raster dimensions are inferred
-automatically.}
-
-\item{...}{Additional arguments passed to methods.}
-
-\item{width}{Integer width of the image (number of columns in the original
-spatial raster). Required for the `matrix` method.}
-
-\item{height}{Integer height of the image (number of rows in the original
-spatial raster). Required for the `matrix` method.}
+\item{img}{Image data. For the `array` method this should be numeric or
+integer with 3 (height, width, bands) dimensions. For the `SpatRaster`
+method (from `terra`), the dimensions are inferred automatically.}
 
 \item{seeds}{Optional integer matrix with two columns (row, column) giving
 1-based pixel coordinates for the initial seeds. If omitted, seeds are
@@ -36,11 +30,11 @@ encourage more spatially compact superpixels.}
 
 \item{grid_step}{Positive integer spacing, expressed in pixels, used when
 generating default grid seeds. Defaults to 10.}
+
+\item{...}{Additional arguments passed to methods.}
 }
 \value{
-A matrix of superpixel labels with `height` rows and `width` columns. When
-flattened with `as.vector(t(result))`, the values match the raster ordering
-used by [terra::values()].
+A matrix of superpixel labels with `height` rows and `width` columns.
 }
 \description{
 Segment an image into superpixels using the SNIC algorithm. This function
@@ -48,8 +42,7 @@ wraps a C++ implementation that works with any number of spectral bands.
 The segmentation uses a 4-neighbour (von Neumann) connectivity.
 }
 \details{
-The `img` argument follows the convention used by the `terra` package:
-each row corresponds to a pixel (in raster order, from top-left to
-bottom-right), and each column corresponds to a spectral band or channel.
-Thus, the total number of rows must equal `width * height`.
+The `img` array must use R's standard column-major order with dimensions
+`(rows, cols, bands)` if 3D, or `(rows, cols)` if 2D. This layout matches the
+underlying C implementation of SNIC used by this package.
 }

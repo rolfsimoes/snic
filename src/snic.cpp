@@ -640,26 +640,27 @@ extern "C" SEXP _seeds_grid(SEXP imgSEXP,
 }
 
 /*
- * R-callable wrapper to transpose a numeric array from
- * row-major (terra) to column-major (R) layout.
+ * Implements a conversion of row-major (terra) to
+ * column-major (R) layout.
  *
  * @param imgSEXP A numeric array (2D or 3D)
  * @param hSEXP, wSEXP, bSEXP Integer scalars for dimensions
  * @return The same numeric array (transposed in place)
  */
-extern "C" SEXP _trans(SEXP imgSEXP,
-                       SEXP hSEXP,
-                       SEXP wSEXP,
-                       SEXP bSEXP)
+extern "C" SEXP _colmaj(SEXP imgSEXP,
+                        SEXP hSEXP,
+                        SEXP wSEXP,
+                        SEXP bSEXP)
 {
     if (!Rf_isReal(imgSEXP))
         Rf_error("`img` must be a numeric array");
 
-    SEXP dim = getAttrib(imgSEXP, R_DimSymbol);
-    if (dim == R_NilValue || LENGTH(dim) < 2)
+    SEXP dimSEXP = getAttrib(imgSEXP, R_DimSymbol);
+    if (dimSEXP == R_NilValue)
         Rf_error("`img` must have 2 or 3 dimensions");
 
-    if (!Rf_isInteger(hSEXP) || !Rf_isInteger(wSEXP) || !Rf_isInteger(bSEXP))
+    if (!Rf_isInteger(hSEXP) || !Rf_isInteger(wSEXP) || !Rf_isInteger(bSEXP) ||
+        LENGTH(hSEXP) != 1 || LENGTH(wSEXP) != 1 || LENGTH(bSEXP) != 1)
         Rf_error("`height`, `width`, and `bands` must be integer scalars");
 
     const int h = INTEGER(hSEXP)[0];
@@ -669,24 +670,25 @@ extern "C" SEXP _trans(SEXP imgSEXP,
     if (h <= 0 || w <= 0 || b <= 0)
         Rf_error("`height`, `width`, and `bands` must be positive");
 
-    const int ndim = LENGTH(dim);
+    const int *dim = INTEGER(dimSEXP);
+    const int n_dim = LENGTH(dimSEXP);
 
-    /* Verify dimension agreement */
-    if (ndim == 2) {
-        if (INTEGER(dim)[0] != h * w || INTEGER(dim)[1] != b) {
-            Rf_error("`img` dimensions (%d,%d) do not match (height*width=%d, bands=%d)",
-                     INTEGER(dim)[0], INTEGER(dim)[1], h * w, b);
+    // Verify dimension agreement
+    if (n_dim == 2) {
+        if (dim[0] != h * w || dim[1] != b) {
+            Rf_error("`img` dimensions (%d,%d) do not match (h*w=%d, b=%d)",
+                     dim[0], dim[1], h * w, b);
         }
-    } else if (ndim == 3) {
-        if (INTEGER(dim)[0] != h || INTEGER(dim)[1] != w || INTEGER(dim)[2] != b) {
+    } else if (n_dim == 3) {
+        if (dim[0] != h || dim[1] != w || dim[2] != b) {
             Rf_error("`img` dimensions (%d,%d,%d) do not match (h=%d, w=%d, b=%d)",
-                     INTEGER(dim)[0], INTEGER(dim)[1], INTEGER(dim)[2], h, w, b);
+                     dim[0], dim[1], dim[2], h, w, b);
         }
     } else {
         Rf_error("`img` must have 2 or 3 dimensions");
     }
 
-    /* Transpose data */
+    // Transpose data
     const int n = h * w;
     double *data = REAL(imgSEXP);
     double *tmp  = (double *) R_alloc(n, sizeof(double));
@@ -702,7 +704,7 @@ extern "C" SEXP _trans(SEXP imgSEXP,
             src[i] = tmp[i];
     }
 
-    /* Update dimensions in-place */
+    // Update dimensions in-place
     SEXP newdim = PROTECT(Rf_allocVector(INTSXP, 3));
     INTEGER(newdim)[0] = h;
     INTEGER(newdim)[1] = w;

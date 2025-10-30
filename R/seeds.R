@@ -14,13 +14,13 @@
 #' coordinates of the selected seeds.
 #'
 #' @export
-snic_seeds_grid <- function(img, grid_step, ...) {
+snic_seeds_grid <- function(img, grid_step = 10L, ...) {
     UseMethod("snic_seeds_grid")
 }
 
 #' @rdname snic_seeds_grid
 #' @export
-snic_seeds_grid.array <- function(img, grid_step, ...) {
+snic_seeds_grid.array <- function(img, grid_step = 10L, ...) {
     extra <- list(...)
     if (length(extra)) {
         bad_args <- names(extra)
@@ -56,7 +56,7 @@ snic_seeds_grid.array <- function(img, grid_step, ...) {
 
 #' @rdname snic_seeds_grid
 #' @export
-snic_seeds_grid.SpatRaster <- function(img, grid_step, ...) {
+snic_seeds_grid.SpatRaster <- function(img, grid_step = 10L, ...) {
     if (!requireNamespace("terra", quietly = TRUE)) {
         stop("Package 'terra' must be installed to handle SpatRaster input.",
             call. = FALSE
@@ -82,13 +82,7 @@ snic_seeds_grid.SpatRaster <- function(img, grid_step, ...) {
     }
 
     # Convert to array with (height, width, bands). Tested!
-    .Call(
-        C_snic_trans,
-        img_mtx,
-        as.integer(terra::nrow(img)),
-        as.integer(terra::ncol(img)),
-        as.integer(terra::nlyr(img))
-    )
+    .colmaj(img_mtx, terra::nrow(img), terra::ncol(img), terra::nlyr(img))
 
     if (!is.integer(grid_step)) {
         grid_step <- as.integer(grid_step)
@@ -104,7 +98,7 @@ snic_seeds_grid.SpatRaster <- function(img, grid_step, ...) {
 
 #' @rdname snic_seeds_grid
 #' @export
-snic_seeds_grid.default <- function(img, ...) {
+snic_seeds_grid.default <- function(img, grid_step = 10L, ...) {
     stop("Unsupported input type '", class(img)[1],
         "'. SNIC seeding currently supports array and SpatRaster inputs only.",
         call. = FALSE

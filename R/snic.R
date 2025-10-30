@@ -26,7 +26,11 @@
 #' A matrix of superpixel labels with `height` rows and `width` columns.
 #'
 #' @export
-snic <- function(img, ...) {
+snic <- function(img,
+                 seeds = NULL,
+                 compactness = 10,
+                 grid_step = 10L,
+                 ...) {
     UseMethod("snic")
 }
 
@@ -64,8 +68,7 @@ snic.array <- function(img,
         img,
         seeds,
         as.numeric(compactness),
-        as.integer(grid_step),
-        PACKAGE = "snic"
+        as.integer(grid_step)
     )
 }
 
@@ -101,21 +104,14 @@ snic.SpatRaster <- function(img,
     }
 
     # Convert to array with (height, width, bands). Tested!
-    .Call(
-        C_snic_trans,
-        img_mtx,
-        as.integer(terra::nrow(img)),
-        as.integer(terra::ncol(img)),
-        as.integer(terra::nlyr(img))
-    )
+    .colmaj(img_mtx, terra::nrow(img), terra::ncol(img), terra::nlyr(img))
 
     result <- .Call(
         C_snic_snic,
         img_mtx,
         seeds,
         as.numeric(compactness),
-        as.integer(grid_step),
-        PACKAGE = "snic"
+        as.integer(grid_step)
     )
 
     if (isTRUE(getOption("snic.return_raster", FALSE))) {

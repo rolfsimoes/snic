@@ -48,7 +48,7 @@ seeds <- snic::snic_seeds_grid(
     img_matrix_lab,
     width = terra::ncol(s2_cube),
     height = terra::nrow(s2_cube),
-    step = grid_step
+    grid_step = grid_step
 )
 
 

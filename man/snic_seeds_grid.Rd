@@ -2,34 +2,31 @@
 % Please edit documentation in R/seeds.R
 \name{snic_seeds_grid}
 \alias{snic_seeds_grid}
-\alias{snic_seeds_grid.matrix}
+\alias{snic_seeds_grid.array}
 \alias{snic_seeds_grid.SpatRaster}
+\alias{snic_seeds_grid.default}
 \title{Grid SNIC seeding}
 \usage{
-snic_seeds_grid(img, ...)
+snic_seeds_grid(img, grid_step = 10L, ...)
 
-\method{snic_seeds_grid}{matrix}(img, width, height, step, ...)
+\method{snic_seeds_grid}{array}(img, grid_step = 10L, ...)
 
-\method{snic_seeds_grid}{SpatRaster}(img, step, ...)
+\method{snic_seeds_grid}{SpatRaster}(img, grid_step = 10L, ...)
+
+\method{snic_seeds_grid}{default}(img, grid_step = 10L, ...)
 }
 \arguments{
-\item{img}{Image data. For the `matrix` method this should follow the same
-layout as [snic()], with one row per pixel. For the `SpatRaster` method
-(from `terra`), raster dimensions are inferred automatically.}
+\item{img}{Image data. For the `array` method this should be numeric or
+integer with 3 (height, width, bands) dimensions. For the `SpatRaster`
+method (from `terra`), the dimensions are inferred automatically.}
+
+\item{grid_step}{Positive integer spacing between grid lines (in pixels).}
 
 \item{...}{Additional arguments passed to methods.}
-
-\item{width}{Image width (number of columns). Required for the `matrix`
-method.}
-
-\item{height}{Image height (number of rows). Required for the `matrix`
-method.}
-
-\item{step}{Positive integer spacing between grid lines (in pixels).}
 }
 \value{
-matrix with two columns (row, column) giving the 1-based pixel
-  coordinates of the selected seeds.
+A two-column integer matrix `(row, column)` giving the 1-based pixel
+coordinates of the selected seeds.
 }
 \description{
 Place seeds on a regular grid, discarding any sites that fall on invalid
