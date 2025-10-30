@@ -25,6 +25,8 @@ struct Img {
     int h;
     int b;
     int n;
+    std::vector<std::uint8_t> mask_;
+    int n_valid;
 
     Img(const double* data, int width, int height, int bands);
 
@@ -34,7 +36,11 @@ struct Img {
     void vals(int pid, std::vector<double>& out) const;
     void neighbors4(int pid, std::vector<int>& out) const;
     bool has_nan(int pid) const;
+    int valid_pixel_count() const;
+    const std::vector<std::uint8_t>& mask() const;
 };
+
+static double dist_sq_eu_buf(const double* a, const double* b, int len);
 
 struct Clu {
     std::vector<double> val;
@@ -65,26 +71,26 @@ struct NodeGreater {
     bool operator()(const Node& a, const Node& b) const;
 };
 
-namespace detail {
-
-double dist_sq_eu_buf(const double* a, const double* b, int len)
-{
-    double sum = 0.0;
-    for (int i = 0; i < len; ++i) {
-        const double d = a[i] - b[i];
-        sum += d * d;
-    }
-    return sum;
-}
-
-} // namespace detail
-
 // =====================
 // Img implementation
 // =====================
 
-Img::Img(const double* data_, int width, int height, int bands)
-    : data(data_), w(width), h(height), b(bands), n(width * height)
+/*
+ * Construct an Img object.
+ * @param data_ Pointer to image data in band-interleaved format.
+ *   pixels are stored column-wise, with bands stacked. A pixel at (r, c)
+ *   and band b is located at data_[r + c * height + b * (width * height)].
+ *   data_ comes from R as 3D numerical array (height x width x bands).
+ *   Column-major order is used to match R's internal storage. No rearrangement
+ *   is needed.
+ * @param height Image height (number of rows)
+ * @param width Image width (number of columns)
+ * @param bands Number of bands (channels) in the image
+ *
+ */
+Img::Img(const double* data_, int height, int width, int bands)
+    : data(data_), w(width), h(height), b(bands), n(width * height),
+      mask_(), n_valid(0)
 {
     if (data == nullptr) {
         throw std::invalid_argument("Image data pointer must not be null");
@@ -95,21 +101,33 @@ Img::Img(const double* data_, int width, int height, int bands)
     if (b <= 0) {
         throw std::invalid_argument("Number of bands must be positive");
     }
+
+    mask_.resize(static_cast<std::size_t>(n));
+    int valid = 0;
+    for (int pid = 0; pid < n; ++pid) {
+        const bool has_na = has_nan(pid);
+        mask_[pid] = has_na ? static_cast<std::uint8_t>(0) :
+            static_cast<std::uint8_t>(1);
+        if (!has_na) {
+            ++valid;
+        }
+    }
+    n_valid = valid;
 }
 
 int Img::idx(int r, int c) const
 {
-    return r * w + c;
+    return r + c * h;
 }
 
 int Img::row(int pid) const
 {
-    return pid / w;
+    return pid % h;
 }
 
 int Img::col(int pid) const
 {
-    return pid % w;
+    return pid / h;
 }
 
 void Img::vals(int pid, std::vector<double>& out) const
@@ -155,6 +173,16 @@ bool Img::has_nan(int pid) const
     return false;
 }
 
+int Img::valid_pixel_count() const
+{
+    return n_valid;
+}
+
+const std::vector<std::uint8_t>& Img::mask() const
+{
+    return mask_;
+}
+
 // =====================
 // Clu implementation
 // =====================
@@ -190,7 +218,7 @@ double Clu::dist_sq_to_vals(const std::vector<double>& px_val,
 {
     const int k = std::min(static_cast<int>(val.size()),
         static_cast<int>(px_val.size()));
-    const double dval_sq = detail::dist_sq_eu_buf(px_val.data(), val.data(), k);
+    const double dval_sq = dist_sq_eu_buf(px_val.data(), val.data(), k);
 
     const double dr = static_cast<double>(row) - r;
     const double dc = static_cast<double>(col) - c;
@@ -224,33 +252,34 @@ bool NodeGreater::operator()(const Node& a, const Node& b) const
 // Free functions
 // =====================
 
-int build_valid_mask(const Img& img, std::vector<std::uint8_t>& mask)
-{
-    mask.assign(static_cast<std::size_t>(img.n), static_cast<std::uint8_t>(1));
 
-    int valid = 0;
-    for (int pid = 0; pid < img.n; ++pid) {
-        const bool ok = !img.has_nan(pid);
-        mask[pid] = ok ? static_cast<std::uint8_t>(1) : static_cast<std::uint8_t>(0);
-        if (ok) {
-            ++valid;
-        }
-    }
-    return valid;
+static double dist_sq_eu_buf(const double* a, const double* b, int len)
+{
+  double sum = 0.0;
+  for (int i = 0; i < len; ++i) {
+    const double d = a[i] - b[i];
+    sum += d * d;
+  }
+  return sum;
 }
 
-std::vector<int> grid_seeds(const Img& img,
-                            int grid_step,
-                            const std::vector<std::uint8_t>& mask)
+/*
+ * Implement a grid seeding function that places seeds at regular intervals
+ *   across the image, respecting the image mask.
+*/
+static std::vector<int> grid_seeds(const Img& img,
+                                   int grid_step)
 {
     std::vector<int> out;
     if (grid_step <= 0) {
         return out;
     }
-    if (mask.size() != static_cast<std::size_t>(img.n)) {
-        throw std::runtime_error("Mask size mismatch for grid seeding.");
-    }
 
+    const std::vector<std::uint8_t>& mask = img.mask();
+    if (mask.size() != static_cast<std::size_t>(img.n)) {
+        throw std::runtime_error("Mask size mismatch for image size.");
+    }
+    out.reserve(mask.size() / (grid_step * grid_step));
     const int offset = grid_step / 2;
     for (int r = offset; r < img.h; r += grid_step) {
         for (int c = offset; c < img.w; c += grid_step) {
@@ -264,37 +293,42 @@ std::vector<int> grid_seeds(const Img& img,
     return out;
 }
 
-// Returns segmentation vector (size img.n). Pixels masked out remain 0.
-std::vector<int> snic_segment(const Img& img,
-                              const std::vector<int>& seeds,
-                              const std::vector<std::uint8_t>& mask,
-                              double compactness)
+/*
+ * SNIC segmentation function
+ * Returns segmentation vector (size img.n). Pixels masked out remain 0.
+ * Segments are labeled from 1 to number of seeds.
+ */
+static std::vector<int> snic_segment(const Img& img,
+                                     const std::vector<int>& seeds,
+                                     double compactness)
 {
     if (img.n <= 0) {
-        throw std::runtime_error("Image must contain at least one pixel.");
+        throw std::runtime_error("Image must contain at least one pixel");
     }
+
+    const std::vector<std::uint8_t>& mask = img.mask();
     if (mask.size() != static_cast<std::size_t>(img.n)) {
-        throw std::runtime_error("Mask size must match the number of pixels in the image.");
+        throw std::runtime_error("Mask size mismatch for image size");
     }
     if (seeds.empty()) {
-        throw std::runtime_error("No seeds provided for SNIC segmentation.");
+        throw std::runtime_error("No seeds provided for SNIC segmentation");
     }
 
     if (compactness < 0.0) {
         compactness = 0.0;
     }
 
-    const int valid = std::accumulate(mask.begin(), mask.end(), 0);
+    const int valid = img.valid_pixel_count();
     if (valid == 0) {
-        throw std::runtime_error("All pixels contain NA values; SNIC cannot segment.");
+        throw std::runtime_error("All pixels contain NA values; SNIC cannot segment");
     }
 
     for (int pid : seeds) {
         if (pid < 0 || pid >= img.n) {
-            throw std::runtime_error("Seed index out of bounds for provided image dimensions.");
+            throw std::runtime_error("Seed index out of bounds for provided image dimensions");
         }
         if (!mask[pid]) {
-            throw std::runtime_error("Seed placed on pixel containing NA values.");
+            throw std::runtime_error("Seed placed on pixel containing NA values");
         }
     }
 
@@ -369,103 +403,140 @@ std::vector<int> snic_segment(const Img& img,
 
 } // namespace snic
 
-extern "C" SEXP _snic(SEXP imgSEXP,
-                      SEXP wSEXP,
-                      SEXP hSEXP,
-                      SEXP seedsSEXP,
-                      SEXP compactSEXP)
-{
-    if (!Rf_isMatrix(imgSEXP) || !Rf_isReal(imgSEXP)) {
-        Rf_error("`img` must be a numeric matrix");
-    }
-    if (wSEXP == R_NilValue || hSEXP == R_NilValue) {
-        Rf_error("`w` and `h` must be provided");
-    }
-    if (!Rf_isInteger(wSEXP) || LENGTH(wSEXP) < 1 ||
-        !Rf_isInteger(hSEXP) || LENGTH(hSEXP) < 1) {
-        Rf_error("`w` and `h` must be integer");
-    }
-    const int w = INTEGER(wSEXP)[0];
-    const int h = INTEGER(hSEXP)[0];
 
+/*
+ * This is the R interface to the SNIC segmentation function.
+ *
+ * @param imgSEXP Numeric array (height x width x bands) representing the image.
+ *   Pixels are stored column-wise, with bands stacked. No rearrangement is
+ *   needed. A pixel at (r, c) and band b is located at
+ *   img[r + c * height + b * (width * height)].
+ *   The array must have exactly three dimensions and strictly positive sizes.
+ * @param seedsSEXP Integer matrix (m x 2) of seed coordinates (row, column).
+ *   Coordinates are 1-based (R style). Values must be within image bounds.
+ * @param compactSEXP Single numeric value (scalar) representing the
+ *   compactness parameter; must be finite and non-negative.
+ * @param grid_stepSEXP Used just when seeds are not provided. Integer scalar
+ *   representing the grid step size; must be positive and not exceed the
+ *   image width or height.
+ * @return Integer vector (length width * height) representing the
+ *  segmentation. Pixels masked out remain NA. Segments are labeled from
+ *  1 to number of seeds.
+ */
+extern "C" SEXP _snic(SEXP imgSEXP,
+                      SEXP seedsSEXP,
+                      SEXP compactSEXP,
+                      SEXP grid_stepSEXP)
+{
+    if (!Rf_isReal(imgSEXP)) {
+        Rf_error("Argument `img` must be a numeric array");
+    }
     SEXP dim = getAttrib(imgSEXP, R_DimSymbol);
     if (dim == R_NilValue) {
-        Rf_error("`img` must have dimensions");
+        Rf_error("Argument `img` must have dimensions");
     }
-    if (LENGTH(dim) < 2) {
-        Rf_error("`img` must be a matrix with two dimensions");
+    if (!Rf_isInteger(dim) || LENGTH(dim) != 3) {
+        Rf_error("Argument `img` must be a numeric array with three dimensions");
     }
-    const int n = INTEGER(dim)[0];
-    const int b = INTEGER(dim)[1]; // bands
-    if (n != w * h) {
-        Rf_error("nrow(`img`) must equal `width` * `height`");
+
+    const int h = INTEGER(dim)[0];
+    const int w = INTEGER(dim)[1];
+    const int b = INTEGER(dim)[2];
+    if (h == NA_INTEGER || h <= 0 ||
+        w == NA_INTEGER || w <= 0 ||
+        b == NA_INTEGER || b <= 0) {
+        Rf_error("Argument `img` dimensions must be positive integers");
     }
 
     const double* data = REAL(imgSEXP);
-    snic::Img img(data, w, h, b);
+   snic::Img img(data, h, w, b);
 
-    if (compactSEXP == R_NilValue) {
-      Rf_error("`compactness` must be provided");
-    }
-    if (!Rf_isReal(compactSEXP) || LENGTH(compactSEXP) < 1) {
-      Rf_error("`compactness` must be a numeric");
+    if (compactSEXP == R_NilValue || !Rf_isReal(compactSEXP) ||
+        LENGTH(compactSEXP) != 1) {
+        Rf_error("Argument `compactness` must be a numeric scalar");
     }
 
     const double compact = REAL(compactSEXP)[0];
     if (!R_finite(compact) || compact < 0.0) {
-      Rf_error("`compactness` must be a non-negative finite number");
+        Rf_error("Argument `compactness` must be a non-negative finite number");
     }
 
-    if (seedsSEXP == R_NilValue || !Rf_isMatrix(seedsSEXP) || !Rf_isInteger(seedsSEXP)) {
-        Rf_error("`seeds` must be an integer matrix with two columns");
-    }
-    SEXP seedDim = getAttrib(seedsSEXP, R_DimSymbol);
-    if (seedDim == R_NilValue) {
-        Rf_error("`seeds` must have dimensions");
-    }
-    const int seed_rows = INTEGER(seedDim)[0];
-    const int seed_cols = INTEGER(seedDim)[1];
-    if (seed_cols != 2) {
-        Rf_error("`seeds` must have two columns (row, column)");
-    }
-    if (seed_rows <= 0) {
-        Rf_error("`seeds` must contain at least one coordinate");
-    }
-    if (LENGTH(seedsSEXP) != seed_rows * seed_cols) {
-        Rf_error("`seeds` length mismatch");
-    }
-
-    const int* row_ptr = INTEGER(seedsSEXP);
-    const int* col_ptr = row_ptr + seed_rows;
     std::vector<int> seeds;
-    seeds.reserve(seed_rows);
+    if (seedsSEXP == R_NilValue || !Rf_isMatrix(seedsSEXP) ||
+        !Rf_isInteger(seedsSEXP)) {
+        if (!Rf_isInteger(grid_stepSEXP) || LENGTH(grid_stepSEXP) != 1) {
+            // no seeds provided, grid_step also not provided
+            Rf_error("Either argument `seeds` or `grid_step` must be provided");
+        } else {
+            // no seeds provided, grid_step must be valid
+            const int step = INTEGER(grid_stepSEXP)[0];
+            if (step == NA_INTEGER || step <= 0) {
+                Rf_error("Argument `grid_step` must be a positive integer");
+            }
+            if (step > w || step > h) {
+                Rf_error("Argument `grid_step` must not exceed the image width or height");
+            }
+            // no seeds provided, create a new one
+            try {
+              seeds = snic::grid_seeds(img, step);
+            } catch (const std::runtime_error& err) {
+              Rf_error("%s", err.what());
+            }
 
-    for (int i = 0; i < seed_rows; ++i) {
-        const int r = row_ptr[i];
-        const int c = col_ptr[i];
-        if (r == NA_INTEGER || c == NA_INTEGER) {
-          Rf_error("`seeds` cannot contain NA coordinates");
+            if (seeds.empty()) {
+              Rf_error("Grid seeding produced no valid seeds; adjust `grid_step` or check image nodata.");
+            }
         }
-        if (r < 1 || r > h || c < 1 || c > w) {
-            Rf_error("`seeds` coordinates must lie within the image dimensions");
+    } else {
+        // seeds provided
+        SEXP seedDim = getAttrib(seedsSEXP, R_DimSymbol);
+        if (seedDim == R_NilValue) {
+            Rf_error("Argument `seeds` must have dimensions");
         }
-        seeds.push_back(img.idx(r - 1, c - 1));
+        const int seed_rows = INTEGER(seedDim)[0];
+        const int seed_cols = INTEGER(seedDim)[1];
+        if (seed_cols != 2) {
+            Rf_error("Argument `seeds` must have two columns (row, column)");
+        }
+        if (seed_rows <= 0) {
+            Rf_error("Argument `seeds` must contain at least one coordinate");
+        }
+        if (LENGTH(seedsSEXP) != seed_rows * seed_cols) {
+            Rf_error("Argument `seeds` length mismatch");
+        }
+
+        const int* row_ptr = INTEGER(seedsSEXP);
+        const int* col_ptr = row_ptr + seed_rows;
+        seeds.reserve(seed_rows);
+
+        for (int i = 0; i < seed_rows; ++i) {
+            const int r = row_ptr[i];
+            const int c = col_ptr[i];
+            if (r == NA_INTEGER || c == NA_INTEGER) {
+                Rf_error("Argument `seeds` cannot contain NA coordinates");
+            }
+            if (r < 1 || r > h || c < 1 || c > w) {
+                Rf_error("Argument `seeds` coordinates must lie within image bounds");
+            }
+            seeds.push_back(img.idx(r - 1, c - 1));
+        }
     }
 
-    std::vector<std::uint8_t> mask;
-    const int n_valid = snic::build_valid_mask(img, mask);
+    const int n_valid = img.valid_pixel_count();
     if (n_valid == 0) {
       Rf_error("All pixels contain NA values; SNIC cannot segment.");
     }
     std::vector<int> seg;
     try {
-        seg = snic::snic_segment(img, seeds, mask, compact);
+        seg = snic::snic_segment(img, seeds, compact);
     } catch (const std::runtime_error& err) {
         Rf_error("%s", err.what());
     }
 
-    SEXP out = PROTECT(Rf_allocVector(INTSXP, n));
-    int* out_ptr = INTEGER(out);
+    // prepare and fill output segmentation
+    const int n = w * h;
+    SEXP outSEXP = PROTECT(Rf_allocVector(INTSXP, n));
+    int* out_ptr = INTEGER(outSEXP);
     for (int pid = 0; pid < n; ++pid) {
         if (seg[pid] == 0) {
             out_ptr[pid] = NA_INTEGER;
@@ -473,59 +544,77 @@ extern "C" SEXP _snic(SEXP imgSEXP,
             out_ptr[pid] = seg[pid];
         }
     }
-    UNPROTECT(1);
-    return out;
+
+    // Update dimensions attribute (height, width, 1)
+    SEXP newdim = PROTECT(Rf_allocVector(INTSXP, 3));
+    INTEGER(newdim)[0] = h;
+    INTEGER(newdim)[1] = w;
+    INTEGER(newdim)[2] = 1;
+    setAttrib(outSEXP, R_DimSymbol, newdim);
+
+    UNPROTECT(2);
+    return outSEXP;
 }
 
-extern "C" SEXP _seed_grid(SEXP imgSEXP,
-                           SEXP wSEXP,
-                           SEXP hSEXP,
-                           SEXP stepSEXP)
+/*
+ * This is the R interface to the SNIC grid seeding function.
+ *
+ * @param imgSEXP Numeric array (height x width x bands) representing the image.
+ *   Pixels are stored column-wise, with bands stacked. No rearrangement is
+ *   needed. A pixel at (r, c) and band b is located at
+ *   img[r + c * height + b * (width * height)]. The array must have exactly
+ *   three dimensions and strictly positive sizes.
+ * @param grid_stepSEXP Integer scalar representing the grid step size; must be
+ *   positive and not exceed the image width or height.
+ * @return Integer matrix (m x 2) of seed coordinates (row, column).
+ *   Coordinates are 1-based (R style).
+ */
+extern "C" SEXP _seeds_grid(SEXP imgSEXP,
+                            SEXP grid_stepSEXP)
 {
-    if (!Rf_isMatrix(imgSEXP) || !Rf_isReal(imgSEXP)) {
-        Rf_error("`img` must be a numeric matrix");
+    if (!Rf_isReal(imgSEXP)) {
+        Rf_error("Argument `img` must be a numeric array");
     }
-    if (!Rf_isInteger(wSEXP) || LENGTH(wSEXP) < 1 ||
-        !Rf_isInteger(hSEXP) || LENGTH(hSEXP) < 1) {
-        Rf_error("`width` and `height` must be integer");
-    }
-    const int w = INTEGER(wSEXP)[0];
-    const int h = INTEGER(hSEXP)[0];
-
-    if (!Rf_isInteger(stepSEXP) || LENGTH(stepSEXP) < 1) {
-        Rf_error("`step` must be an integer");
-    }
-
-    const int step = INTEGER(stepSEXP)[0];
-    if (step <= 0) {
-        Rf_error("`step` must be a positive integer");
-    }
-
     SEXP dim = getAttrib(imgSEXP, R_DimSymbol);
     if (dim == R_NilValue) {
-        Rf_error("`img` must have dimensions");
+        Rf_error("Argument `img` must have dimensions");
     }
-    if (LENGTH(dim) < 2) {
-        Rf_error("`img` must be a matrix with two dimensions");
+    if (!Rf_isInteger(dim) || LENGTH(dim) != 3) {
+        Rf_error("Argument `img` must be a numeric array with three dimensions");
     }
-    const int n = INTEGER(dim)[0];
-    const int b = INTEGER(dim)[1]; // bands
-    if (n != w * h) {
-        Rf_error("nrow(`img`) must equal `width` * `height`");
+
+    const int h = INTEGER(dim)[0];
+    const int w = INTEGER(dim)[1];
+    const int b = INTEGER(dim)[2];
+    if (h == NA_INTEGER || h <= 0 ||
+        w == NA_INTEGER || w <= 0 ||
+        b == NA_INTEGER || b <= 0) {
+        Rf_error("Argument `img` dimensions must be positive integers");
+    }
+
+    if (!Rf_isInteger(grid_stepSEXP) || LENGTH(grid_stepSEXP) != 1) {
+        Rf_error("Argument `grid_step` must be an integer scalar");
+    }
+
+    const int step = INTEGER(grid_stepSEXP)[0];
+    if (step == NA_INTEGER || step <= 0) {
+        Rf_error("Argument `grid_step` must be a positive integer");
+    }
+    if (step > w || step > h) {
+        Rf_error("Argument `grid_step` must not exceed the image width or height");
     }
 
     const double* data = REAL(imgSEXP);
-    snic::Img img(data, w, h, b);
+    snic::Img img(data, h, w, b);
 
-    std::vector<std::uint8_t> mask;
-    const int n_valid = snic::build_valid_mask(img, mask);
+    const int n_valid = img.valid_pixel_count();
     if (n_valid == 0) {
         Rf_error("All pixels contain NA values; no seeds can be placed.");
     }
 
     std::vector<int> seeds;
     try {
-        seeds = snic::grid_seeds(img, step, mask);
+        seeds = snic::grid_seeds(img, step);
     } catch (const std::runtime_error& err) {
         Rf_error("%s", err.what());
     }
@@ -534,6 +623,7 @@ extern "C" SEXP _seed_grid(SEXP imgSEXP,
         Rf_error("Grid seeding produced no valid seeds; adjust `step` or mask.");
     }
 
+    // prepare and fill output segmentation
     const int m = static_cast<int>(seeds.size());
     SEXP out = PROTECT(Rf_allocMatrix(INTSXP, m, 2));
     int* out_ptr = INTEGER(out);
@@ -541,9 +631,128 @@ extern "C" SEXP _seed_grid(SEXP imgSEXP,
         const int pid = seeds[i];
         const int r = img.row(pid);
         const int c = img.col(pid);
+        // column-major
         out_ptr[i] = r + 1;
         out_ptr[i + m] = c + 1;
     }
     UNPROTECT(1);
     return out;
+}
+
+/*
+ * R-callable wrapper to transpose a numeric array from
+ * row-major (terra) to column-major (R) layout.
+ *
+ * @param imgSEXP A numeric array (2D or 3D)
+ * @param hSEXP, wSEXP, bSEXP Integer scalars for dimensions
+ * @return The same numeric array (transposed in place)
+ */
+extern "C" SEXP _trans(SEXP imgSEXP,
+                       SEXP hSEXP,
+                       SEXP wSEXP,
+                       SEXP bSEXP)
+{
+    if (!Rf_isReal(imgSEXP))
+        Rf_error("`img` must be a numeric array");
+
+    SEXP dim = getAttrib(imgSEXP, R_DimSymbol);
+    if (dim == R_NilValue || LENGTH(dim) < 2)
+        Rf_error("`img` must have 2 or 3 dimensions");
+
+    if (!Rf_isInteger(hSEXP) || !Rf_isInteger(wSEXP) || !Rf_isInteger(bSEXP))
+        Rf_error("`height`, `width`, and `bands` must be integer scalars");
+
+    const int h = INTEGER(hSEXP)[0];
+    const int w = INTEGER(wSEXP)[0];
+    const int b = INTEGER(bSEXP)[0];
+
+    if (h <= 0 || w <= 0 || b <= 0)
+        Rf_error("`height`, `width`, and `bands` must be positive");
+
+    const int ndim = LENGTH(dim);
+
+    /* Verify dimension agreement */
+    if (ndim == 2) {
+        if (INTEGER(dim)[0] != h * w || INTEGER(dim)[1] != b) {
+            Rf_error("`img` dimensions (%d,%d) do not match (height*width=%d, bands=%d)",
+                     INTEGER(dim)[0], INTEGER(dim)[1], h * w, b);
+        }
+    } else if (ndim == 3) {
+        if (INTEGER(dim)[0] != h || INTEGER(dim)[1] != w || INTEGER(dim)[2] != b) {
+            Rf_error("`img` dimensions (%d,%d,%d) do not match (h=%d, w=%d, b=%d)",
+                     INTEGER(dim)[0], INTEGER(dim)[1], INTEGER(dim)[2], h, w, b);
+        }
+    } else {
+        Rf_error("`img` must have 2 or 3 dimensions");
+    }
+
+    /* Transpose data */
+    const int n = h * w;
+    double *data = REAL(imgSEXP);
+    double *tmp  = (double *) R_alloc(n, sizeof(double));
+
+    for (int band = 0; band < b; ++band) {
+        double *src = data + band * n;
+        for (int r = 0; r < h; ++r) {
+            for (int c = 0; c < w; ++c) {
+                tmp[c * h + r] = src[r * w + c];
+            }
+        }
+        for (int i = 0; i < n; ++i)
+            src[i] = tmp[i];
+    }
+
+    /* Update dimensions in-place */
+    SEXP newdim = PROTECT(Rf_allocVector(INTSXP, 3));
+    INTEGER(newdim)[0] = h;
+    INTEGER(newdim)[1] = w;
+    INTEGER(newdim)[2] = b;
+    setAttrib(imgSEXP, R_DimSymbol, newdim);
+    UNPROTECT(1);
+
+    return imgSEXP;
+}
+
+/*
+ * _dim: Set a new dimension on an existing atomic R object in place.
+ *
+ * @param imgSEXP Any atomic vector or array (numeric, integer, logical, complex, raw, character)
+ * @param newdimSEXP Integer vector specifying new dimensions
+ * @return The same object, with updated dimension attribute.
+ */
+extern "C" SEXP _dim(SEXP imgSEXP, SEXP newdimSEXP)
+{
+    if (!isVectorAtomic(imgSEXP)) {
+        Rf_error("`img` must be an atomic R object");
+    }
+
+    if (!Rf_isInteger(newdimSEXP)) {
+        Rf_error("`newdim` must be an integer vector");
+    }
+
+    const R_xlen_t len_img = XLENGTH(imgSEXP);
+    const R_xlen_t len_dim = XLENGTH(newdimSEXP);
+
+    if (len_dim < 1) {
+        Rf_error("`newdim` must contain at least one dimension");
+    }
+
+    // Validate new dimensions
+    const int *dims = INTEGER(newdimSEXP);
+    R_xlen_t prod_dim = 1;
+    for (R_xlen_t i = 0; i < len_dim; i++) {
+        if (dims[i] <= 0) {
+            Rf_error("`newdim` contains non-positive value at position %lld", (long long)(i + 1));
+        }
+        prod_dim *= (R_xlen_t)dims[i];
+    }
+
+    if (prod_dim != len_img) {
+        Rf_error("Product of `newdim` (%lld) does not match object length (%lld)",
+                 (long long)prod_dim, (long long)len_img);
+    }
+
+    setAttrib(imgSEXP, R_DimSymbol, newdimSEXP);
+
+    return imgSEXP;
 }
