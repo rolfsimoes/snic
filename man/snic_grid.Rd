@@ -71,7 +71,9 @@ yields a desired number of segments.
 In addition to these programmatic grid generators, seeds can also be defined
 interactively using \code{\link{manual_grid}}, which allows the user to
 click on the image to place seeds manually. This is useful for inspection,
-debugging, or small-scale segmentation experiments.
+debugging, or small-scale segmentation experiments. For scripted diagnostics
+you can also rely on \code{\link{seeding_animation}}, which replays the
+incremental seed placement while saving intermediate plots and a GIF.
 }
 \examples{
 if (requireNamespace("terra", quietly = TRUE)) {

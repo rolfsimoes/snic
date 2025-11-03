@@ -87,5 +87,6 @@ if (interactive() && requireNamespace("terra", quietly = TRUE)) {
 \seealso{
 \code{\link{snic}}, \code{\link{snic_grid}}, \code{\link{rect_grid}},
 \code{\link{diamond_grid}}, \code{\link{hexagonal_grid}},
-\code{\link{random_grid}}, \code{\link{snic_plot}}.
+\code{\link{random_grid}}, \code{\link{snic_plot}},
+\code{\link{seeding_animation}}.
 }

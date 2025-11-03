@@ -42,7 +42,9 @@
 #' In addition to these programmatic grid generators, seeds can also be defined
 #' interactively using \code{\link{manual_grid}}, which allows the user to
 #' click on the image to place seeds manually. This is useful for inspection,
-#' debugging, or small-scale segmentation experiments.
+#' debugging, or small-scale segmentation experiments. For scripted diagnostics
+#' you can also rely on \code{\link{seeding_animation}}, which replays the
+#' incremental seed placement while saving intermediate plots and a GIF.
 #'
 #' @return
 #' For \code{rect_grid()}, \code{diamond_grid()}, \code{hexagonal_grid()}, and
@@ -243,7 +245,8 @@ random_grid <- function(img, spacing, padding = NULL) {
 #' @seealso
 #' \code{\link{snic}}, \code{\link{snic_grid}}, \code{\link{rect_grid}},
 #' \code{\link{diamond_grid}}, \code{\link{hexagonal_grid}},
-#' \code{\link{random_grid}}, \code{\link{snic_plot}}.
+#' \code{\link{random_grid}}, \code{\link{snic_plot}},
+#' \code{\link{seeding_animation}}.
 #'
 #' @examples
 #' \dontrun{
@@ -330,4 +333,100 @@ manual_grid <- function(img,
 count_seeds <- function(img, spacing, padding = NULL) {
     params <- .prepare_grid_args(img, spacing, padding, "count_seeds")
     prod(.count_seeds(params$h, params$w, params$spacing, params$padding))
+}
+
+#' Animated visualization of SNIC seeding and segmentation
+#'
+#' Generate an animated GIF illustrating how SNIC segmentation evolves
+#' as seeds are progressively added. This function runs a sequence of
+#' SNIC segmentations using incremental subsets of the provided seeds
+#' and compiles the results into an animation.
+#'
+#' @param img A `SpatRaster` object (from **terra**) representing the
+#'   multiband image to segment. Dimensions and coordinate reference
+#'   are inferred automatically.
+#' @param seeds A two-column object specifying the seed coordinates
+#'   `(r, c)` in 1-based pixel indices. The object can be a matrix,
+#'   data frame, or any object coercible to that structure. Seeds are
+#'   typically generated using functions from \code{\link{snic_grid}}
+#'   or interactively with \code{\link{manual_grid}}.
+#' @param compactness Numeric scalar controlling the SNIC compactness
+#'   parameter (default = 1). Larger values produce more spatially
+#'   compact segments.
+#' @param max_frames Integer giving the maximum number of frames to
+#'   render in the animation. If the number of seeds exceeds this
+#'   limit, only the first \code{max_frames} seeds are used.
+#' @param duration Numeric value giving the total playback time of the
+#'   animation in seconds. The function automatically computes an appropriate
+#'   frame delay so that all frames are displayed within this duration.
+#'   Due to GIF timing resolution (1/100 s per frame), the actual playback
+#'   time may differ slightly from the requested value. Defaults to 10 seconds.
+#' @param ... Additional arguments passed to \code{\link{snic_plot}}
+#'   when drawing each frame (for example, color palettes or symbol
+#'   options for seeds).
+#' @param device_args Named list of arguments passed to
+#'   \code{grDevices::png()} when rendering frames. Defaults to
+#'   \code{list(res = 200, bg = "white")}. Values such as
+#'   \code{width}, \code{height}, and \code{filename} are managed
+#'   automatically.
+#'
+#' @details
+#' For each iteration, the function adds one seed to the current set
+#' and re-runs \code{\link{snic}}. The resulting segmentation and seed
+#' locations are drawn using \code{\link{snic_plot}}, saved as a PNG,
+#' and finally combined into an animated GIF using the **magick**
+#' package.
+#'
+#' This tool is intended for exploratory and didactic purposes rather
+#' than large-scale processing. It can be used to illustrate the
+#' influence of seed placement or the effect of the `compactness`
+#' parameter on segmentation results.
+#'
+#' @return
+#' Invisibly returns the file path of the generated GIF (saved in the
+#' current working directory). A message is printed with the saved
+#' file name.
+#'
+#' @seealso
+#' \code{\link{snic}}, \code{\link{snic_plot}}, \code{\link{snic_grid}},
+#' \code{\link{manual_grid}}.
+#'
+#' @examples
+#' if (requireNamespace("terra", quietly = TRUE) &&
+#'     requireNamespace("magick", quietly = TRUE)) {
+#'     tif_dir <- system.file("S2-20LMR", package = "snic", mustWork = TRUE)
+#'     band_files <- file.path(
+#'         tif_dir,
+#'         c(
+#'             "S2_20LMR_B02_20220630.tif",
+#'             "S2_20LMR_B04_20220630.tif",
+#'             "S2_20LMR_B08_20220630.tif",
+#'             "S2_20LMR_B12_20220630.tif"
+#'         )
+#'     )
+#'     s2 <- terra::aggregate(terra::rast(band_files), factor = 5)
+#'
+#'     set.seed(42)
+#'     seeds <- random_grid(s2, spacing = 10L, padding = 20L)
+#'     seeding_animation(
+#'         s2,
+#'         seeds = seeds,
+#'         compactness = 0.1,
+#'         max_frames = 200L,
+#'         r = 4, g = 3, b = 1,
+#'         seeds_plot_args = list(col = NA)
+#'     )
+#' }
+#' @export
+seeding_animation <- function(img,
+                              seeds = NULL,
+                              compactness = 1.0,
+                              max_frames = 100L,
+                              duration = 10,
+                              ...,
+                              device_args = list(
+                                  res = 200,
+                                  bg = "white"
+                              )) {
+    UseMethod("seeding_animation", img)
 }

@@ -72,7 +72,11 @@
 #'         stretch = "lin",
 #'         seeds = seeds,
 #'         seg = seg,
-#'         seg_plot_args = list(border = "#FFFF00", col = NA, lwd = 0.4)
+#'         seg_plot_args = list(
+#'             border = "#FFFF00",
+#'             col = NA,
+#'             lwd = 0.4
+#'         )
 #'     )
 #' }
 #' @export

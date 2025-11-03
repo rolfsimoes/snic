@@ -4,7 +4,10 @@ Title: Superpixel Segmentation with the SNIC Algorithm
 Version: 0.2.0
 Authors@R: c(
     person(given = "Rolf", family = "Simoes", email = "rolfsimoes@gmail.com", 
-    role = c("aut", "cre"))
+    role = c("aut", "cre")),
+    person('Felipe', 'Souza', role = c('ctb'), email = 'felipe.carvalho@inpe.br'),
+    person('Felipe', 'Carlos', role = c('ctb'), email = "efelipecarlos@gmail.com"),
+    person('Gilberto', 'Camara', role = c('ctb', 'rth'), email = 'gilberto.camara.inpe@gmail.com')
     )
 Description: Implementation of the Simple Non-Iterative Clustering (SNIC) 
     algorithm for superpixel segmentation of multi-band images.  The core 
@@ -17,7 +20,9 @@ Depends: R (>= 3.5.0)
 Suggests: 
     testthat (>= 3.0.0),
     terra,
-    spelling
+    spelling,
+    covr,
+    magick
 License: MIT + file LICENSE
 Encoding: UTF-8
 RoxygenNote: 7.3.3
