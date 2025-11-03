@@ -27,7 +27,7 @@
 #'   \item \code{snic_rect_grid()}: regular rectangular grid.
 #'   \item \code{snic_diamon_grid()}: two offset rectangular grids forming a
 #'     diamond pattern.
-#'   \item \code{snic_hexagonal_grid()}: two offset rectangular grids approximating a
+#'   \item \code{snic_hex_grid()}: two offset rectangular grids approximating a
 #'     hexagonal (honeycomb) tiling with density correction.
 #'   \item \code{snic_random_grid()}: uniformly random seed positions with the same
 #'     expected density as the rectangular grid.
@@ -47,7 +47,7 @@
 #' incremental seed placement while saving intermediate plots and a GIF.
 #'
 #' @return
-#' For \code{snic_rect_grid()}, \code{snic_diamon_grid()}, \code{snic_hexagonal_grid()}, and
+#' For \code{snic_rect_grid()}, \code{snic_diamon_grid()}, \code{snic_hex_grid()}, and
 #' \code{snic_random_grid()}, the return value is a two-column integer matrix giving
 #' the 1-based pixel coordinates \code{(row, column)} of the generated seeds.
 #'
@@ -138,8 +138,8 @@ snic_diamon_grid <- function(img, spacing, padding = NULL) {
 
 #' @rdname snic_grid
 #' @export
-snic_hexagonal_grid <- function(img, spacing, padding = NULL) {
-    params <- .prepare_grid_args(img, spacing, padding, "snic_hexagonal_grid")
+snic_hex_grid <- function(img, spacing, padding = NULL) {
+    params <- .prepare_grid_args(img, spacing, padding, "snic_hex_grid")
     h <- params$h
     w <- params$w
     spacing <- params$spacing
@@ -244,7 +244,7 @@ snic_random_grid <- function(img, spacing, padding = NULL) {
 #'
 #' @seealso
 #' \code{\link{snic}}, \code{\link{snic_grid}}, \code{\link{snic_rect_grid}},
-#' \code{\link{snic_diamon_grid}}, \code{\link{snic_hexagonal_grid}},
+#' \code{\link{snic_diamon_grid}}, \code{\link{snic_hex_grid}},
 #' \code{\link{snic_random_grid}}, \code{\link{snic_plot}},
 #' \code{\link{snic_animation}}.
 #'

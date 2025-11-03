@@ -16,7 +16,7 @@
 #'   These seeds define the starting positions for region growth. They can be
 #'   generated automatically using the functions in \code{\link{snic_grid}}
 #'   (for example, \code{\link{snic_rect_grid}}, \code{\link{snic_diamon_grid}},
-#'   \code{\link{snic_hexagonal_grid}}, or \code{\link{snic_random_grid}}), or
+#'   \code{\link{snic_hex_grid}}, or \code{\link{snic_random_grid}}), or
 #'   interactively using \code{\link{snic_manual_grid}}. Passing the seed matrix
 #'   explicitly ensures reproducibility and full control over segmentation
 #'   initialisation.

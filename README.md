@@ -30,7 +30,7 @@ most of the plotting utilities demonstrated below.
 - Implements SNIC with a fast C++ core exposed to R
 - Works with in-memory arrays or `terra::SpatRaster` objects
 - Offers multiple seeding strategies (`snic_rect_grid()`, `snic_diamon_grid()`,
-  `snic_hexagonal_grid()`, `snic_random_grid()`) and interactive placement via
+  `snic_hex_grid()`, `snic_random_grid()`) and interactive placement via
   `snic_manual_grid()`
 - Includes ready-to-plot utilities (`snic_plot()`) for quick inspection
   of inputs, seeds, and resulting segments
@@ -122,7 +122,7 @@ the segmentation.
 spacing <- c(20L, 20L)
 
 rect <- snic_rect_grid(s2_small, spacing = spacing)
-hex  <- snic_hexagonal_grid(s2_small, spacing = spacing)
+hex  <- snic_hex_grid(s2_small, spacing = spacing)
 rand <- snic_random_grid(s2_small, spacing = spacing)
 
 snic_count_seeds(s2_small, spacing = spacing)

@@ -14,12 +14,12 @@ test_that("snic_rect_grid produces evenly spaced coordinates for arrays", {
     expect_true(all(diff(cols) == diff(cols)[1L]))
 })
 
-test_that("snic_hexagonal_grid yields coordinates within image bounds", {
+test_that("snic_hex_grid yields coordinates within image bounds", {
     img <- array(runif(144), dim = c(12L, 12L, 1L))
     spacing <- 3L
     padding <- 0L
 
-    seeds <- snic_hexagonal_grid(img, spacing = spacing, padding = padding)
+    seeds <- snic_hex_grid(img, spacing = spacing, padding = padding)
     expect_false(anyNA(seeds))
     expect_equal(ncol(seeds), 2L)
     expect_true(all(seeds[, 1L] >= 1 & seeds[, 1L] <= nrow(img)))
@@ -106,13 +106,13 @@ test_that("snic_diamon_grid filters use axis-specific padding", {
     expect_true(all(seeds[, 2L] <= ncol(img) - padding[[2]]))
 })
 
-test_that("snic_hexagonal_grid filters use axis-specific padding", {
+test_that("snic_hex_grid filters use axis-specific padding", {
     img <- array(0, dim = c(45L, 70L, 1L))
     spacing <- c(6, 5)
     padding <- c(3, 12)
 
     expect_no_warning({
-        seeds <- snic_hexagonal_grid(img, spacing = spacing, padding = padding)
+        seeds <- snic_hex_grid(img, spacing = spacing, padding = padding)
     })
 
     expect_gt(nrow(seeds), 0L)

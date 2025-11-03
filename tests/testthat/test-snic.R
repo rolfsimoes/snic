@@ -108,7 +108,7 @@ test_that("snic processes Lab-converted RGB input", {
         to = "Lab"
     )
     lab <- array(lab_mat, dim = c(height, width, 3L))
-    seeds <- snic_hexagonal_grid(lab, spacing = 2L, padding = 0L)
+    seeds <- snic_hex_grid(lab, spacing = 2L, padding = 0L)
     segs <- snic(lab, seeds = seeds, compactness = 15)
     expect_true(is.array(segs))
     expect_equal(dim(segs), c(height, width, 1L))

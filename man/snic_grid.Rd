@@ -4,7 +4,7 @@
 \alias{snic_grid}
 \alias{snic_rect_grid}
 \alias{snic_diamon_grid}
-\alias{snic_hexagonal_grid}
+\alias{snic_hex_grid}
 \alias{snic_random_grid}
 \alias{snic_count_seeds}
 \title{Spatial grid seeding for SNIC segmentation}
@@ -13,7 +13,7 @@ snic_rect_grid(img, spacing, padding = NULL)
 
 snic_diamon_grid(img, spacing, padding = NULL)
 
-snic_hexagonal_grid(img, spacing, padding = NULL)
+snic_hex_grid(img, spacing, padding = NULL)
 
 snic_random_grid(img, spacing, padding = NULL)
 
@@ -34,7 +34,7 @@ horizontal axes. A single value applies equally in both directions.}
 Defaults to \code{spacing / 2}, which centres the grid.}
 }
 \value{
-For \code{snic_rect_grid()}, \code{snic_diamon_grid()}, \code{snic_hexagonal_grid()}, and
+For \code{snic_rect_grid()}, \code{snic_diamon_grid()}, \code{snic_hex_grid()}, and
 \code{snic_random_grid()}, the return value is a two-column integer matrix giving
 the 1-based pixel coordinates \code{(row, column)} of the generated seeds.
 
@@ -56,7 +56,7 @@ The functions differ in the geometric arrangement of seed centres:
   \item \code{snic_rect_grid()}: regular rectangular grid.
   \item \code{snic_diamon_grid()}: two offset rectangular grids forming a
     diamond pattern.
-  \item \code{snic_hexagonal_grid()}: two offset rectangular grids approximating a
+  \item \code{snic_hex_grid()}: two offset rectangular grids approximating a
     hexagonal (honeycomb) tiling with density correction.
   \item \code{snic_random_grid()}: uniformly random seed positions with the same
     expected density as the rectangular grid.
