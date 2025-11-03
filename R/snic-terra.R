@@ -157,9 +157,9 @@ snic_plot.SpatRaster <- function(x,
     invisible(NULL)
 }
 
-#' @rdname seeding_animation
+#' @rdname snic_animation
 #' @export
-seeding_animation.SpatRaster <- function(img,
+snic_animation.SpatRaster <- function(img,
                                          seeds = NULL,
                                          compactness = 1.0,
                                          max_frames = 100L,

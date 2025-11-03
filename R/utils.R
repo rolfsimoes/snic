@@ -44,7 +44,7 @@
     )
 }
 
-.count_seeds <- function(h, w, spacing, padding) {
+.snic_count_seeds <- function(h, w, spacing, padding) {
     if (length(spacing) == 1) {
         spacing <- c(spacing, spacing)
     }

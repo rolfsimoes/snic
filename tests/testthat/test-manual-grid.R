@@ -1,4 +1,4 @@
-test_that("manual_grid collects locator clicks into seed matrix", {
+test_that("snic_manual_grid collects locator clicks into seed matrix", {
     skip_if_not_installed("terra")
 
     img <- terra::rast(nrows = 4, ncols = 5, nlyrs = 3, xmin = 0, xmax = 10, ymin = 0, ymax = 8)
@@ -54,7 +54,7 @@ test_that("manual_grid collects locator clicks into seed matrix", {
                                 {
                                     expect_true(interactive())
                                     expect_message(
-                                        result <- manual_grid(
+                                        result <- snic_manual_grid(
                                             img,
                                             seeds = initial_seeds,
                                             compactness = 0.25,

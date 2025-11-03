@@ -2,22 +2,22 @@
 % Please edit documentation in R/grid.R
 \name{snic_grid}
 \alias{snic_grid}
-\alias{rect_grid}
-\alias{diamond_grid}
-\alias{hexagonal_grid}
-\alias{random_grid}
-\alias{count_seeds}
+\alias{snic_rect_grid}
+\alias{snic_diamon_grid}
+\alias{snic_hexagonal_grid}
+\alias{snic_random_grid}
+\alias{snic_count_seeds}
 \title{Spatial grid seeding for SNIC segmentation}
 \usage{
-rect_grid(img, spacing, padding = NULL)
+snic_rect_grid(img, spacing, padding = NULL)
 
-diamond_grid(img, spacing, padding = NULL)
+snic_diamon_grid(img, spacing, padding = NULL)
 
-hexagonal_grid(img, spacing, padding = NULL)
+snic_hexagonal_grid(img, spacing, padding = NULL)
 
-random_grid(img, spacing, padding = NULL)
+snic_random_grid(img, spacing, padding = NULL)
 
-count_seeds(img, spacing, padding = NULL)
+snic_count_seeds(img, spacing, padding = NULL)
 }
 \arguments{
 \item{img}{Image data. For the \code{array} method this should be numeric or
@@ -34,11 +34,11 @@ horizontal axes. A single value applies equally in both directions.}
 Defaults to \code{spacing / 2}, which centres the grid.}
 }
 \value{
-For \code{rect_grid()}, \code{diamond_grid()}, \code{hexagonal_grid()}, and
-\code{random_grid()}, the return value is a two-column integer matrix giving
+For \code{snic_rect_grid()}, \code{snic_diamon_grid()}, \code{snic_hexagonal_grid()}, and
+\code{snic_random_grid()}, the return value is a two-column integer matrix giving
 the 1-based pixel coordinates \code{(row, column)} of the generated seeds.
 
-For \code{count_seeds()}, the return value is a single integer giving the
+For \code{snic_count_seeds()}, the return value is a single integer giving the
 total number of seeds that would be generated for the same parameters.
 }
 \description{
@@ -48,31 +48,31 @@ are available: rectangular, diamond, hexagonal, and random.
 }
 \details{
 The \code{spacing} parameter directly determines the seed density.
-The helper \code{\link{count_seeds}} returns the number of seeds that will be
+The helper \code{\link{snic_count_seeds}} returns the number of seeds that will be
 generated for a given image size, spacing, and padding.
 
 The functions differ in the geometric arrangement of seed centres:
 \itemize{
-  \item \code{rect_grid()}: regular rectangular grid.
-  \item \code{diamond_grid()}: two offset rectangular grids forming a
+  \item \code{snic_rect_grid()}: regular rectangular grid.
+  \item \code{snic_diamon_grid()}: two offset rectangular grids forming a
     diamond pattern.
-  \item \code{hexagonal_grid()}: two offset rectangular grids approximating a
+  \item \code{snic_hexagonal_grid()}: two offset rectangular grids approximating a
     hexagonal (honeycomb) tiling with density correction.
-  \item \code{random_grid()}: uniformly random seed positions with the same
+  \item \code{snic_random_grid()}: uniformly random seed positions with the same
     expected density as the rectangular grid.
 }
 
-The companion function \code{\link{count_seeds}} does not generate
+The companion function \code{\link{snic_count_seeds}} does not generate
 coordinates. Instead, it calculates how many seed points would be placed in a
 given image using the same \code{spacing} and \code{padding} parameters.
 This is useful for estimating seed density or selecting a spacing value that
 yields a desired number of segments.
 
 In addition to these programmatic grid generators, seeds can also be defined
-interactively using \code{\link{manual_grid}}, which allows the user to
+interactively using \code{\link{snic_manual_grid}}, which allows the user to
 click on the image to place seeds manually. This is useful for inspection,
 debugging, or small-scale segmentation experiments. For scripted diagnostics
-you can also rely on \code{\link{seeding_animation}}, which replays the
+you can also rely on \code{\link{snic_animation}}, which replays the
 incremental seed placement while saving intermediate plots and a GIF.
 }
 \examples{
@@ -94,11 +94,11 @@ if (requireNamespace("terra", quietly = TRUE)) {
 
     # Generate seed patterns
     set.seed(42)
-    seeds_rect <- rect_grid(s2, spacing = 10L, padding = 20L)
+    seeds_rect <- snic_rect_grid(s2, spacing = 10L, padding = 20L)
     head(seeds_rect)
 }
 }
 \seealso{
-\code{\link{count_seeds}} for estimating seed counts and
-\code{\link{manual_grid}} for interactive seed placement.
+\code{\link{snic_count_seeds}} for estimating seed counts and
+\code{\link{snic_manual_grid}} for interactive seed placement.
 }

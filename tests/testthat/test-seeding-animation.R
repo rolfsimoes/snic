@@ -1,4 +1,4 @@
-test_that("seeding_animation creates gif from sequential seeds", {
+test_that("snic_animation creates gif from sequential seeds", {
     skip_if_not_installed("terra")
     skip_if_not_installed("magick")
     terra::terraOptions(progress = 0)
@@ -30,7 +30,7 @@ test_that("seeding_animation creates gif from sequential seeds", {
     )
 
     expect_message(
-        gif_path <- seeding_animation(
+        gif_path <- snic_animation(
             img,
             seeds = seeds,
             compactness = 0.2,
@@ -49,7 +49,7 @@ test_that("seeding_animation creates gif from sequential seeds", {
     unlink(gif_path)
 })
 
-test_that("seeding_animation validates inputs", {
+test_that("snic_animation validates inputs", {
     skip_if_not_installed("terra")
 
     img <- terra::rast(
@@ -63,12 +63,12 @@ test_that("seeding_animation validates inputs", {
     )
 
     expect_error(
-        seeding_animation(img, seeds = NULL),
+        snic_animation(img, seeds = NULL),
         "argument 'seeds' cannot be NULL"
     )
 
     expect_error(
-        seeding_animation(matrix(1), seeds = matrix(c(1, 1), ncol = 2)),
-        "no applicable method for 'seeding_animation' applied to an object of class"
+        snic_animation(matrix(1), seeds = matrix(c(1, 1), ncol = 2)),
+        "no applicable method for 'snic_animation' applied to an object of class"
     )
 })

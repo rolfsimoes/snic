@@ -33,7 +33,7 @@ The `terra` package is suggested for raster support and required for most of the
 
 - Implements SNIC with a fast C++ core exposed to R
 - Works with in-memory arrays or `terra::SpatRaster` objects
-- Offers multiple seeding strategies (`rect_grid()`, `diamond_grid()`, `hexagonal_grid()`, `random_grid()`) and interactive placement via `manual_grid()`
+- Offers multiple seeding strategies (`snic_rect_grid()`, `snic_diamon_grid()`, `snic_hexagonal_grid()`, `snic_random_grid()`) and interactive placement via `snic_manual_grid()`
 - Includes ready-to-plot utilities (`snic_plot()`) for quick inspection of inputs, seeds, and resulting segments
 - Ships with a Sentinel-2 subset (`system.file("S2-20LMR", package = "snic")`) for reproducible examples and tests
 
@@ -48,7 +48,7 @@ load_snic <- function() {
       getNamespaceExports("snic"),
       error = function(e) character()
     )
-    if ("rect_grid" %in% exports) {
+    if ("snic_rect_grid" %in% exports) {
       return(library(snic))
     }
   }
@@ -77,7 +77,7 @@ s2_small <- terra::aggregate(s2, fact = 5)
 
 # Seed generation and segmentation
 spacing <- 8L
-seeds <- rect_grid(s2_small, spacing = spacing, padding = 0L)
+seeds <- snic_rect_grid(s2_small, spacing = spacing, padding = 0L)
 segments <- snic(s2_small, seeds = seeds, compactness = 0.1)
 
 # Visualise RGB composite with superpixel boundaries
@@ -103,19 +103,19 @@ snic_plot(
 
 ## Seed strategies
 
-All seed generators share the same arguments and return a two-column matrix (`r`, `c`) ready for `snic()`. Use `count_seeds()` to estimate the expected number of superpixels for a given spacing before running the segmentation.
+All seed generators share the same arguments and return a two-column matrix (`r`, `c`) ready for `snic()`. Use `snic_count_seeds()` to estimate the expected number of superpixels for a given spacing before running the segmentation.
 
 ```{r seeding, eval = TRUE}
 spacing <- c(20L, 20L)
 
-rect <- rect_grid(s2_small, spacing = spacing)
-hex  <- hexagonal_grid(s2_small, spacing = spacing)
-rand <- random_grid(s2_small, spacing = spacing)
+rect <- snic_rect_grid(s2_small, spacing = spacing)
+hex  <- snic_hexagonal_grid(s2_small, spacing = spacing)
+rand <- snic_random_grid(s2_small, spacing = spacing)
 
-count_seeds(s2_small, spacing = spacing)
+snic_count_seeds(s2_small, spacing = spacing)
 ```
 
-When automatic strategies are not enough, `manual_grid()` launches an interactive session (requires an interactive R session with plotting enabled) that lets you refine or extend an existing seed set.
+When automatic strategies are not enough, `snic_manual_grid()` launches an interactive session (requires an interactive R session with plotting enabled) that lets you refine or extend an existing seed set.
 
 ## Scripted demos
 

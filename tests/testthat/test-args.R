@@ -25,18 +25,18 @@ test_that("snic validates matrix-based inputs", {
     expect_equal(dim(result), c(2L, 2L, 1L))
 })
 
-test_that("rect_grid and count_seeds provide consistent coordinates", {
+test_that("snic_rect_grid and snic_count_seeds provide consistent coordinates", {
     img <- array(runif(16), dim = c(4L, 4L, 1L))
     spacing <- c(2L, 2L)
     padding <- c(0L, 0L)
 
-    seeds <- rect_grid(img, spacing = spacing, padding = padding)
+    seeds <- snic_rect_grid(img, spacing = spacing, padding = padding)
     seeds <- round(seeds)
     storage.mode(seeds) <- "integer"
 
     expect_true(is.matrix(seeds))
     expect_equal(ncol(seeds), 2L)
-    expect_equal(nrow(seeds), count_seeds(img, spacing, padding))
+    expect_equal(nrow(seeds), snic_count_seeds(img, spacing, padding))
     expect_true(all(seeds[, 1L] >= 1L & seeds[, 1L] <= nrow(img)))
     expect_true(all(seeds[, 2L] >= 1L & seeds[, 2L] <= ncol(img)))
 })

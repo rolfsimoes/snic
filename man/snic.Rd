@@ -25,9 +25,9 @@ can be coerced to such) with columns named \code{r} (row) and \code{c}
 (column), giving the 1-based pixel coordinates of each cluster centre.
 These seeds define the starting positions for region growth. They can be
 generated automatically using the functions in \code{\link{snic_grid}}
-(for example, \code{\link{rect_grid}}, \code{\link{diamond_grid}},
-\code{\link{hexagonal_grid}}, or \code{\link{random_grid}}), or
-interactively using \code{\link{manual_grid}}. Passing the seed matrix
+(for example, \code{\link{snic_rect_grid}}, \code{\link{snic_diamon_grid}},
+\code{\link{snic_hexagonal_grid}}, or \code{\link{snic_random_grid}}), or
+interactively using \code{\link{snic_manual_grid}}. Passing the seed matrix
 explicitly ensures reproducibility and full control over segmentation
 initialisation.}
 
@@ -76,7 +76,7 @@ if (requireNamespace("terra", quietly = TRUE)) {
 
     s2 <- terra::aggregate(terra::rast(band_files), factor = 5)
 
-    seeds <- rect_grid(s2, spacing = 10L, padding = 50L)
+    seeds <- snic_rect_grid(s2, spacing = 10L, padding = 50L)
     seg <- snic(s2, seeds = seeds, compactness = 0.25)
 
     snic_plot(
@@ -95,5 +95,5 @@ if (requireNamespace("terra", quietly = TRUE)) {
 }
 \seealso{
 \code{\link{snic_grid}} for seed generation functions and
-\code{\link{count_seeds}} for estimating seed counts.
+\code{\link{snic_count_seeds}} for estimating seed counts.
 }

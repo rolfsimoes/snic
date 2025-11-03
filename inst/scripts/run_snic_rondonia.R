@@ -26,7 +26,7 @@ s2_cube <- terra::rast(paths)
 
 grid_step <- 20L
 compactness <- 0.1
-seeds <- rect_grid(
+seeds <- snic_rect_grid(
     s2_cube,
     spacing = c(grid_step, grid_step),
     padding = c(grid_step %/% 2L, grid_step %/% 2L)

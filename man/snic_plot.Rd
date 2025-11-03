@@ -122,7 +122,7 @@ if (requireNamespace("terra", quietly = TRUE)) {
     )
     s2 <- terra::rast(band_files)
     s2 <- terra::aggregate(s2, factor = 5)
-    seeds <- rect_grid(
+    seeds <- snic_rect_grid(
         s2,
         spacing = c(10L, 10L),
         padding = c(5L, 5L)
