@@ -1,7 +1,7 @@
 Package: snic
 Type: Package
-Title: SNIC Superpixel Segmentation
-Version: 0.1.0
+Title: Superpixel Segmentation with the SNIC Algorithm
+Version: 0.2.0
 Authors@R: c(
     person(given = "Rolf", family = "Simoes", email = "rolfsimoes@gmail.com", 
     role = c("aut", "cre"))
@@ -14,10 +14,12 @@ Description: Implementation of the Simple Non-Iterative Clustering (SNIC)
     images with an arbitrary number of spectral bands and returns an integer 
     matrix of segment labels covering the input scene.
 Depends: R (>= 3.5.0)
-Suggests: testthat (>= 3.0.0),
-    terra
+Suggests: 
+    testthat (>= 3.0.0),
+    terra,
+    spelling
 License: MIT + file LICENSE
 Encoding: UTF-8
-LazyData: true
 RoxygenNote: 7.3.3
 Config/testthat/edition: 3
+Language: en-US

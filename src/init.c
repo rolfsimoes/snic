@@ -7,15 +7,11 @@
 #include <R_ext/Rdynload.h>
 
 extern SEXP _snic(SEXP, SEXP, SEXP, SEXP);
-extern SEXP _seeds_grid(SEXP, SEXP);
-extern SEXP _colmaj(SEXP, SEXP, SEXP, SEXP);
-extern SEXP _dim(SEXP, SEXP);
+extern SEXP _set_dim(SEXP, SEXP);
 
 static const R_CallMethodDef CallEntries[] = {
     {"snic_snic", (DL_FUNC) &_snic, 4},
-    {"snic_seeds_grid", (DL_FUNC) &_seeds_grid, 2},
-    {"snic_colmaj", (DL_FUNC) &_colmaj, 4},
-    {"snic_dim", (DL_FUNC) &_dim, 2},
+    {"snic_set_dim", (DL_FUNC) &_set_dim, 2},
     {NULL, NULL, 0}
 };
 

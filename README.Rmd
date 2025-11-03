@@ -1,0 +1,134 @@
+---
+output: github_document
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+# snic <a id="top"></a>
+
+<!-- badges: start -->
+[![R-CMD-check](https://github.com/rolfsimoes/snic/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/rolfsimoes/snic/actions/workflows/R-CMD-check.yaml)
+<!-- badges: end -->
+
+Efficient superpixel segmentation for multi-band imagery using the Simple Non-Iterative Clustering (SNIC) algorithm. The package wraps a C++ implementation with an ergonomic R interface, integrates with `terra` for raster workflows, and provides helpers for seed placement, plotting, and reproducibility.
+
+## Installation
+
+``` r
+# install.packages("pak")
+pak::pak("rolfsimoes/snic")
+
+# alternatively with remotes
+# remotes::install_github("rolfsimoes/snic")
+```
+
+The `terra` package is suggested for raster support and required for most of the plotting utilities demonstrated below.
+
+## Highlights
+
+- Implements SNIC with a fast C++ core exposed to R
+- Works with in-memory arrays or `terra::SpatRaster` objects
+- Offers multiple seeding strategies (`rect_grid()`, `diamond_grid()`, `hexagonal_grid()`, `random_grid()`) and interactive placement via `manual_grid()`
+- Includes ready-to-plot utilities (`snic_plot()`) for quick inspection of inputs, seeds, and resulting segments
+- Ships with a Sentinel-2 subset (`system.file("S2-20LMR", package = "snic")`) for reproducible examples and tests
+
+## Quick start
+
+The example below demonstrates a typical SNIC workflow with the bundled Sentinel-2 subset. The chunk is marked `eval = FALSE` to avoid heavy computation when knitting.
+
+```{r quick-start, eval = TRUE}
+load_snic <- function() {
+  if (requireNamespace("snic", quietly = TRUE)) {
+    exports <- tryCatch(
+      getNamespaceExports("snic"),
+      error = function(e) character()
+    )
+    if ("rect_grid" %in% exports) {
+      return(library(snic))
+    }
+  }
+  if (requireNamespace("pkgload", quietly = TRUE)) {
+    return(pkgload::load_all(export_all = FALSE, helpers = FALSE, attach_testthat = FALSE))
+  }
+  stop("Install the development version (via pkgload) or the released snic package to run this example.", call. = FALSE)
+}
+
+load_snic()
+
+library(terra)
+
+# Sentinel-2 subset packaged with snic
+data_dir <- system.file("S2-20LMR", package = "snic", mustWork = TRUE)
+bands <- c("B02", "B04", "B08", "B12")
+paths <- file.path(
+  data_dir,
+  sprintf("S2_20LMR_%s_20220630.tif", bands)
+)
+
+s2 <- terra::rast(paths)
+
+# Downsample to speed up the example
+s2_small <- terra::aggregate(s2, fact = 5)
+
+# Seed generation and segmentation
+spacing <- 8L
+seeds <- rect_grid(s2_small, spacing = spacing, padding = 0L)
+segments <- snic(s2_small, seeds = seeds, compactness = 0.1)
+
+# Visualise RGB composite with superpixel boundaries
+snic_plot(
+  s2_small,
+  r = 4, g = 3, b = 1,
+  stretch = "lin",
+  seg = segments,
+  seg_plot_args = list(border = "#FFFF00", col = NA, lwd = 0.6)
+)
+```
+
+For quick inspections from the console you can also rely on `snic_plot()`:
+
+```{r snic-plot, eval = TRUE}
+snic_plot(
+  s2_small,
+  r = 4, g = 3, b = 1,
+  seeds = seeds,
+  seg = segments
+)
+```
+
+## Seed strategies
+
+All seed generators share the same arguments and return a two-column matrix (`r`, `c`) ready for `snic()`. Use `count_seeds()` to estimate the expected number of superpixels for a given spacing before running the segmentation.
+
+```{r seeding, eval = TRUE}
+spacing <- c(20L, 20L)
+
+rect <- rect_grid(s2_small, spacing = spacing)
+hex  <- hexagonal_grid(s2_small, spacing = spacing)
+rand <- random_grid(s2_small, spacing = spacing)
+
+count_seeds(s2_small, spacing = spacing)
+```
+
+When automatic strategies are not enough, `manual_grid()` launches an interactive session (requires an interactive R session with plotting enabled) that lets you refine or extend an existing seed set.
+
+## Scripted demos
+
+The repository provides a ready-to-run script demonstrating a full segmentation workflow for the Rondônia Sentinel-2 stack:
+
+- `inst/scripts/run_snic_rondonia.R`: command-line script that loads the packaged data, runs SNIC, and visualises the result.
+
+Run it with:
+
+``` bash
+Rscript inst/scripts/run_snic_rondonia.R
+```
+
+## Contributing
+
+Bug reports, feature requests, and pull requests are welcome in the [issue tracker](https://github.com/rolfsimoes/snic/issues). When proposing changes, please run `R CMD check` locally to ensure the package remains stable.

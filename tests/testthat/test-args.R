@@ -1,49 +1,42 @@
 test_that("snic validates matrix-based inputs", {
     img <- array(runif(4), dim = c(2L, 2L, 1L))
 
+    expect_error(snic(img), "argument \"seeds\" is missing, with no default")
+
+    seeds_valid <- matrix(c(1L, 1L), ncol = 2L)
     expect_error(
-        snic(img, grid_step = 0L),
-        "Argument `grid_step` must be a positive integer"
+        snic(img, seeds = seeds_valid, compactness = -1),
+        "argument 'compactness' must be a non-negative finite number"
     )
 
     expect_error(
-        snic(img, grid_step = 1L, compactness = -1),
-        "Argument `compactness` must be a non-negative finite number"
-    )
-
-    expect_error(
-        snic(array(rep("a", 4L), dim = c(4L, 1L, 1L)), grid_step = 1L),
-        "Argument `img` must be a numeric array"
+        snic(array(rep("a", 4L), dim = c(4L, 1L, 1L)), seeds = seeds_valid),
+        "argument 'img' must be a numeric array"
     )
 
     seeds <- matrix(c(0L, 1L), ncol = 2L, byrow = TRUE)
     expect_error(
         snic(img, seeds = seeds),
-        "Argument `seeds` coordinates must lie within image bounds"
+        "argument 'seeds' coordinates must lie within image bounds"
     )
 
-    result <- snic(img, grid_step = 1L, compactness = 0)
+    result <- snic(img, seeds = seeds_valid, compactness = 0)
     expect_true(is.array(result))
     expect_equal(dim(result), c(2L, 2L, 1L))
 })
 
-test_that("snic_seeds_grid enforces argument contracts", {
-    img <- array(runif(4), dim = c(2L, 2L, 1L))
+test_that("rect_grid and count_seeds provide consistent coordinates", {
+    img <- array(runif(16), dim = c(4L, 4L, 1L))
+    spacing <- c(2L, 2L)
+    padding <- c(0L, 0L)
 
-    expect_error(
-        snic_seeds_grid(
-            array(rep("a", 4), dim = c(2L, 2L, 1L)),
-            grid_step = 1L
-        ),
-        "Argument `img` must be a numeric array"
-    )
+    seeds <- rect_grid(img, spacing = spacing, padding = padding)
+    seeds <- round(seeds)
+    storage.mode(seeds) <- "integer"
 
-    expect_error(
-        snic_seeds_grid(img, grid_step = 0L),
-        "Argument `grid_step` must be a positive integer"
-    )
-
-    seeds <- snic_seeds_grid(img, grid_step = 1L)
     expect_true(is.matrix(seeds))
-    expect_equal(dim(seeds)[2], 2L)
+    expect_equal(ncol(seeds), 2L)
+    expect_equal(nrow(seeds), count_seeds(img, spacing, padding))
+    expect_true(all(seeds[, 1L] >= 1L & seeds[, 1L] <= nrow(img)))
+    expect_true(all(seeds[, 2L] >= 1L & seeds[, 2L] <= ncol(img)))
 })

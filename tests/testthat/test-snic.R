@@ -1,81 +1,95 @@
-grid_seed_count <- function(height, width, step) {
-    length(seq(0, height - 1L, by = step)) *
-        length(seq(0, width - 1L, by = step))
-}
-
-seg_matrix_view <- function(segs, height, width) {
-    expect_true(is.array(segs))
-    expect_equal(dim(segs), c(height, width, 1L))
-    segs[, , 1L]
-}
-
-test_that("grid seeding respects spacing and mask", {
-    height <- 6L
-    width <- 6L
-    step <- 2L
+test_that("rect_grid seeds align to requested spacing", {
+    height <- 12L
+    width <- 12L
+    spacing <- c(3L, 3L)
+    padding <- c(1L, 1L)
     img <- array(runif(height * width), dim = c(height, width, 1L))
-    # introduce NA at a grid location
-    na_row <- 3L
-    na_col <- 5L
-    img[na_row, na_col, 1L] <- NA_real_
-    seeds <- snic_seeds_grid(img, grid_step = step)
-    start_offset <- step %/% 2L + 1L
-    expect_true(all((seeds[, 1L] - start_offset) %% step == 0L))
-    expect_true(all((seeds[, 2L] - start_offset) %% step == 0L))
-    expect_false(any(seeds[, 1L] == na_row & seeds[, 2L] == na_col))
-    max_possible <- grid_seed_count(height, width, step)
-    expect_lte(nrow(seeds), max_possible)
+
+    seeds <- rect_grid(
+        img,
+        spacing = spacing,
+        padding = padding
+    )
+    expect_equal(ncol(seeds), 2L)
+    expect_equal(nrow(seeds), count_seeds(img, spacing, padding))
+
+    rows <- sort(unique(seeds[, 1L]))
+    cols <- sort(unique(seeds[, 2L]))
+    expect_true(all(diff(rows) == spacing[[1L]]))
+    expect_true(all(diff(cols) == spacing[[2L]]))
 })
 
 test_that("snic seeding helpers accept SpatRaster input", {
     skip_if_not_installed("terra")
     height <- 6L
-    width <- 6L
-    step <- 2L
+    width <- 7L
     img <- array(runif(height * width), dim = c(height, width, 1L))
     rast <- terra::rast(nrows = height, ncols = width, nlyrs = 1)
     terra::values(rast) <- as.numeric(aperm(img, c(2, 1, 3)))
 
-    seeds_grid_mat <- snic_seeds_grid(img, grid_step = step)
-    seeds_grid_rast <- snic_seeds_grid(rast, grid_step = step)
-    expect_equal(seeds_grid_rast, seeds_grid_mat)
+    spacing <- c(2L, 2L)
+    padding <- c(0L, 0L)
+
+    seeds_array <- rect_grid(
+        img,
+        spacing = spacing,
+        padding = padding
+    )
+
+    seeds_rast <- rect_grid(
+        rast,
+        spacing = spacing,
+        padding = padding
+    )
+    expect_equal(seeds_rast, seeds_array)
 })
 
 test_that("snic works with user supplied seeds", {
     height <- 4L
-    width <- 4L
+    width <- 5L
     set.seed(2)
     img <- array(runif(height * width), dim = c(height, width, 1L))
-    seeds <- snic_seeds_grid(img, grid_step = 2L)
+    seeds <- rect_grid(
+        img,
+        spacing = c(2L, 2L),
+        padding = c(0L, 0L)
+    )
     segs <- snic(img, seeds = seeds, compactness = 5)
-    seg_mat <- seg_matrix_view(segs, height, width)
+    expect_true(is.array(segs))
+    expect_equal(dim(segs), c(height, width, 1L))
+    seg_mat <- segs[, , 1L]
     expect_true(all(seg_mat[!is.na(seg_mat)] >= 1L))
     expect_true(all(seg_mat[!is.na(seg_mat)] <= nrow(seeds)))
 })
 
-test_that("snic default seeding matches grid helper", {
+test_that("snic errors when seeds are not supplied", {
     height <- 6L
-    width <- 6L
-    step <- 3L
+    width <- 7L
     set.seed(5)
     img <- array(runif(height * width), dim = c(height, width, 1L))
-    grid_seeds <- snic_seeds_grid(img, grid_step = step)
-    seg_manual <- snic(img, seeds = grid_seeds)
-    seg_default <- snic(img, grid_step = step)
-    expect_equal(seg_default, seg_manual)
+    expect_error(
+        snic(img),
+        "argument \"seeds\" is missing, with no default"
+    )
 })
 
 test_that("snic skips NA pixels", {
     height <- 5L
-    width <- 5L
+    width <- 7L
     set.seed(4)
     img <- array(runif(height * width * 2L), dim = c(height, width, 2L))
     na_row <- 2L
     na_col <- 4L
     img[na_row, na_col, ] <- NA_real_
-    seeds <- snic_seeds_grid(img, grid_step = 2L)
+    seeds <- rect_grid(
+        img,
+        spacing = c(2L, 2L),
+        padding = c(0L, 0L)
+    )
     segs <- snic(img, seeds = seeds, compactness = 10)
-    seg_mat <- seg_matrix_view(segs, height, width)
+    expect_true(is.array(segs))
+    expect_equal(dim(segs), c(height, width, 1L))
+    seg_mat <- segs[, , 1L]
     expect_true(is.na(seg_mat[na_row, na_col]))
     na_mask <- is.na(seg_mat)
     na_mask[na_row, na_col] <- FALSE
@@ -84,7 +98,7 @@ test_that("snic skips NA pixels", {
 
 test_that("snic processes Lab-converted RGB input", {
     height <- 6L
-    width <- 6L
+    width <- 7L
     set.seed(10)
     rgb <- array(runif(height * width * 3L), dim = c(height, width, 3L))
     rgb_mat <- matrix(as.numeric(rgb), ncol = 3L, byrow = FALSE)
@@ -94,8 +108,11 @@ test_that("snic processes Lab-converted RGB input", {
         to = "Lab"
     )
     lab <- array(lab_mat, dim = c(height, width, 3L))
-    segs <- snic(lab, grid_step = 3L, compactness = 15)
-    seg_mat <- seg_matrix_view(segs, height, width)
+    seeds <- hexagonal_grid(lab, spacing = 2L, padding = 0L)
+    segs <- snic(lab, seeds = seeds, compactness = 15)
+    expect_true(is.array(segs))
+    expect_equal(dim(segs), c(height, width, 1L))
+    seg_mat <- segs[, , 1L]
     expect_true(any(!is.na(seg_mat)))
     expect_true(all(seg_mat[!is.na(seg_mat)] >= 1L))
 })
@@ -103,40 +120,50 @@ test_that("snic processes Lab-converted RGB input", {
 test_that("snic handles SpatRaster input", {
     skip_if_not_installed("terra")
     height <- 6L
-    width <- 6L
+    width <- 7L
     set.seed(15)
     rgb <- array(runif(height * width * 3L), dim = c(height, width, 3L))
     rast <- terra::rast(nrows = height, ncols = width, nlyrs = 3L)
-    terra::values(rast) <- matrix(
-        as.numeric(aperm(rgb, c(2, 1, 3))),
-        ncol = 3L,
-        byrow = FALSE
+    terra::values(rast) <- rgb
+    seeds <- rect_grid(
+        rgb,
+        spacing = c(3L, 3L),
+        padding = c(0L, 0L)
     )
-    seg_vec <- snic(rgb, compactness = 12, grid_step = 3L)
-    seg_from_rast <- snic(rast, compactness = 12, grid_step = 3L)
-    expect_true(is.array(seg_from_rast))
+    seg_vec <- snic(rgb, seeds = seeds, compactness = 12)
+    seg_from_rast <- snic(rast, seeds = seeds, compactness = 12)
+    expect_true(inherits(seg_from_rast, "SpatRaster"))
     expect_equal(dim(seg_from_rast), c(height, width, 1L))
-    expect_equal(seg_from_rast, seg_vec)
+    expect_equal(c(terra::values(seg_from_rast)), c(aperm(seg_vec, c(2, 1, 3))))
 })
 
 
-test_that("plot_snic_seeds renders without error", {
+test_that("snic_plot renders seeds without error", {
     height <- 4L
     width <- 4L
     img <- array(seq_len(height * width), dim = c(height, width, 1L))
-    seeds <- snic_seeds_grid(img, grid_step = 2L)
+    seeds <- rect_grid(
+        img,
+        spacing = c(2L, 2L),
+        padding = c(0L, 0L)
+    )
     grDevices::pdf(file = NULL)
     on.exit(grDevices::dev.off())
-    expect_silent(plot(img, seeds = seeds))
+    expect_silent(snic_plot(img, seeds = seeds))
 })
 
-test_that("plot handles segmentation output matrices", {
+test_that("snic_plot handles segmentation output arrays", {
     height <- 4L
     width <- 4L
     set.seed(21)
     img <- array(runif(height * width), dim = c(height, width, 1L))
-    segs <- snic(img, compactness = 5, grid_step = 2L)
+    seeds <- rect_grid(
+        img,
+        spacing = c(2L, 2L),
+        padding = c(0L, 0L)
+    )
+    segs <- snic(img, seeds = seeds, compactness = 5)
     grDevices::pdf(file = NULL)
     on.exit(grDevices::dev.off(), add = TRUE)
-    expect_silent(plot(segs))
+    expect_silent(snic_plot(segs))
 })

@@ -1,108 +1,77 @@
 #!/usr/bin/env Rscript
 
-library(snic)
+# SNIC segmentation demo for the Rondônia Sentinel-2 stack.
 
 if (!requireNamespace("terra", quietly = TRUE)) {
-    stop("terra package must be installed to run this script", call. = FALSE)
+    stop("The 'terra' package must be installed to run this script.", call. = FALSE)
 }
 
-# helper to resolve files relative to project root
-project_file <- function(...) system.file("S2-20LKP", ..., package = "snic")
+library(snic)
 
-band_files <- c(
-    "S2_MSI_20LKP_B02_2021-08-10.tif",
-    "S2_MSI_20LKP_B11_2021-08-10.tif",
-    "S2_MSI_20LKP_B8A_2021-08-10.tif",
-    "S2_MSI_20LKP_B02_2021-08-26.tif",
-    "S2_MSI_20LKP_B11_2021-08-26.tif",
-    "S2_MSI_20LKP_B8A_2021-08-26.tif"
+# Locate and load input data
+data_dir <- system.file("S2-20LMR", package = "snic", mustWork = TRUE)
+
+files <- c(
+    "S2_20LMR_B02_20220630.tif",
+    "S2_20LMR_B04_20220630.tif",
+    "S2_20LMR_B08_20220630.tif",
+    "S2_20LMR_B12_20220630.tif"
 )
 
-paths <- vapply(band_files, project_file, character(1))
-if (!all(file.exists(paths))) {
-    missing <- band_files[!file.exists(paths)]
-    stop(sprintf("Missing input rasters: %s", paste(missing, collapse = ", ")))
-}
-
-# load all six bands as a single multi-layer raster
+paths <- file.path(data_dir, files)
 s2_cube <- terra::rast(paths)
 
-# snic expects one row per pixel and one column per band
-img_matrix <- terra::values(s2_cube, mat = TRUE)
 
-img_matrix_lab <- rgb2lab(
-    img_matrix
+# SNIC configuration and execution
+
+grid_step <- 20L
+compactness <- 0.1
+seeds <- rect_grid(
+    s2_cube,
+    spacing = c(grid_step, grid_step),
+    padding = c(grid_step %/% 2L, grid_step %/% 2L)
 )
+seeds <- round(seeds)
+storage.mode(seeds) <- "integer"
 
-grid_step <- 10L
-
-if (anyNA(img_matrix)) {
-    message(
-        "Input data contains NA values; SNIC will skip those pixels ",
-        "during segmentation."
-    )
-}
-
-# test grid seeds and visualize
-seeds <- snic::snic_seeds_grid(
-    img_matrix_lab,
-    width = terra::ncol(s2_cube),
-    height = terra::nrow(s2_cube),
-    grid_step = grid_step
-)
-
-
-plot(img_matrix_lab,
-    band = 1,
-    width = terra::ncol(s2_cube),
-    height = terra::nrow(s2_cube),
-    seeds = seeds
-)
-
-# run SNIC
-
-compactness <- 10L
-
-message(sprintf(
-    paste0(
-        "Running SNIC on image with %d bands, ",
-        "grid_step = %d, compactness = %d..."
-    ),
-    ncol(img_matrix), grid_step, compactness
-))
-
-# run SNIC with grid seeds (default)
-segments <- snic::snic(
-    img_matrix_lab,
-    width = terra::ncol(s2_cube),
-    height = terra::nrow(s2_cube),
+segments <- snic(
+    s2_cube,
     seeds = seeds,
-    compactness = compactness,
-    grid_step = grid_step
+    compactness = compactness
 )
 
-plot(segments,
-    width = terra::ncol(s2_cube),
-    height = terra::nrow(s2_cube)
+# Vectorise segments
+segments_poly <- terra::as.polygons(
+    segments,
+    dissolve = TRUE,
+    na.rm = TRUE
 )
 
 
-# save segmentation
+# Visualisation
 
-seg_raster <- terra::rast(s2_cube[[1]])
-terra::values(seg_raster) <- as.vector(t(segments))
-terra::varnames(seg_raster) <- "snic"
-
-output_path <- file.path(
-    "~",
-    "S2_MSI_20LKP_snic_segments_2021-08-10_2021-08-10.tif"
+terra::plotRGB(
+    s2_cube,
+    r = 4, # B12
+    g = 3, # B08
+    b = 1, # B02
+    stretch = "lin",
+    mar = c(3, 3, 1, 5),
+    main = sprintf(
+        "SNIC (%d x %d, step=%d, compactness=%.2f)",
+        nrow(s2_cube), ncol(s2_cube), grid_step, compactness
+    )
 )
 
-terra::writeRaster(
-    seg_raster,
-    output_path,
-    overwrite = TRUE,
-    datatype = "INT4U"
+terra::plot(
+    segments_poly,
+    add = TRUE,
+    border = "#FFFF00",
+    col = NA,
+    lwd = 0.8
 )
 
-message("SNIC segmentation written to: ", output_path)
+# Uncomment below to save the segmentation raster.
+# output_path <- file.path(tempdir(), "snic_rondonia_segments_full.tif")
+# writeRaster(segments, output_path, overwrite = TRUE, datatype = "INT4U")
+# message("Segmentation saved to: ", output_path)

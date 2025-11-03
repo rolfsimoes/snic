@@ -1,79 +1,41 @@
-plot_array <- function(...) {
-    getS3method("plot", "array", "snic")(...)
-}
-
-test_that("plot.array requires 3D arrays", {
-    img <- array(runif(4), dim = c(2, 2))
+test_that("snic_plot.array requires 3D numeric arrays", {
+    img2d <- array(runif(4), dim = c(2, 2))
     expect_error(
-        plot_array(img),
-        "`x` must be a 3D array with dimensions \\(height, width, bands\\)"
+        snic_plot(img2d),
+        "'x' must be a 3D array with dimensions \\(height, width, bands\\)"
+    )
+
+    img_chr <- array(letters[1:8], dim = c(2, 2, 2))
+    expect_error(
+        snic_plot(img_chr),
+        "'x' must be a numeric array"
     )
 })
 
-test_that("plot.array validates band indices", {
+test_that("snic_plot.array validates band and RGB selection", {
     img <- array(runif(8), dim = c(2, 2, 2))
     expect_error(
-        plot_array(img, band = 3L),
-        "Invalid `band` index \\(3\\). Array has 2 bands\\."
+        snic_plot(img, band = 3L),
+        "Invalid 'band' index \\(3\\). Array has 2 bands\\."
     )
-})
-
-test_that("plot.array forwards arguments to plot_snic_matrix", {
-    img <- array(runif(12), dim = c(2, 3, 2))
-    seeds <- matrix(c(1, 1, 2, 3), ncol = 2, byrow = TRUE)
-    captured <- NULL
-    with_mocked_bindings(
-        {
-            expect_invisible(
-                plot_array(img,
-                    seeds = seeds,
-                    band = 2L,
-                    col = "purple",
-                    seed_col = "green",
-                    seed_pch = 8,
-                    seed_cex = 1.5,
-                    main = "demo"
-                )
-            )
-        },
-        plot_snic_matrix = function(...) {
-            captured <<- list(...)
-            invisible(NULL)
-        },
-        .package = "snic"
-    )
-    expect_equal(captured$img, img[, , 2L, drop = FALSE])
-    expect_equal(captured$seeds, seeds)
-    expect_identical(captured$band, 2L)
-    expect_identical(captured$col, "purple")
-    expect_identical(captured$seed_col, "green")
-    expect_identical(captured$seed_pch, 8)
-    expect_identical(captured$seed_cex, 1.5)
-    expect_identical(captured$image_args$main, "demo")
-})
-
-test_that("plot_snic_matrix requires 3D numeric arrays", {
-    img <- array(runif(4), dim = c(2, 2))
     expect_error(
-        snic:::plot_snic_matrix(img),
-        "`img` must be a 3D array with dimensions \\(height, width, bands\\)"
+        snic_plot(img, r = 1L, g = NULL, b = 2L),
+        "Parameters 'r', 'g', and 'b' must all be supplied together"
     )
-})
-
-test_that("plot_snic_matrix validates band selection", {
-    img <- array(runif(12), dim = c(2, 2, 3))
     expect_error(
-        snic:::plot_snic_matrix(img, band = 4L),
-        "Invalid band index \\(max = 3\\)"
+        snic_plot(img, r = 1L, g = 2L, b = 3L),
+        "Invalid RGB band index\\. Array has 2 bands\\."
     )
 })
 
-test_that("plot_snic_matrix draws grayscale images with default arguments", {
+test_that("snic_plot.array draws grayscale images with defaults", {
     img <- array(runif(6), dim = c(2, 3, 1))
     captured <- NULL
     with_mocked_bindings(
         {
-            expect_invisible(snic:::plot_snic_matrix(img, col = "grey70"))
+            expect_invisible(
+                snic_plot(img, col = "grey70", main = "demo")
+            )
         },
         image = function(...) {
             captured <<- list(...)
@@ -87,87 +49,311 @@ test_that("plot_snic_matrix draws grayscale images with default arguments", {
         },
         .package = "graphics"
     )
-    expect_equal(captured$x, 0.5 + 0:dim(img)[2])
-    expect_equal(captured$y, 0.5 + 0:dim(img)[1])
+    expect_equal(captured$x, 0:dim(img)[2])
+    expect_equal(captured$y, 0:dim(img)[1])
     expect_equal(captured$col, "grey70")
+    expect_equal(captured$main, "demo")
     expect_equal(captured$asp, 1)
-    expect_equal(captured$ylim, c(dim(img)[1] + 0.5, 0.5))
+    expect_equal(captured$ylim, c(dim(img)[1], 0))
 })
 
-test_that("plot_snic_matrix builds RGB composites and overlays seeds", {
-    img <- array(runif(24), dim = c(3, 4, 3))
+test_that("snic_plot.array builds RGB composites and overlays seeds", {
+    img <- array((1:60) / 60, dim = c(5, 4, 3))
     seeds <- matrix(c(1, 1, 3, 4), ncol = 2, byrow = TRUE)
-    captured_raster <- NULL
-    captured_points <- NULL
+    captured <- list()
+    stretch_calls <- list()
+    stretch_returns <- list(
+        matrix(0.1, nrow = dim(img)[1], ncol = dim(img)[2]),
+        matrix(0.2, nrow = dim(img)[1], ncol = dim(img)[2]),
+        matrix(0.3, nrow = dim(img)[1], ncol = dim(img)[2])
+    )
+    with_mocked_bindings(
+        {
+            with_mocked_bindings(
+                {
+                    expect_invisible(
+                        snic_plot(
+                            img,
+                            r = 1L,
+                            g = 2L,
+                            b = 3L,
+                            seeds = seeds,
+                            seeds_plot_args = list(col = "yellow", pch = 9, cex = 2)
+                        )
+                    )
+                },
+                plot.new = function() {
+                    captured$plot_new <<- TRUE
+                    invisible(NULL)
+                },
+                plot.window = function(...) {
+                    captured$window <<- list(...)
+                    invisible(NULL)
+                },
+                rasterImage = function(image, xleft, ybottom, xright, ytop, ...) {
+                    captured$raster <<- list(
+                        image = image,
+                        xleft = xleft,
+                        ybottom = ybottom,
+                        xright = xright,
+                        ytop = ytop,
+                        args = list(...)
+                    )
+                    invisible(NULL)
+                },
+                image = function(...) {
+                    stop("image should not be called for RGB inputs")
+                },
+                par = function(..., no.readonly = FALSE) {
+                    invisible(NULL)
+                },
+                points = function(x, y, col, pch, cex, ...) {
+                    captured$points <<- list(
+                        x = x,
+                        y = y,
+                        col = col,
+                        pch = pch,
+                        cex = cex,
+                        extra = list(...)
+                    )
+                    invisible(NULL)
+                },
+                .package = "graphics"
+            )
+        },
+        .stretch_band = function(x, stretch, ...) {
+            idx <- length(stretch_calls) + 1L
+            stretch_calls[[idx]] <<- list(
+                x = x,
+                stretch = stretch,
+                extra = list(...)
+            )
+            if (idx > length(stretch_returns)) {
+                stop("Unexpected .stretch_band invocation count")
+            }
+            stretch_returns[[idx]]
+        },
+        .package = "snic"
+    )
+    expect_true(isTRUE(captured$plot_new))
+    expect_equal(captured$window$xlim, c(0, dim(img)[2]))
+    expect_equal(captured$window$ylim, c(0, dim(img)[1]))
+    expect_identical(captured$window$asp, 1)
+    expect_equal(dim(captured$raster$image), c(dim(img)[1], dim(img)[2], 4L))
+    expect_equal(captured$raster$xleft, 0)
+    expect_equal(captured$raster$ybottom, 0)
+    expect_equal(captured$raster$xright, dim(img)[2])
+    expect_equal(captured$raster$ytop, dim(img)[1])
+    expect_identical(captured$raster$args$interpolate, FALSE)
+    expect_equal(length(stretch_calls), 3)
+    expect_equal(stretch_calls[[1]]$x, img[, , 1])
+    expect_equal(stretch_calls[[2]]$x, img[, , 2])
+    expect_equal(stretch_calls[[3]]$x, img[, , 3])
+    expect_identical(stretch_calls[[1]]$stretch, "lin")
+    expect_identical(stretch_calls[[2]]$stretch, "lin")
+    expect_identical(stretch_calls[[3]]$stretch, "lin")
+    expect_identical(stretch_calls[[1]]$extra, list())
+    expect_identical(captured$raster$image[, , 1], stretch_returns[[1]])
+    expect_identical(captured$raster$image[, , 2], stretch_returns[[2]])
+    expect_identical(captured$raster$image[, , 3], stretch_returns[[3]])
+    expect_identical(
+        captured$raster$image[, , 4],
+        matrix(1, nrow = dim(img)[1], ncol = dim(img)[2])
+    )
+    expect_equal(captured$points$x, seeds[, 2])
+    expect_equal(captured$points$y, seeds[, 1])
+    expect_identical(captured$points$col, "yellow")
+    expect_identical(captured$points$pch, 9)
+    expect_identical(captured$points$cex, 2)
+    expect_identical(captured$points$extra, list())
+})
+
+test_that("snic_plot.array validates seeds input", {
+    img <- array(runif(12), dim = c(3, 2, 2))
+    expect_error(
+        snic_plot(img, seeds = matrix(1:3, ncol = 3)),
+        "argument 'seeds' must be a matrix with two columns \\(row, column\\)"
+    )
+    expect_error(
+        snic_plot(img, seeds = matrix(integer(0), ncol = 2)),
+        "argument 'seeds' must contain at least one coordinate"
+    )
+    expect_error(
+        snic_plot(img, seeds = matrix(c(0, 1), ncol = 2)),
+        "argument 'seeds' must lie within the image bounds"
+    )
+})
+
+test_that("snic_plot.array merges default seeds plotting arguments", {
+    img <- array((1:6) / 6, dim = c(2, 3, 1))
+    seeds <- matrix(c(1, 2, 2, 3), ncol = 2, byrow = TRUE)
+    captured <- NULL
     with_mocked_bindings(
         {
             expect_invisible(
-                snic:::plot_snic_matrix(
+                snic_plot(
                     img,
-                    band = NULL,
                     seeds = seeds,
-                    seed_col = "yellow",
-                    seed_pch = 9,
-                    seed_cex = 2
+                    seeds_plot_args = list(col = "yellow")
                 )
             )
         },
-        rasterImage = function(image, xleft, ybottom, xright, ytop, ...) {
-            captured_raster <<- list(
-                image = image,
-                xleft = xleft,
-                ybottom = ybottom,
-                xright = xright,
-                ytop = ytop,
-                args = list(...)
-            )
+        image = function(...) {
             invisible(NULL)
         },
-        image = function(...) {
-            stop("image should not be called for RGB inputs")
+        rasterImage = function(...) {
+            stop("rasterImage should not be called for grayscale inputs")
         },
-        points = function(x, y, pch, col, cex, ...) {
-            captured_points <<- list(
+        plot.new = function() {
+            invisible(NULL)
+        },
+        plot.window = function(...) {
+            invisible(NULL)
+        },
+        par = function(..., no.readonly = FALSE) {
+            invisible(NULL)
+        },
+        points = function(x, y, col, pch, cex, ...) {
+            captured <<- list(
                 x = x,
                 y = y,
-                pch = pch,
                 col = col,
-                cex = cex
+                pch = pch,
+                cex = cex,
+                extra = list(...)
             )
             invisible(NULL)
         },
         .package = "graphics"
     )
-    expect_equal(dim(captured_raster$image), c(dim(img)[2], dim(img)[1], 3))
-    expect_equal(captured_raster$xleft, 1)
-    expect_equal(captured_raster$ybottom, 1)
-    expect_equal(captured_raster$xright, dim(img)[2])
-    expect_equal(captured_raster$ytop, dim(img)[1])
-    expect_identical(captured_raster$args$interpolate, FALSE)
-
-    expect_equal(captured_points$x, seeds[, 2])
-    expect_equal(captured_points$y, seeds[, 1])
-    expect_identical(captured_points$pch, 9)
-    expect_identical(captured_points$col, "yellow")
-    expect_identical(captured_points$cex, 2)
+    expect_equal(captured$x, seeds[, 2])
+    expect_equal(captured$y, seeds[, 1])
+    expect_identical(captured$col, "yellow")
+    expect_identical(captured$pch, 4)
+    expect_identical(captured$cex, 1)
+    expect_identical(captured$extra, list())
 })
 
-test_that("plot_snic_matrix validates seeds input", {
-    img <- array(runif(12), dim = c(3, 2, 2))
+test_that("snic_plot.default errors for unsupported classes", {
     expect_error(
-        snic:::plot_snic_matrix(img, seeds = matrix(1:3, ncol = 3)),
-        "`seeds` must be a matrix with two columns \\(row, column\\)"
+        snic_plot(list()),
+        "no applicable method for 'snic_plot' applied to an object of class \"list\""
     )
-    expect_error(
-        snic:::plot_snic_matrix(img, seeds = matrix(c(1, 1.5), ncol = 2)),
-        "`seeds` must contain integer coordinates"
+})
+
+test_that("snic_plot.SpatRaster forwards to terra::plot for single band", {
+    skip_if_not_installed("terra")
+    r <- terra::rast(nrows = 2, ncols = 3, nlyrs = 2, xmin = 0, xmax = 3, ymin = 0, ymax = 2)
+    terra::values(r) <- runif(12)
+    captured <- NULL
+    with_mocked_bindings(
+        {
+            with_mocked_bindings(
+                {
+                    expect_invisible(
+                        snic_plot(r, band = 2L, col = "grey50", main = "demo")
+                    )
+                },
+                points = function(...) {
+                    stop("points should not be called without seeds")
+                },
+                .package = "graphics"
+            )
+        },
+        plot = function(x, ...) {
+            captured <<- list(x = x, args = list(...))
+            invisible(NULL)
+        },
+        plotRGB = function(...) {
+            stop("plotRGB should not be called for single-band plots")
+        },
+        .package = "terra"
     )
-    expect_error(
-        snic:::plot_snic_matrix(img, seeds = matrix(integer(0), ncol = 2)),
-        "`seeds` must contain at least one coordinate"
+    expect_true(inherits(captured$x, "SpatRaster"))
+    expect_equal(terra::nlyr(captured$x), 1)
+    expect_equal(captured$args$col, "grey50")
+    expect_equal(captured$args$main, "demo")
+})
+
+test_that("snic_plot.SpatRaster uses plotRGB and overlays seeds", {
+    skip_if_not_installed("terra")
+    r <- terra::rast(nrows = 2, ncols = 2, nlyrs = 3, xmin = 0, xmax = 2, ymin = 0, ymax = 2)
+    terra::values(r) <- runif(12)
+    seeds <- matrix(c(1, 1, 2, 2), ncol = 2, byrow = TRUE)
+    captured_rgb <- NULL
+    captured_points <- NULL
+    with_mocked_bindings(
+        {
+            with_mocked_bindings(
+                {
+                    expect_invisible(
+                        snic_plot(r,
+                            r = 1L,
+                            g = 2L,
+                            b = 3L,
+                            seeds = seeds,
+                            seeds_plot_args = list(col = "blue", pch = 16)
+                        )
+                    )
+                },
+                points = function(x, y, col, pch, cex, ...) {
+                    captured_points <<- list(
+                        x = x,
+                        y = y,
+                        col = col,
+                        pch = pch,
+                        cex = cex
+                    )
+                    invisible(NULL)
+                },
+                .package = "graphics"
+            )
+        },
+        plot = function(...) {
+            stop("plot should not be called for RGB plots")
+        },
+        plotRGB = function(x, r, g, b, ...) {
+            captured_rgb <<- list(x = x, r = r, g = g, b = b, args = list(...))
+            invisible(NULL)
+        },
+        .package = "terra"
     )
-    expect_error(
-        snic:::plot_snic_matrix(img, seeds = matrix(c(0, 1), ncol = 2)),
-        "`seeds` must lie within the image bounds"
+    expect_equal(captured_rgb$r, 1L)
+    expect_equal(captured_rgb$g, 2L)
+    expect_equal(captured_rgb$b, 3L)
+    expected_xy <- terra::xyFromCell(r, terra::cellFromRowCol(r, seeds[, 1], seeds[, 2]))
+    expect_equal(captured_points$x, expected_xy[, 1])
+    expect_equal(captured_points$y, expected_xy[, 2])
+    expect_identical(captured_points$col, "blue")
+    expect_identical(captured_points$pch, 16)
+    expect_identical(captured_points$cex, 1)
+})
+
+test_that("snic_plot.SpatRaster overlays segmentation polygons", {
+    skip_if_not_installed("terra")
+    r <- terra::rast(nrows = 2, ncols = 2, nlyrs = 1, xmin = 0, xmax = 2, ymin = 0, ymax = 2)
+    terra::values(r) <- runif(4)
+    seg <- terra::rast(r)
+    terra::values(seg) <- sample(1:2, terra::ncell(seg), replace = TRUE)
+    calls <- list()
+    with_mocked_bindings(
+        {
+            expect_invisible(
+                snic_plot(r, seg = seg, seg_plot_args = list(border = "yellow"))
+            )
+        },
+        plot = function(x, ...) {
+            calls[[length(calls) + 1]] <<- list(x = x, args = list(...))
+            invisible(NULL)
+        },
+        plotRGB = function(...) {
+            stop("plotRGB should not be called for single-band plots")
+        },
+        .package = "terra"
     )
+    expect_length(calls, 2)
+    expect_true(inherits(calls[[1]]$x, "SpatRaster"))
+    expect_true(inherits(calls[[2]]$x, "SpatVector"))
+    expect_true(isTRUE(calls[[2]]$args$add))
+    expect_identical(calls[[2]]$args$border, "yellow")
 })
