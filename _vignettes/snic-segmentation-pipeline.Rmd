@@ -1,0 +1,127 @@
+---
+title: "SNIC Segmentation Pipeline"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{SNIC Segmentation Pipeline}
+  %\VignetteEngine{knitr::rmarkdown}
+  \usepackage[utf8]{inputenc}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  message = FALSE,
+  warning = FALSE,
+  fig.width = 6,
+  fig.height = 5
+)
+library(snic)
+```
+
+## Pipeline overview
+
+The Simple Non-Iterative Clustering (SNIC) algorithm grows superpixels from an initial set of seed pixels. A typical workflow is:
+
+1. Load or prepare an image cube with one or more spectral bands.
+2. Place seeds with one of the `snic_grid()` helpers.
+3. Call `snic()` to segment the image using the chosen compactness.
+4. Inspect the result or convert it to polygons for further analysis.
+
+This vignette walks through that pipeline by working with the Sentinel-2 subset shipped with the package and highlights the most important parameters.
+
+## Loading imagery with terra
+
+```{r load-imagery}
+if (requireNamespace("terra", quietly = TRUE)) {
+  library(terra)
+
+  data_dir <- system.file("S2-20LMR", package = "snic", mustWork = TRUE)
+  band_names <- c("S2_20LMR_B02_20220630.tif",
+                  "S2_20LMR_B04_20220630.tif",
+                  "S2_20LMR_B08_20220630.tif",
+                  "S2_20LMR_B12_20220630.tif")
+  s2 <- rast(file.path(data_dir, band_names))
+
+  # Aggregate raster for lightweight examples
+  s2_small <- aggregate(s2, fact = 6)
+  s2_small
+} else {
+  stop("Package 'terra' is required for this example.")
+}
+```
+
+`terra::rast()` reads the reference bands and stores them as a `SpatRaster`.
+
+## Understanding `snic()` parameters
+
+The `snic()` interface is intentionally minimal:
+
+- `img`: array or `SpatRaster` containing the bands to segment.
+- `seeds`: pixel coordinates that anchor cluster growth. They must be supplied explicitly, which keeps the results reproducible.
+- `compactness`: non-negative value that balances spectral similarity and spatial proximity. Smaller numbers privilege spectral contrast, whereas larger ones grow rounder segments.
+
+The default compactness value of `1` offers a good starting point on reflectance-scaled data. Images with different value ranges can be re-scaled before segmentation (see `?terra::scale`).
+
+## Seed placement with `snic_grid_rect()`
+
+`snic_grid_rect()` builds a uniform rectangular grid of seeds. Two arguments control the layout:
+
+- `spacing`: expected distance (in pixels) between neighboring seeds. A single value applies to rows and columns equally; a length-two vector defines anisotropic spacing.
+- `padding`: margin from the image borders where seeds are not placed. The default (`spacing / 2`) centers the grid inside the scene.
+
+```{r rect-grid}
+spacing_demo <- 30L
+seeds_default <- snic_grid_rect(s2_small, spacing = spacing_demo)
+head(seeds_default)
+```
+
+As `spacing` increases the number of seeds decreases. Use `snic_count_seeds()` to estimate how many seeds will be created without actually generating them:
+
+```{r count-seeds}
+seed_total <- snic_count_seeds(
+  s2_small,
+  spacing = spacing_demo,
+  padding = spacing_demo / 2
+)
+seed_total
+```
+
+Padding creates inner margins and can be set independently along rows and columns:
+
+```{r rect-grid-padding}
+seeds_asymmetric <- snic_grid_rect(
+  s2_small,
+  spacing = c(30, 20),
+  padding = c(10, 5)
+)
+nrow(seeds_asymmetric)
+```
+
+## End-to-end segmentation example
+
+```{r run-snic}
+comp <- 0.25
+seg_rect <- snic(
+  s2_small,
+  seeds = seeds_default,
+  compactness = comp
+)
+seg_rect
+```
+
+Overlay the segmentation to inspect the results:
+
+```{r plot-snic, fig.height=4.5, fig.width=7}
+snic_plot(
+  s2_small,
+  r = 3, g = 2, b = 1,
+  stretch = "lin",
+  seeds = seeds_default,
+  seg = seg_rect,
+  seg_plot_args = list(border = "#FFFF00", col = NA, lwd = 0.6),
+  seeds_plot_args = list(pch = 3, col = "#00FFFF", cex = 0.7)
+)
+```
+
+The compactness parameter gently constrains the shapes of the superpixels. Combining a carefully chosen spacing and padding with compactness controls how detailed the segmentation becomes. Dedicated vignettes cover parameter tuning, seed placement strategies, non-Earth-observation imagery, and parallel processing for more advanced workflows.

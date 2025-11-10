@@ -5,13 +5,17 @@
 #include <R.h>
 #include <Rinternals.h>
 
-#include <algorithm>
-#include <cmath>
-#include <cstdint>
-#include <numeric>
+#ifdef length
+#undef length
+#endif
+
+
+#include <gdal.h>
+#include <gdal_alg.h>
+
+
 #include <queue>
 #include <stdexcept>
-#include <vector>
 
 #include "snic.h"
 
@@ -83,21 +87,21 @@ Img<T>::Img(T* data_, int height, int width, int bands, char order_)
       n_valid_(-1)
 {
     if (!data) {
-        throw std::invalid_argument("Image data pointer must not be null");
+        Rf_error("img_data_pointer_null");
     }
     if (w <= 0 || h <= 0) {
-        throw std::invalid_argument("Image width and height must be positive");
+        Rf_error("img_dimensions_not_positive");
     }
     if (b <= 0) {
-        throw std::invalid_argument("Number of bands must be positive");
+        Rf_error("img_bands_not_positive");
     }
     if (order != 'C' && order != 'F') {
-        throw std::invalid_argument("Image order must be 'C' (row-major) or 'F' (column-major)");
+        Rf_error("order_invalid");
     }
 
     const long long n_ = static_cast<long long>(h) *
       static_cast<long long>(w);
-    if (n_ > std::numeric_limits<int>::max()) Rf_error("Image too large");
+    if (n_ > std::numeric_limits<int>::max()) Rf_error("image_too_large");
     n = static_cast<int>(n_);
 
     // Compute mask
@@ -267,8 +271,8 @@ bool NodeGreater::operator()(const Node& a, const Node& b) const
 
 /*
  * SNIC segmentation function
- * Fills 'out' with segmentation labels (size img.n). Pixels masked out remain 0.
- * Segments are labeled from 1 to number of seeds.
+ * Fills 'out' with segmentation labels (size img.n). Pixels masked out
+ * remain 0. Segments are labeled from 1 to number of seeds.
  */
 template <typename T>
 void snic_run(const Img<T>& img,
@@ -278,20 +282,20 @@ void snic_run(const Img<T>& img,
               std::vector<int>& out)
 {
     if (img.n <= 0) {
-        throw std::runtime_error("Image must contain at least one pixel");
+        throw std::runtime_error("image_must_contain_pixel");
     }
 
     const std::vector<std::uint8_t>& mask = img.mask();
     if (mask.size() != static_cast<std::size_t>(img.n)) {
-      throw std::runtime_error("Mask size mismatch for image size");
+      throw std::runtime_error("mask_size_mismatch");
     }
     const int valid = img.valid_pixel_count();
     if (valid == 0) {
-      throw std::runtime_error("All pixels contain NA values; SNIC cannot segment");
+      throw std::runtime_error("img_all_na");
     }
 
     if (seed_rows.empty()) {
-      throw std::runtime_error("No seeds provided for SNIC segmentation");
+      throw std::runtime_error("snic_no_seeds");
     }
 
     // prepare SNIC loop
@@ -310,7 +314,7 @@ void snic_run(const Img<T>& img,
         const int c = seed_cols[i];
         const int pid = img.idx(r, c);
         if (pid < 0 || pid >= img.n) {
-          throw std::runtime_error("Seed index out of bounds for provided image dimensions");
+          throw std::runtime_error("seed_index_out_of_bounds");
         }
         if (!mask[pid]) {
           continue;
@@ -325,7 +329,7 @@ void snic_run(const Img<T>& img,
     }
 
     if (clus.empty()) {
-      throw std::runtime_error("All seeds fall on pixels containing NA values; SNIC cannot segment");
+      throw std::runtime_error("seeds_all_on_na");
     }
 
     // alloc output
@@ -383,7 +387,7 @@ void snic_run(const Img<T>& img,
     }
     if (static_cast<size_t>(out.size()) !=
         static_cast<size_t>(img.w) * static_cast<size_t>(img.h)) {
-        Rf_error("Internal error: segmentation length mismatch");
+        Rf_error("internal_segmentation_length_mismatch");
     }
 }
 
@@ -392,9 +396,9 @@ void snic_run(const Img<T>& img,
 /*
  * This is the R interface to the SNIC segmentation function.
  *
- * @param imgSEXP Numeric array (height x width x bands) representing the image.
- *   Pixels are stored row-wise, with bands stacked. A pixel at (r, c) and
- *   band b is located at img[c + r * width + b * (width * height)].
+ * @param imgSEXP Numeric array (height x width x bands) representing
+ *   the image. Pixels are stored row-wise, with bands stacked. A pixel at
+ *   (r, c) and band b is located at img[c + r * width + b * (width * height)].
  *   The array must have exactly three dimensions and strictly positive sizes.
  * @param seedsSEXP Integer matrix (m x 2) of seed coordinates (row, column).
  *   Coordinates are 1-based (R style). Values must be within image bounds.
@@ -410,14 +414,14 @@ extern "C" SEXP _snic(SEXP imgSEXP,
                       SEXP orderSEXP)
 {
     if (!Rf_isReal(imgSEXP)) {
-        Rf_error("argument 'img' must be a numeric array");
+        Rf_error("img_must_be_numeric_array");
     }
     SEXP dim = getAttrib(imgSEXP, R_DimSymbol);
     if (dim == R_NilValue) {
-        Rf_error("argument 'img' must have dimensions");
+        Rf_error("img_must_have_dimensions");
     }
     if (!Rf_isInteger(dim) || LENGTH(dim) != 3) {
-        Rf_error("argument 'img' must be a numeric array with three dimensions");
+        Rf_error("img_must_be_numeric_array_three_dimensions");
     }
 
     const int h = INTEGER(dim)[0];
@@ -426,23 +430,23 @@ extern "C" SEXP _snic(SEXP imgSEXP,
     if (h == NA_INTEGER || h <= 0 ||
         w == NA_INTEGER || w <= 0 ||
         b == NA_INTEGER || b <= 0) {
-        Rf_error("argument 'img' dimensions must be positive integers");
+        Rf_error("img_dimensions_positive_integers");
     }
 
     if (!Rf_isReal(compactSEXP) || LENGTH(compactSEXP) != 1) {
-        Rf_error("argument 'compactness' must be a numeric scalar");
+        Rf_error("compactness_must_be_numeric_scalar");
     }
     const double compact = REAL(compactSEXP)[0];
     if (!R_finite(compact) || compact < 0.0) {
-        Rf_error("argument 'compactness' must be a non-negative finite number");
+        Rf_error("compactness_non_negative_finite");
     }
 
     if (!Rf_isString(orderSEXP) || LENGTH(orderSEXP) != 1) {
-        Rf_error("argument 'order' must be a single character string");
+        Rf_error("order_single_character");
     }
     const char order = CHAR(STRING_ELT(orderSEXP, 0))[0];
     if (order != 'C' && order != 'F') {
-        Rf_error("argument 'order' must be either 'C' (row-major) or 'F' (column-major)");
+        Rf_error("order_invalid");
     }
 
     const double* data = REAL(imgSEXP);
@@ -450,31 +454,31 @@ extern "C" SEXP _snic(SEXP imgSEXP,
 
     const int n_valid = img.valid_pixel_count();
     if (n_valid == 0) {
-      Rf_error("All pixels contain NA values; SNIC cannot segment.");
+      Rf_error("img_all_na");
     }
 
     if (seedsSEXP == R_NilValue) {
-        Rf_error("argument 'seeds' must be provided");
+        Rf_error("seeds_required");
     }
     if (!Rf_isMatrix(seedsSEXP) || !Rf_isInteger(seedsSEXP)) {
-        Rf_error("argument 'seeds' must be an integer matrix");
+        Rf_error("seeds_must_be_integer_matrix");
     }
 
     SEXP seedDim = getAttrib(seedsSEXP, R_DimSymbol);
     if (seedDim == R_NilValue) {
-        Rf_error("argument 'seeds' must have dimensions");
+        Rf_error("seeds_must_have_dimensions");
     }
 
     const int n_seeds = INTEGER(seedDim)[0];
     const int n_dim_cols = INTEGER(seedDim)[1];
     if (n_dim_cols != 2) {
-        Rf_error("argument 'seeds' must have two columns (row, column)");
+        Rf_error("seeds_two_columns_exact");
     }
     if (n_seeds <= 0) {
-        Rf_error("argument 'seeds' must contain at least one coordinate");
+        Rf_error("seeds_must_have_coordinates");
     }
     if (LENGTH(seedsSEXP) != n_seeds * n_dim_cols) {
-        Rf_error("argument 'seeds' length mismatch");
+        Rf_error("seeds_length_mismatch");
     }
 
     std::vector<int> seed_rows;
@@ -489,10 +493,10 @@ extern "C" SEXP _snic(SEXP imgSEXP,
         const int r = row_ptr[i];
         const int c = col_ptr[i];
         if (r == NA_INTEGER || c == NA_INTEGER) {
-            Rf_error("argument 'seeds' cannot contain NA coordinates");
+            Rf_error("seeds_no_na_coordinates");
         }
         if (r < 1 || r > h || c < 1 || c > w) {
-            Rf_error("argument 'seeds' coordinates must lie within image bounds");
+            Rf_error("seeds_coordinates_within_bounds");
         }
         // transform to 0-based row and col
         seed_rows.push_back(r - 1);
@@ -508,7 +512,7 @@ extern "C" SEXP _snic(SEXP imgSEXP,
 
     // prepare and fill output segmentation
     const R_xlen_t n_ = static_cast<R_xlen_t>(w) * static_cast<R_xlen_t>(h);
-    if (n_ > INT_MAX) Rf_error("Image too large");
+    if (n_ > INT_MAX) Rf_error("image_too_large");
     const int n = static_cast<int>(n_);
 
     SEXP outSEXP = PROTECT(Rf_allocVector(INTSXP, n));
@@ -520,8 +524,14 @@ extern "C" SEXP _snic(SEXP imgSEXP,
             out_ptr[pid] = seg[pid];
         }
     }
+    SEXP outdimSEXP = PROTECT(Rf_allocVector(INTSXP, 3));
+    int *outdim = INTEGER(outdimSEXP);
+    outdim[0] = h;
+    outdim[1] = w;
+    outdim[2] = 1;
+    setAttrib(outSEXP, R_DimSymbol, outdimSEXP);
 
-    UNPROTECT(1);
+    UNPROTECT(2);
     return outSEXP;
 }
 
@@ -529,25 +539,26 @@ extern "C" SEXP _snic(SEXP imgSEXP,
 /*
  * Set a new dimension on an existing atomic R object in place.
  *
- * @param imgSEXP Any atomic vector or array (numeric, integer, logical, complex, raw, character)
+ * @param imgSEXP Any atomic vector or array (numeric, integer, logical,
+ *   complex, raw, character)
  * @param newdimSEXP Integer vector specifying new dimensions
  * @return The same object, with updated dimension attribute.
  */
 extern "C" SEXP _set_dim(SEXP imgSEXP, SEXP newdimSEXP)
 {
     if (!isVectorAtomic(imgSEXP)) {
-        Rf_error("'img' must be an atomic R object");
+        Rf_error("img_must_be_atomic");
     }
 
     if (!Rf_isInteger(newdimSEXP)) {
-        Rf_error("'newdim' must be an integer vector");
+        Rf_error("newdim_must_be_integer_vector");
     }
 
     const R_xlen_t len_img = XLENGTH(imgSEXP);
     const R_xlen_t len_dim = XLENGTH(newdimSEXP);
 
     if (len_dim < 1) {
-        Rf_error("'newdim' must contain at least one dimension");
+        Rf_error("newdim_must_have_dimension");
     }
 
     // Validate new dimensions
@@ -555,17 +566,122 @@ extern "C" SEXP _set_dim(SEXP imgSEXP, SEXP newdimSEXP)
     R_xlen_t prod_dim = 1;
     for (R_xlen_t i = 0; i < len_dim; i++) {
         if (dims[i] <= 0) {
-            Rf_error("'newdim' contains non-positive value at position %lld", (long long)(i + 1));
+            Rf_error("newdim_non_positive|%lld", (long long)(i + 1));
         }
         prod_dim *= (R_xlen_t)dims[i];
     }
 
     if (prod_dim != len_img) {
-        Rf_error("Product of 'newdim' (%lld) does not match object length (%lld)",
+        Rf_error("newdim_product_mismatch|%lld|%lld",
                  (long long)prod_dim, (long long)len_img);
     }
 
     setAttrib(imgSEXP, R_DimSymbol, newdimSEXP);
 
     return imgSEXP;
+}
+
+
+extern "C" SEXP _polygonize(SEXP imgSEXP) {
+    if (!Rf_isInteger(imgSEXP)) {
+        Rf_error("img_must_be_integer_array");
+    }
+    SEXP dim = getAttrib(imgSEXP, R_DimSymbol);
+    if (dim == R_NilValue) {
+        Rf_error("img_must_have_dimensions");
+    }
+    if (!Rf_isInteger(dim) || LENGTH(dim) != 3) {
+        Rf_error("img_must_be_integer_array_three_dimensions");
+    }
+
+    const int h = INTEGER(dim)[0];
+    const int w = INTEGER(dim)[1];
+    const int b = INTEGER(dim)[2];
+    if (h == NA_INTEGER || h <= 0 ||
+        w == NA_INTEGER || w <= 0 ||
+        b == NA_INTEGER || b <= 0) {
+        Rf_error("img_dimensions_positive_integers");
+    }
+    // Convert imgSEXP to a GDAL MEM dataset
+    GDALAllRegister();
+
+    GDALDriverH drvMEM = GDALGetDriverByName("MEM");
+    if (drvMEM == NULL) {
+        Rf_error("gdal_drive_mem_error");
+    }
+    GDALDatasetH ds = GDALCreate(drvMEM, "", w, h, 1, GDT_Int32, NULL);
+    if (ds == NULL) {
+        Rf_error("gdal_create_mem_raster_error");
+    }
+    GDALRasterBandH band = GDALGetRasterBand(ds, 1);
+    if (band == NULL) {
+        GDALClose(ds);
+        Rf_error("gdal_get_raster_band_error");
+    }
+    // Write raster values
+    int *vals = INTEGER(imgSEXP);
+    CPLErr io_err = GDALRasterIO(band, GF_Write, 0, 0, w, h, vals, w, h, GDT_Int32, 0, 0);
+    if (io_err != CE_None) {
+        GDALClose(ds);
+        Rf_error("gdal_raster_io_error");
+    }
+    // Create in-memory vector dataset
+    GDALDriverH drvV = GDALGetDriverByName("Memory");
+    GDALDatasetH vds = GDALCreate(drvV, "", 0, 0, 0, GDT_Unknown, NULL);
+    OGRLayerH lyr = GDALDatasetCreateLayer(vds, "poly", NULL, wkbPolygon, NULL);
+
+    // Add integer field for DN
+    OGRFieldDefnH fld = OGR_Fld_Create("DN", OFTInteger);
+    OGR_L_CreateField(lyr, fld, TRUE);
+    OGR_Fld_Destroy(fld);
+
+    // Polygonize
+    GDALPolygonize(band, NULL, lyr, 0, NULL, NULL, NULL);
+
+    // Iterate features
+    OGRFeatureH feat;
+    OGR_L_ResetReading(lyr);
+
+    // Count features to allocate list
+    int nfeat = 0;
+    while ((feat = OGR_L_GetNextFeature(lyr)) != NULL) {
+        nfeat++;
+        OGR_F_Destroy(feat);
+    }
+    OGR_L_ResetReading(lyr);
+
+    SEXP poly_list = PROTECT(Rf_allocVector(VECSXP, nfeat));
+    int idx = 0;
+
+    while ((feat = OGR_L_GetNextFeature(lyr)) != NULL) {
+        OGRGeometryH g = OGR_F_GetGeometryRef(feat);
+
+        // Each polygon may have multiple rings (exterior + holes)
+        int nrings = OGR_G_GetGeometryCount(g);
+        SEXP ring_list = PROTECT(Rf_allocVector(VECSXP, nrings));
+
+        for (int r = 0; r < nrings; r++) {
+            OGRGeometryH ring = OGR_G_GetGeometryRef(g, r);
+            int npts = OGR_G_GetPointCount(ring);
+
+            SEXP mat = PROTECT(Rf_allocMatrix(REALSXP, npts, 2));
+            double *pm = REAL(mat);
+
+            for (int i = 0; i < npts; i++) {
+                pm[i]       = OGR_G_GetX(ring, i);        // column 1
+                pm[i+npts]  = OGR_G_GetY(ring, i);        // column 2
+            }
+            SET_VECTOR_ELT(ring_list, r, mat);
+            UNPROTECT(1);
+        }
+
+        SET_VECTOR_ELT(poly_list, idx++, ring_list);
+        UNPROTECT(1);
+        OGR_F_Destroy(feat);
+    }
+
+    UNPROTECT(1);
+    GDALClose(vds);
+    GDALClose(ds);
+    return poly_list;
 }

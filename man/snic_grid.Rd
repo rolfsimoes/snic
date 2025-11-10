@@ -2,84 +2,76 @@
 % Please edit documentation in R/grid.R
 \name{snic_grid}
 \alias{snic_grid}
-\alias{snic_rect_grid}
-\alias{snic_diamon_grid}
-\alias{snic_hex_grid}
-\alias{snic_random_grid}
 \alias{snic_count_seeds}
 \title{Spatial grid seeding for SNIC segmentation}
 \usage{
-snic_rect_grid(img, spacing, padding = NULL)
+snic_grid(
+  x,
+  type = c("rectangular", "diamond", "hexagonal", "random"),
+  spacing,
+  padding = spacing/2,
+  ...
+)
 
-snic_diamon_grid(img, spacing, padding = NULL)
-
-snic_hex_grid(img, spacing, padding = NULL)
-
-snic_random_grid(img, spacing, padding = NULL)
-
-snic_count_seeds(img, spacing, padding = NULL)
+snic_count_seeds(x, spacing, padding = padding/2)
 }
 \arguments{
-\item{img}{Image data. For the \code{array} method this should be numeric or
-integer with dimensions \code{(height, width, bands)}. For the
-\code{\link[terra:SpatRaster-class]{SpatRaster}} method (from \pkg{terra}),
-raster dimensions are inferred automatically.}
+\item{x}{Image data. For arrays, this must be numeric with dimensions
+\code{(height, width, bands)}. For \code{SpatRaster} objects, raster
+dimensions are inferred automatically.}
 
-\item{spacing}{Numeric or integer vector of length 1 or 2 giving the expected
-spacing (in pixels) between neighbouring seeds along the vertical and
-horizontal axes. A single value applies equally in both directions.}
+\item{type}{Character string indicating the spatial pattern to generate.
+One of \code{"rectangular"}, \code{"diamond"}, \code{"hexagonal"},
+or \code{"random"}.}
 
-\item{padding}{Numeric or integer vector of length 1 or 2 giving the distance
-(in pixels) from the image borders within which no seeds are placed.
-Defaults to \code{spacing / 2}, which centres the grid.}
+\item{spacing}{Numeric or integer. Either one value (applied to both axes)
+or two values \code{(vertical, horizontal)} giving the spacing between
+seeds in pixels.}
+
+\item{padding}{Numeric or integer. Distance from image borders within which
+no seeds are placed. May be of length 1 or 2. Defaults to
+\code{spacing / 2}.}
 }
 \value{
-For \code{snic_rect_grid()}, \code{snic_diamon_grid()}, \code{snic_hex_grid()}, and
-\code{snic_random_grid()}, the return value is a two-column integer matrix giving
-the 1-based pixel coordinates \code{(row, column)} of the generated seeds.
-
-For \code{snic_count_seeds()}, the return value is a single integer giving the
-total number of seeds that would be generated for the same parameters.
+A data frame containing:
+\itemize{
+  \item \code{r}, \code{c} when \code{x} has no CRS.
+  \item \code{lat}, \code{lon} when \code{x} has a CRS, expressed in
+    \code{EPSG:4326}.
+}
 }
 \description{
-Generate seed points following different spatial patterns used in SNIC
-(Simple Non-Iterative Clustering) segmentation. Four sampling strategies
-are available: rectangular, diamond, hexagonal, and random.
+Generate seed locations on an image following one of four spatial
+arrangements used in SNIC (Simple Non-Iterative Clustering) segmentation:
+rectangular, diamond, hexagonal, or random. Works for both numeric arrays
+and \code{\link[terra:SpatRaster-class]{SpatRaster}} objects.
 }
 \details{
-The \code{spacing} parameter directly determines the seed density.
-The helper \code{\link{snic_count_seeds}} returns the number of seeds that will be
-generated for a given image size, spacing, and padding.
+The \code{spacing} parameter controls seed density. Padding shifts the
+seed grid inward so that seeds are not placed directly on image borders.
 
-The functions differ in the geometric arrangement of seed centres:
+The spatial arrangements are:
 \itemize{
-  \item \code{snic_rect_grid()}: regular rectangular grid.
-  \item \code{snic_diamon_grid()}: two offset rectangular grids forming a
-    diamond pattern.
-  \item \code{snic_hex_grid()}: two offset rectangular grids approximating a
-    hexagonal (honeycomb) tiling with density correction.
-  \item \code{snic_random_grid()}: uniformly random seed positions with the same
-    expected density as the rectangular grid.
+  \item \code{rectangular}: regular grid aligned with rows and columns.
+  \item \code{diamond}: alternating row offsets, forming a diamond layout.
+  \item \code{hexagonal}: alternating offsets approximating a hexagonal
+    tiling.
+  \item \code{random}: uniform random placement with similar expected
+    density.
 }
 
-The companion function \code{\link{snic_count_seeds}} does not generate
-coordinates. Instead, it calculates how many seed points would be placed in a
-given image using the same \code{spacing} and \code{padding} parameters.
-This is useful for estimating seed density or selecting a spacing value that
-yields a desired number of segments.
+The helper \code{\link{snic_count_seeds}} reports how many seeds would be
+generated for given spacing and padding, without computing coordinates.
 
-In addition to these programmatic grid generators, seeds can also be defined
-interactively using \code{\link{snic_manual_grid}}, which allows the user to
-click on the image to place seeds manually. This is useful for inspection,
-debugging, or small-scale segmentation experiments. For scripted diagnostics
-you can also rely on \code{\link{snic_animation}}, which replays the
-incremental seed placement while saving intermediate plots and a GIF.
+If \code{x} has a coordinate reference system, the returned matrix includes
+additional geographic coordinates (\code{lon}, \code{lat}) in
+\code{EPSG:4326}.
 }
 \examples{
+\dontrun{
 if (requireNamespace("terra", quietly = TRUE)) {
-    # Sentinel-2 subset provided with the package
     tiff_dir <- system.file("S2-20LMR", package = "snic", mustWork = TRUE)
-    band_files <- file.path(
+    files <- file.path(
         tiff_dir,
         c(
             "S2_20LMR_B02_20220630.tif",
@@ -89,16 +81,19 @@ if (requireNamespace("terra", quietly = TRUE)) {
         )
     )
 
-    # Load and downsample
-    s2 <- terra::aggregate(terra::rast(band_files), fact = 5)
+    s2 <- terra::aggregate(terra::rast(files), fact = 5)
 
-    # Generate seed patterns
-    set.seed(42)
-    seeds_rect <- snic_rect_grid(s2, spacing = 10L, padding = 20L)
-    head(seeds_rect)
+    seeds <- snic_grid(
+        s2,
+        type = "rectangular",
+        spacing = 10L,
+        padding = 20L
+    )
+
+    head(seeds)
+}
 }
 }
 \seealso{
-\code{\link{snic_count_seeds}} for estimating seed counts and
-\code{\link{snic_manual_grid}} for interactive seed placement.
+\code{\link{snic_count_seeds}} for estimating seed counts.
 }

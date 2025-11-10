@@ -9,3 +9,5 @@ src/*.so
 src/*.dll
 *.tar.gz
 Rplots.pdf
+/doc/
+/Meta/

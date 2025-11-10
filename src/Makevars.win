@@ -1,0 +1,9 @@
+# Makevars.win for rgio package
+# Links to GDAL library on Windows
+
+# Note: Windows users need to have GDAL installed
+# This may require OSGeo4W or similar distribution
+
+PKG_CPPFLAGS = -I$(GDAL_HOME)/include
+PKG_LIBS = -L$(GDAL_HOME)/lib -lgdal
+

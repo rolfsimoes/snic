@@ -22,7 +22,12 @@ Suggests:
     terra,
     spelling,
     covr,
-    magick
+    magick,
+    jpeg,
+    png,
+    knitr,
+    rmarkdown
+VignetteBuilder: knitr
 License: MIT + file LICENSE
 Encoding: UTF-8
 RoxygenNote: 7.3.3

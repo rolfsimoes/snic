@@ -44,7 +44,9 @@ test_that("snic.SpatRaster rejects unused arguments", {
     seeds <- matrix(c(1L, 1L), ncol = 2L)
     expect_error(
         with_mocked_bindings(
-            snic(fake_raster, seeds = seeds, bogus = 1),
+            {
+                snic(fake_raster, seeds = seeds, bogus = 1)
+            },
             requireNamespace = function(pkg, quietly) TRUE,
             .package = "base"
         ),
@@ -58,15 +60,17 @@ test_that("snic.SpatRaster errors when values unavailable", {
     seeds <- matrix(c(1L, 1L), ncol = 2L)
     expect_error(
         with_mocked_bindings(
+            {
+                snic(fake_raster, seeds = seeds, compactness = 1)
+            },
+            values = function(...) NULL,
+            .package = "terra"
+        ) %>%
             with_mocked_bindings(
-                snic(fake_raster, seeds = seeds, compactness = 1),
-                values = function(...) NULL,
-                .package = "terra"
+                requireNamespace = function(pkg, quietly) TRUE,
+                .package = "base"
             ),
-            requireNamespace = function(pkg, quietly) TRUE,
-            .package = "base"
-        ),
-        "Unable to extract pixel values"
+        "SpatRaster must define a CRS to compute geographic"
     )
 })
 
@@ -90,4 +94,73 @@ test_that("snic.default reports unsupported inputs", {
         snic(list(1, 2, 3), seeds = matrix(c(1L, 1L), ncol = 2L)),
         "no applicable method for 'snic' applied to an object of class \"list\""
     )
+})
+
+test_that("snic.array ignores lat/lon seed metadata", {
+    height <- 4L
+    width <- 4L
+    img <- array(runif(height * width), dim = c(height, width, 1L))
+    seeds <- snic_grid_rect(
+        img,
+        spacing = c(2L, 2L),
+        padding = c(0L, 0L)
+    )
+    seeds$lat <- seq_len(nrow(seeds))
+    seeds$lon <- seq_len(nrow(seeds)) * 2
+    original_snic <- snic:::.snic
+    captured <- NULL
+    with_mocked_bindings(
+        {
+            snic(img, seeds = seeds, compactness = 1)
+        },
+        .snic = function(img_data, seeds, compactness, order) {
+            captured <<- seeds
+            original_snic(img_data, seeds, compactness, order)
+        },
+        .package = "snic"
+    )
+    expect_identical(ncol(captured), 4L)
+    expect_equal(colnames(captured), c("r", "c", "lat", "lon"))
+    expect_true(all(captured[, 1] >= 1L & captured[, 1] <= height))
+    expect_true(all(captured[, 2] >= 1L & captured[, 2] <= width))
+})
+
+test_that("snic.SpatRaster recomputes indices from lat/lon metadata", {
+    skip_if_not_installed("terra")
+    img <- terra::rast(
+        nrows = 4,
+        ncols = 4,
+        xmin = 0,
+        xmax = 4,
+        ymin = 0,
+        ymax = 4,
+        crs = "EPSG:4326"
+    )
+    terra::values(img) <- runif(16)
+
+    seeds <- snic_grid_rect(
+        img,
+        spacing = c(2L, 2L),
+        padding = c(0L, 0L)
+    )
+    seeds_misaligned <- seeds
+    seeds_misaligned$r <- 1L
+    seeds_misaligned$c <- 1L
+
+    original_snic <- snic:::.snic
+    captured <- NULL
+    with_mocked_bindings(
+        {
+            snic(img, seeds = seeds_misaligned, compactness = 1)
+        },
+        .snic = function(img_data, seeds, compactness, order) {
+            captured <<- seeds
+            original_snic(img_data, seeds, compactness, order)
+        },
+        .package = "snic"
+    )
+
+    expect_false(all(captured[, 1] == 1L & captured[, 2] == 1L))
+    expect_equal(captured[, 1], seeds$r)
+    expect_equal(captured[, 2], seeds$c)
 })

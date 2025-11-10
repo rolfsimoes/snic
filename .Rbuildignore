@@ -3,3 +3,8 @@
 ^\.lintr$
 ^LICENSE\.md$
 ^\.github$
+^README\.Rmd$
+^README_files$
+^README_cache$
+^doc$
+^Meta$

@@ -1,68 +1,62 @@
 #' Spatial grid seeding for SNIC segmentation
 #'
-#' Generate seed points following different spatial patterns used in SNIC
-#' (Simple Non-Iterative Clustering) segmentation. Four sampling strategies
-#' are available: rectangular, diamond, hexagonal, and random.
+#' Generate seed locations on an image following one of four spatial
+#' arrangements used in SNIC (Simple Non-Iterative Clustering) segmentation:
+#' rectangular, diamond, hexagonal, or random. Works for both numeric arrays
+#' and \code{\link[terra:SpatRaster-class]{SpatRaster}} objects.
 #'
 #' @name snic_grid
 #'
-#' @param img Image data. For the \code{array} method this should be numeric or
-#'   integer with dimensions \code{(height, width, bands)}. For the
-#'   \code{\link[terra:SpatRaster-class]{SpatRaster}} method (from \pkg{terra}),
-#'   raster dimensions are inferred automatically.
-#' @param spacing Numeric or integer vector of length 1 or 2 giving the expected
-#'   spacing (in pixels) between neighbouring seeds along the vertical and
-#'   horizontal axes. A single value applies equally in both directions.
-#' @param padding Numeric or integer vector of length 1 or 2 giving the distance
-#'   (in pixels) from the image borders within which no seeds are placed.
-#'   Defaults to \code{spacing / 2}, which centres the grid.
+#' @param x Image data. For arrays, this must be numeric with dimensions
+#'   \code{(height, width, bands)}. For \code{SpatRaster} objects, raster
+#'   dimensions are inferred automatically.
+#' @param type Character string indicating the spatial pattern to generate.
+#'   One of \code{"rectangular"}, \code{"diamond"}, \code{"hexagonal"},
+#'   or \code{"random"}.
+#' @param spacing Numeric or integer. Either one value (applied to both axes)
+#'   or two values \code{(vertical, horizontal)} giving the spacing between
+#'   seeds in pixels.
+#' @param padding Numeric or integer. Distance from image borders within which
+#'   no seeds are placed. May be of length 1 or 2. Defaults to
+#'   \code{spacing / 2}.
 #'
 #' @details
-#' The \code{spacing} parameter directly determines the seed density.
-#' The helper \code{\link{snic_count_seeds}} returns the number of seeds that will be
-#' generated for a given image size, spacing, and padding.
+#' The \code{spacing} parameter controls seed density. Padding shifts the
+#' seed grid inward so that seeds are not placed directly on image borders.
 #'
-#' The functions differ in the geometric arrangement of seed centres:
+#' The spatial arrangements are:
 #' \itemize{
-#'   \item \code{snic_rect_grid()}: regular rectangular grid.
-#'   \item \code{snic_diamon_grid()}: two offset rectangular grids forming a
-#'     diamond pattern.
-#'   \item \code{snic_hex_grid()}: two offset rectangular grids approximating a
-#'     hexagonal (honeycomb) tiling with density correction.
-#'   \item \code{snic_random_grid()}: uniformly random seed positions with the same
-#'     expected density as the rectangular grid.
+#'   \item \code{rectangular}: regular grid aligned with rows and columns.
+#'   \item \code{diamond}: alternating row offsets, forming a diamond layout.
+#'   \item \code{hexagonal}: alternating offsets approximating a hexagonal
+#'     tiling.
+#'   \item \code{random}: uniform random placement with similar expected
+#'     density.
 #' }
 #'
-#' The companion function \code{\link{snic_count_seeds}} does not generate
-#' coordinates. Instead, it calculates how many seed points would be placed in a
-#' given image using the same \code{spacing} and \code{padding} parameters.
-#' This is useful for estimating seed density or selecting a spacing value that
-#' yields a desired number of segments.
+#' The helper \code{\link{snic_count_seeds}} reports how many seeds would be
+#' generated for given spacing and padding, without computing coordinates.
 #'
-#' In addition to these programmatic grid generators, seeds can also be defined
-#' interactively using \code{\link{snic_manual_grid}}, which allows the user to
-#' click on the image to place seeds manually. This is useful for inspection,
-#' debugging, or small-scale segmentation experiments. For scripted diagnostics
-#' you can also rely on \code{\link{snic_animation}}, which replays the
-#' incremental seed placement while saving intermediate plots and a GIF.
+#' If \code{x} has a coordinate reference system, the returned matrix includes
+#' additional geographic coordinates (\code{lon}, \code{lat}) in
+#' \code{EPSG:4326}.
 #'
 #' @return
-#' For \code{snic_rect_grid()}, \code{snic_diamon_grid()}, \code{snic_hex_grid()}, and
-#' \code{snic_random_grid()}, the return value is a two-column integer matrix giving
-#' the 1-based pixel coordinates \code{(row, column)} of the generated seeds.
-#'
-#' For \code{snic_count_seeds()}, the return value is a single integer giving the
-#' total number of seeds that would be generated for the same parameters.
+#' A data frame containing:
+#' \itemize{
+#'   \item \code{r}, \code{c} when \code{x} has no CRS.
+#'   \item \code{lat}, \code{lon} when \code{x} has a CRS, expressed in
+#'     \code{EPSG:4326}.
+#' }
 #'
 #' @seealso
-#' \code{\link{snic_count_seeds}} for estimating seed counts and
-#' \code{\link{snic_manual_grid}} for interactive seed placement.
+#' \code{\link{snic_count_seeds}} for estimating seed counts.
 #'
 #' @examples
+#' \dontrun{
 #' if (requireNamespace("terra", quietly = TRUE)) {
-#'     # Sentinel-2 subset provided with the package
 #'     tiff_dir <- system.file("S2-20LMR", package = "snic", mustWork = TRUE)
-#'     band_files <- file.path(
+#'     files <- file.path(
 #'         tiff_dir,
 #'         c(
 #'             "S2_20LMR_B02_20220630.tif",
@@ -72,188 +66,96 @@
 #'         )
 #'     )
 #'
-#'     # Load and downsample
-#'     s2 <- terra::aggregate(terra::rast(band_files), fact = 5)
+#'     s2 <- terra::aggregate(terra::rast(files), fact = 5)
 #'
-#'     # Generate seed patterns
-#'     set.seed(42)
-#'     seeds_rect <- snic_rect_grid(s2, spacing = 10L, padding = 20L)
-#'     head(seeds_rect)
+#'     seeds <- snic_grid(
+#'         s2,
+#'         type = "rectangular",
+#'         spacing = 10L,
+#'         padding = 20L
+#'     )
+#'
+#'     head(seeds)
+#' }
 #' }
 #' @export
-snic_rect_grid <- function(img, spacing, padding = NULL) {
-    params <- .prepare_grid_args(img, spacing, padding, "snic_rect_grid")
-    h <- params$h
-    w <- params$w
-    spacing <- params$spacing
-    padding <- params$padding
-
-    counts <- .snic_count_seeds(h, w, spacing, padding)
-    if (any(!is.finite(counts))) {
-        stop("Unable to determine seed counts for snic_rect_grid().", call. = FALSE)
+snic_grid <- function(x,
+                      type = c(
+                          "rectangular", "diamond",
+                          "hexagonal", "random"
+                      ),
+                      spacing,
+                      padding = spacing / 2,
+                      ...) {
+    type <- match.arg(type)
+    if (length(spacing) == 1L) {
+        spacing <- rep(spacing, 2L)
     }
-
-    row_start <- padding[[1]] + 1
-    row_end <- h - padding[[1]]
-    col_start <- padding[[2]] + 1
-    col_end <- w - padding[[2]]
-
-    rows <- if (counts[[1]] == 1L) {
-        mean(c(row_start, row_end))
-    } else {
-        seq(row_start, row_end, length.out = counts[[1]])
+    if (length(padding) == 1L) {
+        padding <- rep(padding, 2L)
     }
-    cols <- if (counts[[2]] == 1L) {
-        mean(c(col_start, col_end))
-    } else {
-        seq(col_start, col_end, length.out = counts[[2]])
-    }
+    check_grid_args(x, spacing, padding)
+    seeds <- switch(type,
+        rectangular = {
+            grid_rect(x, spacing, padding)
+        },
+        diamond = {
+            grid_diamond(x, spacing, padding)
+        },
+        hexagonal = {
+            grid_hex(x, spacing, padding)
+        },
+        random = {
+            grid_random(x, spacing, padding)
+        },
+        stop("argument 'type' is invalid")
+    )
 
-    as.matrix(expand.grid(r = rows, c = cols))
-}
-
-#' @rdname snic_grid
-#' @export
-snic_diamon_grid <- function(img, spacing, padding = NULL) {
-    params <- .prepare_grid_args(img, spacing, padding, "snic_diamon_grid")
-    spacing <- params$spacing
-    padding <- params$padding
-    h <- params$h
-    w <- params$w
-
-    spacing <- sqrt(sum(spacing * spacing))
-    spacing <- c(spacing, spacing)
-
-    # Base grid
-    g1 <- snic_rect_grid(img, spacing, padding)
-
-    g2 <- sweep(g1, 2L, spacing / 2, "+")
-    g2 <- g2[
-        g2[, 1] <= h - padding[[1]] &
-            g2[, 2] <= w - padding[[2]], ,
-        drop = FALSE
-    ]
-    rbind(g1, g2)
-}
-
-#' @rdname snic_grid
-#' @export
-snic_hex_grid <- function(img, spacing, padding = NULL) {
-    params <- .prepare_grid_args(img, spacing, padding, "snic_hex_grid")
-    h <- params$h
-    w <- params$w
-    spacing <- params$spacing
-    padding <- params$padding
-
-    # Adjust spacing for equal density with square grid
-    spacing <- spacing * c(1, sqrt(3)) * 1.075 # density correction
-
-    # Base grid
-    g1 <- snic_rect_grid(img, spacing, padding)
-
-    g2 <- sweep(g1, 2L, spacing / 2, "+")
-    g2 <- g2[
-        g2[, 1] <= h - padding[[1]] &
-            g2[, 2] <= w - padding[[2]], ,
-        drop = FALSE
-    ]
-    rbind(g1, g2)
-}
-
-#' @rdname snic_grid
-#' @export
-snic_random_grid <- function(img, spacing, padding = NULL) {
-    params <- .prepare_grid_args(img, spacing, padding, "snic_random_grid")
-    h <- params$h
-    w <- params$w
-    spacing <- params$spacing
-    padding <- params$padding
-
-    # Estimate number of seeds
-    counts <- .snic_count_seeds(h, w, spacing, padding)
-    if (any(!is.finite(counts))) {
-        stop("Unable to determine seed counts for snic_random_grid().", call. = FALSE)
-    }
-    if (any(counts < 1)) {
-        stop(
-            "Spacing/padding combination in snic_random_grid() yields no valid seed positions.",
-            call. = FALSE
-        )
-    }
-    counts <- as.integer(round(counts))
-    n <- prod(counts)
-
-    inner_dims <- c(h, w) - 2 * padding
-    if (any(inner_dims <= 0)) {
-        stop(
-            "Padding in snic_random_grid() leaves no interior area for sampling.",
-            call. = FALSE
-        )
-    }
-    inner_dims <- as.integer(round(inner_dims))
-    area <- prod(inner_dims)
-    if (n > area) {
-        stop(
-            "Requested seed count exceeds available area in snic_random_grid().",
-            call. = FALSE
-        )
-    }
-
-    samples <- sample.int(area, n, replace = FALSE)
-    s <- arrayInd(samples, inner_dims)
-
-    # Valid area (excluding borders)
-    sweep(s, 2L, padding, "+")
+    rc_to_wgs84(x, seeds)
 }
 
 #' Interactive seed selection for SNIC segmentation
 #'
 #' Collect seed points interactively by clicking on the image. Each left-click
-#' adds a new seed; pressing ESC or right-clicking ends the session.
-#' After each click, the SNIC segmentation is recomputed and plotted for visual
-#' feedback. The function is intended for exploratory or fine-tuning workflows,
-#' where automatic seeding may not be ideal.
+#' adds a new seed; pressing \code{ESC} ends the session. After each click,
+#' SNIC segmentation is recomputed and plotted for visual feedback. This is
+#' intended for exploratory and fine-tuning workflows, where automatic seeding
+#' may not be ideal.
 #'
-#' @param img A \code{\link[terra:SpatRaster-class]{SpatRaster}} object (from \pkg{terra})
-#'   representing the image to segment. The raster must have valid spatial
-#'   referencing and extent, as clicks are interpreted in map coordinates.
-#' @param seeds Optional object specifying existing seed coordinates to display
-#'   or extend interactively. The expected structure is a two-column matrix
-#'   (or any object that can be coerced to such) with columns named \code{r}
-#'   (row) and \code{c} (column), giving the 1-based pixel coordinates of seed
-#'   locations. If \code{NULL}, an empty seed set is initialised and new seeds
-#'   are created through mouse clicks. The returned object follows the same
-#'   format and can be passed directly to \code{\link{snic}} for segmentation.
-#' @param compactness Numeric scalar controlling the SNIC compactness parameter.
-#'   Larger values encourage spatial compactness. Defaults to 1.0.
-#' @param ... A list of arguments forwarded to
-#'   \code{\link{snic_plot()}} when rendering the preview image. Override
-#'   entries such as \code{band}, \code{r}, \code{g}, \code{b}, \code{col},
-#'   \code{stretch}, \code{seeds_plot_args}, or \code{seg_plot_args} to tweak
-#'   the display.
+#' @param x A \code{\link[terra:SpatRaster-class]{SpatRaster}} object
+#'   with a valid spatial reference and extent. Mouse clicks are interpreted
+#'   in map coordinates.
+#' @param seeds Optional existing seed set to display and extend. May be given as:
+#'   \itemize{
+#'     \item a two-column data frame \code{(lat, lon)} in \code{EPSG:4326}, or
+#'     \item a two-column data frame \code{(r, c)} containing pixel coordinates.
+#'   }
+#'   If pixel coordinates are supplied, they are internally converted. If
+#'   \code{NULL}, the seed set is initialized empty and populated interactively.
+#' @param ... Arguments forwarded to \code{\link{snic_plot}} for display control.
+#'   These may include \code{band}, \code{r}, \code{g}, \code{b}, \code{stretch},
+#'   \code{seeds_plot_args}, or \code{seg_plot_args}.
+#' @param snic_args A list of arguments passed to \code{\link{snic}}, such as
+#'   \code{compactness}.
+#' @param snic_plot_args A list of display modifiers forwarded to
+#'   \code{\link{snic_plot}} when rendering the preview.
 #'
 #' @details
-#' The function provides an interactive way to define seeds manually for
-#' \code{\link{snic}}. The image is resegmented after each added seed to
-#' visualise the progressive effect of new cluster centres.
+#' After each new seed is placed interactively, segmentation is recomputed to
+#' provide immediate feedback on how the seed placement affects clustering.
 #'
 #' @return
-#' A two-column matrix with seed coordinates \code{(r, c)}. The storage mode is
-#' not enforced and may remain numeric or double. The return value is suitable
-#' for direct use in \code{\link{snic}}.
+#' A two-column data frame \code{(lat, lon)} expressing seed positions in
+#' \code{EPSG:4326}. The result can be passed directly to \code{\link{snic}}.
 #'
 #' @seealso
-#' \code{\link{snic}}, \code{\link{snic_grid}}, \code{\link{snic_rect_grid}},
-#' \code{\link{snic_diamon_grid}}, \code{\link{snic_hex_grid}},
-#' \code{\link{snic_random_grid}}, \code{\link{snic_plot}},
-#' \code{\link{snic_animation}}.
+#' \code{\link{snic}}, \code{\link{snic_grid}}, \code{\link{snic_animation}}.
 #'
 #' @examples
 #' \dontrun{
 #' if (interactive() && requireNamespace("terra", quietly = TRUE)) {
-#'     # Sentinel-2 subset provided with the package
 #'     tiff_dir <- system.file("S2-20LMR", package = "snic", mustWork = TRUE)
-#'     band_files <- file.path(
+#'     files <- file.path(
 #'         tiff_dir,
 #'         c(
 #'             "S2_20LMR_B02_20220630.tif",
@@ -262,21 +164,16 @@ snic_random_grid <- function(img, spacing, padding = NULL) {
 #'             "S2_20LMR_B12_20220630.tif"
 #'         )
 #'     )
+#'     s2 <- terra::aggregate(terra::rast(files), fact = 5)
 #'
-#'     # Load and downsample
-#'     s2 <- terra::aggregate(terra::rast(band_files), fact = 5)
-#'
-#'     # Generate seed patterns
-#'     seeds <- snic_manual_grid(
+#'     seeds <- snic_grid_manual(
 #'         s2,
-#'         compactness = 0.1,
-#'         r = 4, g = 3, b = 1
+#'         snic_args = list(compactness = 0.1),
+#'         snic_plot_args = list(r = 4, g = 3, b = 1)
 #'     )
 #'
-#'     # Run snic
 #'     seg <- snic(s2, seeds, compactness = 0.1)
 #'
-#'     # Visualise one pattern
 #'     snic_plot(
 #'         s2,
 #'         r = 4, g = 3, b = 1,
@@ -286,147 +183,300 @@ snic_random_grid <- function(img, spacing, padding = NULL) {
 #'     )
 #' }
 #' }
-snic_manual_grid <- function(img,
+#' @export
+snic_grid_manual <- function(x,
                              seeds = NULL,
-                             compactness = 1.0,
-                             ...) {
-    if (!requireNamespace("terra", quietly = TRUE)) {
-        stop("Package 'terra' must be installed to handle SpatRaster input", call. = FALSE)
-    }
-
-    if (!inherits(img, "SpatRaster")) {
-        stop("argument 'img' must be a 'SpatRaster' object", call. = FALSE)
-    }
-
-    if (!interactive()) {
-        stop("'snic_manual_grid()' can only be used in an interactive R session", call. = FALSE)
-    }
-
-    # Check and prepare seeds to integer matrix
+                             ...,
+                             snic_args = list(
+                                 compactness = 0.5
+                             ),
+                             snic_plot_args = list(
+                                 stretch = "lin",
+                                 seeds_plot_args = list(
+                                     pch = 4, col = "#FFFF00", cex = 1
+                                 ),
+                                 seg_plot_args = list(
+                                     border = "#FFFF00", col = NA, lwd = 0.4
+                                 )
+                             )) {
     if (!is.null(seeds)) {
-        seeds <- .prepare_seeds(seeds)
+        if (is_seeds(seeds, "rc")) {
+            seeds_rc <- seeds
+        } else {
+            if (!has_crs(x)) {
+                stop("cannot use (lon,lat) seeds with non-spatial data")
+            }
+            seeds_xy <- wgs84_to_xy(x, seeds)
+            seeds_rc <- xy_to_rc(x, seeds_xy)
+        }
+
+        snic_args$seeds <- seeds_rc
     }
 
-    message("Left-click to add points; press ESC or right-click to stop.")
+    seeds <- grid_manual(x, snic_args, snic_plot_args)
 
-    snic_plot(img, seeds = seeds, ...)
-
-    repeat {
-        p <- locator(n = 1)
-        if (is.null(p)) break
-
-        r <- terra::rowFromY(img, p$y)
-        c <- terra::colFromX(img, p$x)
-        if (is.na(r) || is.na(c)) next
-
-        seeds <- rbind(seeds, cbind(r = r, c = c))
-        seg <- snic(img, seeds = seeds, compactness = compactness)
-
-        snic_plot(img, seeds = seeds, seg = seg, ...)
-    }
-
-    invisible(seeds)
+    rc_to_wgs84(x, seeds)
 }
 
 #' @rdname snic_grid
 #' @export
-snic_count_seeds <- function(img, spacing, padding = NULL) {
-    params <- .prepare_grid_args(img, spacing, padding, "snic_count_seeds")
-    prod(.snic_count_seeds(params$h, params$w, params$spacing, params$padding))
+snic_count_seeds <- function(x, spacing, padding = padding / 2) {
+    if (length(spacing) == 1L) {
+        spacing <- rep(spacing, 2L)
+    }
+    if (length(padding) == 1L) {
+        padding <- rep(padding, 2L)
+    }
+    check_grid_args(x, spacing, padding)
+    prod(round(grid_size(x, spacing, padding)))
 }
 
-#' Animated visualization of SNIC seeding and segmentation
+#' Internal grid utilities (developer documentation)
 #'
-#' Generate an animated GIF illustrating how SNIC segmentation evolves
-#' as seeds are progressively added. This function runs a sequence of
-#' SNIC segmentations using incremental subsets of the provided seeds
-#' and compiles the results into an animation.
+#' These functions implement the core logic for generating seed coordinates
+#' used in SNIC grid-based seeding. They are not exported and should not be
+#' called directly by users. All grid functions operate in pixel-index space
+#' (row/column). CRS-aware conversion is handled elsewhere.
 #'
-#' @param img A `SpatRaster` object (from **terra**) representing the
-#'   multiband image to segment. Dimensions and coordinate reference
-#'   are inferred automatically.
-#' @param seeds A two-column object specifying the seed coordinates
-#'   `(r, c)` in 1-based pixel indices. The object can be a matrix,
-#'   data frame, or any object coercible to that structure. Seeds are
-#'   typically generated using functions from \code{\link{snic_grid}}
-#'   or interactively with \code{\link{snic_manual_grid}}.
-#' @param compactness Numeric scalar controlling the SNIC compactness
-#'   parameter (default = 1). Larger values produce more spatially
-#'   compact segments.
-#' @param max_frames Integer giving the maximum number of frames to
-#'   render in the animation. If the number of seeds exceeds this
-#'   limit, only the first \code{max_frames} seeds are used.
-#' @param duration Numeric value giving the total playback time of the
-#'   animation in seconds. The function automatically computes an appropriate
-#'   frame delay so that all frames are displayed within this duration.
-#'   Due to GIF timing resolution (1/100 s per frame), the actual playback
-#'   time may differ slightly from the requested value. Defaults to 10 seconds.
-#' @param ... Additional arguments passed to \code{\link{snic_plot}}
-#'   when drawing each frame (for example, color palettes or symbol
-#'   options for seeds).
-#' @param device_args Named list of arguments passed to
-#'   \code{grDevices::png()} when rendering frames. Defaults to
-#'   \code{list(res = 200, bg = "white")}. Values such as
-#'   \code{width}, \code{height}, and \code{filename} are managed
-#'   automatically.
+#' @section Functions:
+#' \itemize{
 #'
-#' @details
-#' For each iteration, the function adds one seed to the current set
-#' and re-runs \code{\link{snic}}. The resulting segmentation and seed
-#' locations are drawn using \code{\link{snic_plot}}, saved as a PNG,
-#' and finally combined into an animated GIF using the **magick**
-#' package.
+#'   \item \code{check_grid_args(x, spacing, padding)}
+#'   Validates input dimensions and parameters. Ensures:
+#'   \itemize{
+#'     \item \code{x} has positive height and width,
+#'     \item \code{spacing} is numeric of length 2 and greater than 1,
+#'     \item \code{padding} is numeric of length 2 and non-negative,
+#'     \item padding does not eliminate all valid placement area.
+#'   }
 #'
-#' This tool is intended for exploratory and didactic purposes rather
-#' than large-scale processing. It can be used to illustrate the
-#' influence of seed placement or the effect of the `compactness`
-#' parameter on segmentation results.
+#'   \item \code{grid_size(x, spacing, padding)}
+#'   Computes the number of grid points in each dimension that fit within the
+#'   interior region defined by \code{padding}.
 #'
-#' @return
-#' Invisibly returns the file path of the generated GIF (saved in the
-#' current working directory). A message is printed with the saved
-#' file name.
+#'   \item \code{grid_rect(x, spacing, padding)}
+#'   Generates a rectangular grid of seed positions evenly spaced across the
+#'   available region.
 #'
-#' @seealso
-#' \code{\link{snic}}, \code{\link{snic_plot}}, \code{\link{snic_grid}},
-#' \code{\link{snic_manual_grid}}.
+#'   \item \code{grid_diamond(x, spacing, padding)}
+#'   Generates a rectangular grid and a second grid offset diagonally by
+#'   half the spacing, producing a diamond pattern. Boundary checks ensure
+#'   offset points remain valid.
 #'
-#' @examples
-#' if (requireNamespace("terra", quietly = TRUE) &&
-#'     requireNamespace("magick", quietly = TRUE)) {
-#'     tif_dir <- system.file("S2-20LMR", package = "snic", mustWork = TRUE)
-#'     band_files <- file.path(
-#'         tif_dir,
-#'         c(
-#'             "S2_20LMR_B02_20220630.tif",
-#'             "S2_20LMR_B04_20220630.tif",
-#'             "S2_20LMR_B08_20220630.tif",
-#'             "S2_20LMR_B12_20220630.tif"
-#'         )
-#'     )
-#'     s2 <- terra::aggregate(terra::rast(band_files), factor = 5)
+#'   \item \code{grid_hex(x, spacing, padding)}
+#'   Similar to \code{grid_diamond}, but applies axis-dependent spacing to
+#'   approximate a hexagonal tiling geometry.
 #'
-#'     set.seed(42)
-#'     seeds <- snic_random_grid(s2, spacing = 10L, padding = 20L)
-#'     snic_animation(
-#'         s2,
-#'         seeds = seeds,
-#'         compactness = 0.1,
-#'         max_frames = 200L,
-#'         r = 4, g = 3, b = 1,
-#'         seeds_plot_args = list(col = NA)
-#'     )
+#'   \item \code{grid_random(x, spacing, padding)}
+#'   Places \code{prod(grid_size(...))} uniformly sampled seed positions
+#'   inside the padded region. Sampling is without replacement.
+#'
+#'   \item \code{grid_manual(x, snic_args, snic_plot_args)}
+#'   Interactive seeding. Displays an image and iteratively updates seeds
+#'   based on mouse clicks. Re-runs SNIC and re-plots after each update.
+#'   Intended for exploratory inspection, not automated workflows.
 #' }
-#' @export
-snic_animation <- function(img,
-                           seeds = NULL,
-                           compactness = 1.0,
-                           max_frames = 100L,
-                           duration = 10,
-                           ...,
-                           device_args = list(
-                               res = 200,
-                               bg = "white"
-                           )) {
-    UseMethod("snic_animation", img)
+#'
+#' @keywords internal
+#' @name grid_utils
+NULL
+
+#' @rdname grid_utils
+check_grid_args <- function(x, spacing, padding) {
+    h <- nrow(x)
+    w <- ncol(x)
+    if (is.null(h) || is.null(w) || h < 1L || w < 1L) {
+        stop(.msg("grid_img_min_dimensions"), call. = FALSE)
+    }
+    if (!is.numeric(spacing)) {
+        stop(.msg("grid_spacing_numeric"), call. = FALSE)
+    }
+    if (length(spacing) != 2L) {
+        stop(.msg("grid_spacing_length"), call. = FALSE)
+    }
+    if (any(!is.finite(spacing))) {
+        stop(.msg("grid_spacing_finite"), call. = FALSE)
+    }
+    if (any(spacing <= 1)) {
+        stop(.msg("grid_spacing_greater_than_one"), call. = FALSE)
+    }
+    if (!is.numeric(padding)) {
+        stop(.msg("grid_padding_numeric"), call. = FALSE)
+    }
+    if (length(padding) != 2L) {
+        stop(.msg("grid_padding_length"), call. = FALSE)
+    }
+    if (any(!is.finite(padding))) {
+        stop(.msg("grid_padding_finite"), call. = FALSE)
+    }
+    if (any(padding < 0)) {
+        stop(.msg("grid_padding_non_negative"), call. = FALSE)
+    }
+    if (padding[[1]] >= h / 2 || padding[[2]] >= w / 2) {
+        stop(.msg("grid_padding_no_space"), call. = FALSE)
+    }
+
+    invisible(NULL)
+}
+
+#' @rdname grid_utils
+grid_size <- function(x, spacing, padding) {
+    stopifnot(length(spacing) == 2L)
+    stopifnot(length(padding) == 2L)
+    h <- nrow(x)
+    w <- ncol(x)
+    n_rows <- floor((h - 2 * padding[[1]] - 1) / spacing[[1]]) + 1L
+    n_cols <- floor((w - 2 * padding[[2]] - 1) / spacing[[2]]) + 1L
+
+    as.integer(c(n_rows, n_cols))
+}
+
+#' @rdname grid_utils
+grid_rect <- function(x, spacing, padding) {
+    stopifnot(length(spacing) == 2L)
+    stopifnot(length(padding) == 2L)
+
+    size <- grid_size(x, spacing, padding)
+    if (any(!is.finite(size))) {
+        stop(.msg("grid_unable_determine_seed_counts"), call. = FALSE)
+    }
+    if (any(size < 1L)) {
+        stop(.msg("grid_no_valid_seed_positions"), call. = FALSE)
+    }
+
+    h <- nrow(x)
+    w <- ncol(x)
+    r0 <- padding[[1]] + 1
+    r1 <- h - padding[[1]]
+    c0 <- padding[[2]] + 1
+    c1 <- w - padding[[2]]
+
+    if (size[[1]] == 1L) {
+        rows <- mean(c(r0, r1))
+    } else {
+        rows <- seq(r0, r1, length.out = size[[1]])
+    }
+    if (size[[2]] == 1L) {
+        cols <- mean(c(c0, c1))
+    } else {
+        cols <- seq(c0, c1, length.out = size[[2]])
+    }
+
+    .expand(r = rows, c = cols)
+}
+
+#' @rdname grid_utils
+grid_diamond <- function(x, spacing, padding) {
+    stopifnot(length(spacing) == 2L)
+    stopifnot(length(padding) == 2L)
+
+    h <- nrow(x)
+    w <- ncol(x)
+    spacing <- spacing * sqrt(2)
+
+    base <- grid_rect(x, spacing, padding)
+    shifted <- .seeds(
+        r = base$r + spacing[[1]] / 2,
+        c = base$c + spacing[[2]] / 2
+    )
+
+    keep <- shifted$r <= (h - padding[[1]]) &
+        shifted$c <= (w - padding[[2]])
+    shifted <- shifted[keep, , drop = FALSE]
+
+    rbind(base, shifted)
+}
+
+#' @rdname grid_utils
+grid_hex <- function(x, spacing, padding) {
+    stopifnot(length(spacing) == 2L)
+    stopifnot(length(padding) == 2L)
+
+    h <- nrow(x)
+    w <- ncol(x)
+    spacing <- spacing * c(1, sqrt(3))
+
+    base <- grid_rect(x, spacing, padding)
+    shifted <- .seeds(
+        r = base$r + spacing[[1]] / 2,
+        c = base$c + spacing[[2]] / 2
+    )
+    keep <- shifted$r <= (h - padding[[1]]) &
+        shifted$c <= (w - padding[[2]])
+    shifted <- shifted[keep, , drop = FALSE]
+
+    rbind(base, shifted)
+}
+
+#' @rdname grid_utils
+grid_random <- function(x, spacing, padding) {
+    stopifnot(length(spacing) == 2L)
+    stopifnot(length(padding) == 2L)
+
+    n <- prod(grid_size(x, spacing, padding))
+    if (!is.finite(n)) {
+        stop(.msg("grid_unable_determine_seed_counts"), call. = FALSE)
+    }
+    if (n < 1L) {
+        stop(.msg("grid_no_valid_seed_positions"), call. = FALSE)
+    }
+
+    h <- nrow(x)
+    w <- ncol(x)
+    inner_dims <- as.integer(round(c(h, w) - 2 * padding))
+    area <- prod(inner_dims)
+
+    samples <- sample.int(area, n, replace = FALSE)
+    s <- arrayInd(samples, inner_dims)
+
+    .seeds(r = s[, 1L] + padding[[1]], c = s[, 2L] + padding[[2]])
+}
+
+#' @rdname grid_utils
+grid_manual <- function(x, snic_args, snic_plot_args) {
+    if (!.is_interactive()) {
+        stop(.msg("manual_grid_interactive_only"), call. = FALSE)
+    }
+
+    default_snic_args <- list(seeds = NULL, compactness = 0.5)
+    snic_args <- utils::modifyList(default_snic_args, snic_args)
+
+    default_plot_args <- list(
+        stretch = "lin",
+        seeds_plot_args = list(
+            pch = 4, col = "#FFFF00", cex = 1
+        ),
+        seg_plot_args = list(
+            border = "#FFFF00", col = NA, lwd = 0.4
+        )
+    )
+    plot_args <- utils::modifyList(default_plot_args, snic_plot_args)
+
+    message(.msg("manual_grid_instructions"))
+
+    # if (is.array(x)) {
+    x_plt <- arr_to_rast(x_to_arr(x))
+    # }
+
+    if (!is.null(nrow(snic_args$seeds)) && nrow(snic_args$seeds)) {
+        plot_args$seeds <- snic_args$seeds
+        plot_args$seg <- do.call(snic, c(list(x_plt), snic_args))
+    }
+    do.call(snic_plot, c(list(x_plt), plot_args))
+
+    repeat {
+        p <- graphics::locator(n = 1)
+        if (is.null(p)) break
+
+        new_seed <- .seeds(x = p$x, y = p$y)
+        new_seed <- xy_to_rc(x_plt, new_seed)
+        if (any(is.na(new_seed))) next
+
+        snic_args$seeds <- append_seed(snic_args$seeds, new_seed)
+        plot_args$seg <- do.call(snic, c(list(x_plt), snic_args))
+        plot_args$seeds <- snic_args$seeds
+        do.call(snic_plot, c(list(x_plt), plot_args))
+    }
+
+    snic_args$seeds
 }

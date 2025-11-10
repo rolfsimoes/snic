@@ -8,10 +8,12 @@
 
 extern SEXP _snic(SEXP, SEXP, SEXP, SEXP);
 extern SEXP _set_dim(SEXP, SEXP);
+extern SEXP _polygonize(SEXP);
 
 static const R_CallMethodDef CallEntries[] = {
     {"snic_snic", (DL_FUNC) &_snic, 4},
     {"snic_set_dim", (DL_FUNC) &_set_dim, 2},
+    {"snic_polygonize", (DL_FUNC) &_polygonize, 1},
     {NULL, NULL, 0}
 };
 
