@@ -72,7 +72,7 @@ test_that("snic_animation validates inputs", {
     colnames(seeds_invalid) <- c("r", "c")
     expect_error(
         snic_animation(matrix(1), seeds = seeds_invalid, file_path = tempfile(fileext = ".gif")),
-        "argument 'x' must be a 'SpatRaster' object",
+        "argument 'x' must have 3 dimensions",
         fixed = TRUE
     )
 
@@ -82,5 +82,4 @@ test_that("snic_animation validates inputs", {
         snic_animation(img, seeds = seeds, delay = 0, file_path = tempfile(fileext = ".gif")),
         "argument 'delay' must be a positive number"
     )
-
 })

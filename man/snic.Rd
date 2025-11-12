@@ -18,20 +18,19 @@ spatial status of \code{x}:
 \itemize{
   \item If \code{x} has no CRS: a two-column data frame \code{(r, c)}
   giving 1-based pixel coordinates.
-  \item If \code{x} has a CRS: a two-column data frame \code{(lat, lon)}
-  expressed in \code{EPSG:4326}. These are converted internally to pixel
-  coordinates before segmentation.
+  \item If \code{x} has a CRS: a two-column data frame with columns
+  \code{lat} and \code{lon} expressed in \code{EPSG:4326}. These are
+  converted internally to pixel coordinates before segmentation.
 }
-Seeds define the starting cluster centers. They must be generated before
-calling \code{snic}, typically via \code{\link{snic_grid}} utilities such
-as \code{\link{snic_grid_rect}}, \code{\link{snic_grid_hex}}, or
-interactively via \code{\link{snic_grid_manual}}.}
+Seeds define the starting cluster centers. They are usually generated with
+\code{\link{snic_grid}} helpers (e.g. rectangular, hexagonal or random),
+or placed interactively via \code{\link{snic_grid_manual}}.}
 
 \item{compactness}{Non-negative numeric value controlling the balance
 between feature similarity and spatial proximity (default = 0.5).
 Larger values produce more spatially compact superpixels.}
 
-\item{...}{Reserved for future extensions.}
+\item{...}{Currently unused; reserved for future extensions.}
 }
 \value{
 A single-band object with the same spatial dimensions as \code{x}, where
@@ -49,6 +48,7 @@ region, and pixels are assigned based on the SNIC distance metric combining
 spectral similarity and spatial distance, weighted by \code{compactness}.
 }
 \examples{
+# Example 1: Terra raster workflow with visual feedback
 if (requireNamespace("terra", quietly = TRUE)) {
     tdir <- system.file("S2-20LMR", package = "snic", mustWork = TRUE)
     files <- file.path(
@@ -61,8 +61,10 @@ if (requireNamespace("terra", quietly = TRUE)) {
         )
     )
 
+    # Downsample for speed (optional)
     s2 <- terra::aggregate(terra::rast(files), fact = 5)
 
+    # Generate a regular grid of seeds (lat/lon because CRS is present)
     seeds <- snic_grid(
         s2,
         type    = "rectangular",
@@ -70,11 +72,39 @@ if (requireNamespace("terra", quietly = TRUE)) {
         padding = 50L
     )
 
+    # Run segmentation
     seg <- snic(s2, seeds, compactness = 0.25)
+
+    # Visualize RGB composite with seeds and segment boundaries
+    snic_plot(
+        s2,
+        r = 4, g = 3, b = 1,
+        stretch = "lin",
+        seeds = seeds,
+        seg = seg
+    )
+}
+
+# Example 2: In-memory image (JPEG) + Lab transform
+# Uses an example image shipped with the package (no terra needed)
+if (requireNamespace("jpeg", quietly = TRUE)) {
+    img_path <- system.file("clownfish.jpeg", package = "snic", mustWork = TRUE)
+    rgb <- jpeg::readJPEG(img_path)              # h x w x 3 in [0, 1]
+
+    # Convert sRGB -> CIE Lab for perceptual clustering
+    lab <- grDevices::convertColor(rgb, from = "sRGB", to = "Lab", scale.in = 1)
+
+    # Seeds in pixel coordinates for array inputs
+    seeds_rc <- snic_grid(lab, type = "hexagonal", spacing = 8L, padding = 4L)
+
+    # Segment in Lab space and plot L channel with boundaries
+    seg <- snic(lab, seeds_rc, compactness = 0.2)
+    snic_plot(lab, band = 1L, seeds = seeds_rc, seg = seg)
 }
 }
 \seealso{
 \code{\link{snic_grid}} for seed generation,
 \code{\link{snic_grid_manual}} for interactive placement,
-\code{\link{snic_count_seeds}} for estimating seed counts.
+\code{\link{snic_count_seeds}} for estimating seed counts,
+\code{\link{snic_plot}} for visualizing results.
 }

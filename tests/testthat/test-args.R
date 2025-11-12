@@ -11,7 +11,7 @@ test_that("snic validates seed inputs", {
 
     expect_error(
         snic(array(rep("a", 4L), dim = c(4L, 1L, 1L)), seeds = seeds_valid),
-        "argument 'img' must be a numeric array"
+        "argument 'x' must be numeric"
     )
 
     seeds <- data.frame(r = 0L, c = 1L)

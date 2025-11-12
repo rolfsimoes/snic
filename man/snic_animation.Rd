@@ -17,64 +17,56 @@ snic_animation(
 )
 }
 \arguments{
-\item{seeds}{A two-column object specifying the seed coordinates
-`(r, c)` in 1-based pixel indices. The object can be a matrix,
-data frame, or any object coercible to that structure. Seeds are
-typically generated using functions from \code{\link{snic_grid}}
-or interactively with \code{\link{snic_grid_manual}}.}
+\item{x}{A \code{\link[terra:SpatRaster-class]{terra::SpatRaster}}
+representing the image to segment. Dimensions and coordinate reference
+are inferred automatically.}
 
-\item{file_path}{Path where the resulting GIF should be saved. The caller
-must supply a writable location; the file must not already exist.}
+\item{seeds}{A two-column object specifying seed coordinates. If \code{x}
+has a CRS, use columns \code{lat} and \code{lon} (in \code{EPSG:4326});
+otherwise use pixel indices \code{(r, c)}. Typically created with
+\code{\link{snic_grid}} or interactively with
+\code{\link{snic_grid_manual}}.}
 
-\item{max_frames}{Integer giving the maximum number of frames to
-render in the animation. If the number of seeds exceeds this
-limit, only the first \code{max_frames} seeds are used.}
+\item{file_path}{Path where the resulting GIF is saved. The file must not
+already exist and the parent directory must be writable.}
 
-\item{delay}{Numeric value specifying the per-frame delay in
-centiseconds (1/100 of a second). Passed directly to
-\code{magick::image_animate()} to control the playback speed.
-Defaults to 10 (0.1 seconds per frame).}
+\item{max_frames}{Maximum number of frames to render. If there are more
+seeds than \code{max_frames}, only the first \code{max_frames} seeds are
+used.}
 
-\item{...}{Additional arguments passed to \code{\link{snic_plot}}
-when drawing each frame (for example, color palettes or symbol
-options for seeds).}
+\item{delay}{Per-frame delay in centiseconds (1/100 s). Passed to
+\code{magick::image_animate()}. Default is 10 (0.1 s per frame).}
 
-\item{snic_args}{Named list of additional arguments passed to
-\code{\link{snic}} on every iteration. Defaults to
-\code{list(compactness = 1)}. Arguments `img` and `seeds`
-are reserved and cannot be overridden.}
+\item{...}{Additional arguments forwarded to \code{\link{snic_plot}} when
+drawing each frame (e.g., RGB band indices or palette options).}
+
+\item{snic_args}{Named list of extra arguments passed to \code{\link{snic}}
+on every iteration (e.g., \code{compactness}). Arguments \code{x} and
+\code{seeds} are reserved and cannot be overridden.}
+
+\item{plot_args}{Reserved for future use. Currently ignored.}
 
 \item{device_args}{Named list of arguments passed to
 \code{grDevices::png()} when rendering frames. Defaults to
-\code{list(res = 200, bg = "white")}. Values such as
-\code{width}, \code{height}, and \code{filename} are managed
-automatically.}
-
-\item{img}{A `SpatRaster` object (from \pkg{terra}) representing the
-image to segment. Dimensions and coordinate reference are inferred
-automatically.}
+\code{list(res = 96, bg = "white")}. Values such as \code{width},
+\code{height}, and \code{filename} are managed automatically.}
 }
 \value{
-Invisibly returns the file path of the generated GIF. A message is printed
-with the saved file name.
+Invisibly, the file path of the generated GIF.
 }
 \description{
 Generate an animated GIF illustrating how SNIC segmentation evolves
 as seeds are progressively added. This function runs a sequence of
-SNIC segmentation using incremental subsets of the provided seeds
+SNIC segmentations using incremental subsets of the provided seeds
 and compiles the results into an animation.
 }
 \details{
-For each iteration, the function adds one seed to the current set
-and re-runs \code{\link{snic}}. The resulting segmentation and seed
-locations are drawn using \code{\link{snic_plot}}, saved as a PNG,
-and finally combined into an animated GIF using the \pkg{magick}
-package.
-
-This tool is intended for exploratory and didactic purposes rather
-than large-scale processing. It can be used to illustrate the
-influence of seed placement or the effect of the arguments supplied
-to `snic()` (for example `compactness`) on segmentation results.
+For each iteration, the function adds one seed to the current set and
+re-runs \code{\link{snic}}. The segmentation and seed locations are drawn
+using \code{\link{snic_plot}}, saved as PNGs, and then combined into an
+animated GIF using the \pkg{magick} package. This is intended for
+exploratory and didactic use to illustrate the influence of seed placement
+and parameters such as \code{compactness}.
 }
 \examples{
 if (requireNamespace("terra", quietly = TRUE) &&
@@ -89,12 +81,12 @@ if (requireNamespace("terra", quietly = TRUE) &&
             "S2_20LMR_B12_20220630.tif"
         )
     )
-    s2 <- terra::aggregate(terra::rast(band_files), factor = 5)
+    s2 <- terra::aggregate(terra::rast(band_files), fact = 5)
 
     set.seed(42)
     seeds <- snic_grid(s2, type = "random", spacing = 10L, padding = 0L)
 
-    snic_animation(
+    gif_file <- snic_animation(
         s2,
         seeds = seeds,
         file_path = tempfile("snic-demo", fileext = ".gif"),
@@ -102,9 +94,10 @@ if (requireNamespace("terra", quietly = TRUE) &&
         snic_args = list(compactness = 0.1),
         r = 4, g = 3, b = 1
     )
+    gif_file
 }
 }
 \seealso{
-\code{\link{snic}}, \code{\link{snic_plot}}, \code{\link{snic_grid}},
-\code{\link{snic_grid_manual}}.
+\code{\link{snic}}, \code{\link{snic_plot}},
+  \code{\link{snic_grid}}, \code{\link{snic_grid_manual}}.
 }

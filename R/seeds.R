@@ -1,10 +1,21 @@
 #' Seed helper utilities
 #'
 #' Developer-facing helpers for validating, coercing, and appending seed
-#' coordinate tables.
+#' coordinate tables. Seeds can be represented in three coordinate systems:
+#' \itemize{
+#'   \item pixel indices: \code{(r, c)}
+#'   \item map units of the raster: \code{(x, y)}
+#'   \item geographic coordinates: \code{(lat, lon)} in \code{EPSG:4326}
+#' }
 #'
-#' @param seeds Data frame/matrix containing either \code{(r, c)} or
-#'   \code{(lon, lat)} columns.
+#' Conversions between systems require the source raster to resolve extent,
+#' resolution and CRS. Functions here keep column names consistent so that
+#' downstream utilities (e.g., plotting or SNIC core) can dispatch correctly.
+#'
+#' @param seeds Data frame/matrix containing either \code{(r, c)},
+#'   \code{(x, y)}, or \code{(lat, lon)} columns.
+#' @param x A \code{\link[terra:SpatRaster-class]{SpatRaster}} used for
+#'   coordinate conversions between systems.
 #' @keywords internal
 #' @name seeds_helpers
 #' @rdname seeds_helpers

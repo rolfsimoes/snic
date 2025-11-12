@@ -34,12 +34,15 @@
 #'     density.
 #' }
 #'
-#' The helper \code{\link{snic_count_seeds}} reports how many seeds would be
-#' generated for given spacing and padding, without computing coordinates.
+#' The helper \code{\link{snic_count_seeds}} estimates how many seeds would be
+#' generated for a rectangular lattice with the given spacing and padding,
+#' without computing coordinates. For \code{type} = \code{"diamond"} or
+#' \code{"hexagonal"}, the actual number of seeds will be up to roughly
+#' twice this estimate (minus boundary effects). For \code{"random"}, the
+#' estimate corresponds to the expected density.
 #'
-#' If \code{x} has a coordinate reference system, the returned matrix includes
-#' additional geographic coordinates (\code{lon}, \code{lat}) in
-#' \code{EPSG:4326}.
+#' If \code{x} has a coordinate reference system, the returned data frame
+#' includes geographic coordinates (\code{lat}, \code{lon}) in \code{EPSG:4326}.
 #'
 #' @return
 #' A data frame containing:
@@ -55,27 +58,31 @@
 #' @examples
 #' \dontrun{
 #' if (requireNamespace("terra", quietly = TRUE)) {
+#'     # Load example multi-band image (Sentinel-2 subset) and downsample
 #'     tiff_dir <- system.file("S2-20LMR", package = "snic", mustWork = TRUE)
-#'     files <- file.path(
-#'         tiff_dir,
-#'         c(
-#'             "S2_20LMR_B02_20220630.tif",
-#'             "S2_20LMR_B04_20220630.tif",
-#'             "S2_20LMR_B08_20220630.tif",
-#'             "S2_20LMR_B12_20220630.tif"
-#'         )
-#'     )
-#'
+#'     files <- file.path(tiff_dir, c(
+#'         "S2_20LMR_B02_20220630.tif",
+#'         "S2_20LMR_B04_20220630.tif",
+#'         "S2_20LMR_B08_20220630.tif",
+#'         "S2_20LMR_B12_20220630.tif"
+#'     ))
 #'     s2 <- terra::aggregate(terra::rast(files), fact = 5)
 #'
-#'     seeds <- snic_grid(
-#'         s2,
-#'         type = "rectangular",
-#'         spacing = 10L,
-#'         padding = 20L
-#'     )
+#'     # Compare grid types visually using snic_plot for immediate feedback
+#'     types <- c("rectangular", "diamond", "hexagonal", "random")
+#'     par(mfrow = c(2, 2), mar = c(2, 2, 2, 2))
+#'     for (tp in types) {
+#'         seeds <- snic_grid(s2, type = tp, spacing = 12L, padding = 18L)
+#'         snic_plot(
+#'             s2, r = 4, g = 3, b = 1, stretch = "lin",
+#'             seeds = seeds,
+#'             main = paste("Grid:", tp)
+#'         )
+#'     }
+#'     par(mfrow = c(1, 1))
 #'
-#'     head(seeds)
+#'     # Estimate seed counts for planning
+#'     snic_count_seeds(s2, spacing = 12L, padding = 18L)
 #' }
 #' }
 #' @export
@@ -131,7 +138,8 @@ snic_grid <- function(x,
 #' @param seeds Optional existing seed set to display and extend. May be given as:
 #'   \itemize{
 #'     \item a two-column data frame \code{(lat, lon)} in \code{EPSG:4326}, or
-#'     \item a two-column data frame \code{(r, c)} containing pixel coordinates.
+#'     \item a two-column data frame \code{(r, c)} containing pixel coordinates, or
+#'     \item map coordinates \code{(x, y)} in the raster's native CRS.
 #'   }
 #'   If pixel coordinates are supplied, they are internally converted. If
 #'   \code{NULL}, the seed set is initialized empty and populated interactively.
@@ -148,8 +156,15 @@ snic_grid <- function(x,
 #' provide immediate feedback on how the seed placement affects clustering.
 #'
 #' @return
-#' A two-column data frame \code{(lat, lon)} expressing seed positions in
-#' \code{EPSG:4326}. The result can be passed directly to \code{\link{snic}}.
+#' A two-column data frame of seed coordinates. If \code{x} lacks a CRS the
+#' result is always pixel indices \code{(r, c)}. When \code{x} has a CRS:
+#' \itemize{
+#'   \item If \code{seeds} were supplied, their coordinate system is preserved
+#'     in the output.
+#'   \item Otherwise the result is expressed as \code{(lat, lon)} in
+#'     \code{EPSG:4326}.
+#' }
+#' The output can be passed directly to \code{\link{snic}}.
 #'
 #' @seealso
 #' \code{\link{snic}}, \code{\link{snic_grid}}, \code{\link{snic_animation}}.
@@ -203,18 +218,27 @@ snic_grid_manual <- function(x,
                                  )
                              )) {
     snic_args$seeds <- check_seeds(seeds)
+    return_type <- if (!is.null(seeds)) seeds_type(snic_args$seeds) else NULL
 
     seeds <- grid_manual(x, snic_args, snic_plot_args)
 
     if (!has_crs(x)) {
         return(seeds)
     }
-    rc_to_wgs84(x, seeds)
+    if (is.null(return_type)) {
+        return(rc_to_wgs84(x, seeds))
+    }
+
+    switch(return_type,
+        rc = seeds,
+        xy = rc_to_xy(x, seeds),
+        wgs84 = rc_to_wgs84(x, seeds)
+    )
 }
 
 #' @rdname snic_grid
 #' @export
-snic_count_seeds <- function(x, spacing, padding = padding / 2) {
+snic_count_seeds <- function(x, spacing, padding = spacing / 2) {
     if (length(spacing) == 1L) {
         spacing <- rep(spacing, 2L)
     }
@@ -428,7 +452,7 @@ grid_random <- function(x, spacing, padding) {
 
 #' @rdname grid_utils
 grid_manual <- function(x, snic_args, plot_args) {
-    if (!dev.interactive(TRUE)) {
+    if (!base::interactive() && !dev.interactive(TRUE)) {
         stop(.msg("manual_grid_interactive_only"), call. = FALSE)
     }
 

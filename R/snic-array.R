@@ -31,24 +31,39 @@ xy_to_wgs84.array <- function(x, seeds_xy) {
 #' @rdname snic_backends
 #' @export
 xy_to_rc.array <- function(x, seeds_xy) {
+    stopifnot(seeds_type(seeds_xy) == "xy")
+    h <- nrow(x)
+    w <- ncol(x)
+
+    # used to get bottom and right coordinates inside the array domain
+    eps <- 3 * .Machine$double.eps
+
+    r_coord <- h - seeds_xy$y
+    c_coord <- seeds_xy$x
     seeds <- .seeds(
-        r = as.integer(nrow(x) - seeds_xy$y),
-        c = as.integer(seeds_xy$x)
+        r = floor(r_coord - eps * abs(r_coord)) + 1L,
+        c = floor(c_coord - eps * abs(c_coord)) + 1L
     )
-    seeds$r[seeds$r < 0L | seeds$r > nrow(x)] <- NA
-    seeds$c[seeds$c < 0L | seeds$c > ncol(x)] <- NA
+    seeds$r[seeds$r < 1L | seeds$r > h] <- NA_integer_
+    seeds$c[seeds$c < 1L | seeds$c > w] <- NA_integer_
     seeds
 }
 
 #' @rdname snic_backends
 #' @export
 rc_to_xy.array <- function(x, seeds_rc) {
+    stopifnot(seeds_type(seeds_rc) == "rc")
+    h <- nrow(x)
+    w <- ncol(x)
+
     seeds <- .seeds(
-        x = floor(seeds_rc$c) + 0.5,
-        y = floor(nrow(x) - seeds_rc$r) + 0.5
+        x = as.integer(seeds_rc$c - 1L) + 0.5,
+        y = as.integer(h - seeds_rc$r) + 0.5
     )
-    seeds$y[seeds$y < 0 | seeds$y > nrow(x)] <- NA
-    seeds$x[seeds$x < 0 | seeds$x > ncol(x)] <- NA
+
+    tol <- 3 * .Machine$double.eps
+    seeds$y[seeds$y < -tol | seeds$y > h + tol] <- NA
+    seeds$x[seeds$x < -tol | seeds$x > w + tol] <- NA
     seeds
 }
 
@@ -61,9 +76,7 @@ x_to_arr.array <- function(x) {
 #' @rdname snic_backends
 #' @export
 arr_to_x.array <- function(x, arr, names = NULL) {
-    arr <- x_to_arr(arr)
-    colnames(arr) <- names
-    arr
+    x_to_arr(arr)
 }
 
 #' @rdname snic_backends

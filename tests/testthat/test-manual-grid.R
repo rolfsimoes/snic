@@ -10,10 +10,10 @@ test_that("snic_grid_manual collects locator clicks into seed data frame", {
     proj_rast <- terra::rast(
         nrows = terra::nrow(img),
         ncols = terra::ncol(img),
-        xmin = 0,
-        xmax = terra::ncol(img),
-        ymin = 0,
-        ymax = terra::nrow(img)
+        xmin = terra::xmin(img),
+        xmax = terra::xmax(img),
+        ymin = terra::ymin(img),
+        ymax = terra::ymax(img)
     )
 
     initial_seeds <- matrix(c(2L, 3L), ncol = 2, byrow = TRUE)
