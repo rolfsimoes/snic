@@ -12,6 +12,7 @@ snic_animation(
   delay = 10,
   ...,
   snic_args = list(compactness = 0.5),
+  plot_args = list(),
   device_args = list(res = 96, bg = "white")
 )
 }
@@ -88,7 +89,7 @@ if (requireNamespace("terra", quietly = TRUE) &&
             "S2_20LMR_B12_20220630.tif"
         )
     )
-    s2 <- terra::aggregate(terra::rast(band_files), factor = 10)
+    s2 <- terra::aggregate(terra::rast(band_files), factor = 5)
 
     set.seed(42)
     seeds <- snic_grid(s2, type = "random", spacing = 10L, padding = 0L)
@@ -97,7 +98,7 @@ if (requireNamespace("terra", quietly = TRUE) &&
         s2,
         seeds = seeds,
         file_path = tempfile("snic-demo", fileext = ".gif"),
-        max_frames = 100L,
+        max_frames = 150L,
         snic_args = list(compactness = 0.1),
         r = 4, g = 3, b = 1
     )

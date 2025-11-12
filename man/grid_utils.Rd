@@ -23,7 +23,7 @@ grid_hex(x, spacing, padding)
 
 grid_random(x, spacing, padding)
 
-grid_manual(x, snic_args, snic_plot_args)
+grid_manual(x, snic_args, plot_args)
 }
 \description{
 These functions implement the core logic for generating seed coordinates

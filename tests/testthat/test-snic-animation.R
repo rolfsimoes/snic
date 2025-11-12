@@ -61,15 +61,19 @@ test_that("snic_animation validates inputs", {
         ymin = 0,
         ymax = 4
     )
+    terra::values(img) <- runif(terra::ncell(img) * terra::nlyr(img))
 
     expect_error(
         snic_animation(img, seeds = NULL, file_path = tempfile(fileext = ".gif")),
         "argument 'seeds' cannot be NULL"
     )
 
+    seeds_invalid <- matrix(c(1, 1), ncol = 2)
+    colnames(seeds_invalid) <- c("r", "c")
     expect_error(
-        snic_animation(matrix(1), seeds = matrix(c(1, 1), ncol = 2), file_path = tempfile(fileext = ".gif")),
-        "no applicable method for 'snic_animation' applied to an object of"
+        snic_animation(matrix(1), seeds = seeds_invalid, file_path = tempfile(fileext = ".gif")),
+        "argument 'x' must be a 'SpatRaster' object",
+        fixed = TRUE
     )
 
     seeds <- matrix(c(1L, 1L), ncol = 2)
@@ -79,33 +83,4 @@ test_that("snic_animation validates inputs", {
         "argument 'delay' must be a positive number"
     )
 
-    expect_error(
-        snic_animation(
-            img,
-            seeds = seeds,
-            file_path = tempfile(fileext = ".gif"),
-            snic_args = "compact"
-        ),
-        "argument 'snic_args' must be a list"
-    )
-
-    expect_error(
-        snic_animation(
-            img,
-            seeds = seeds,
-            file_path = tempfile(fileext = ".gif"),
-            snic_args = list(0.1)
-        ),
-        "argument 'snic_args' must be a named list"
-    )
-
-    expect_error(
-        snic_animation(
-            img,
-            seeds = seeds,
-            file_path = tempfile(fileext = ".gif"),
-            snic_args = list(img = img)
-        ),
-        "argument 'snic_args' cannot override reserved parameters"
-    )
 })

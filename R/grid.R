@@ -108,9 +108,12 @@ snic_grid <- function(x,
         random = {
             grid_random(x, spacing, padding)
         },
-        stop("argument 'type' is invalid")
+        stop(.msg("grid_type_invalid"), call. = FALSE)
     )
 
+    if (!has_crs(x)) {
+        return(seeds)
+    }
     rc_to_wgs84(x, seeds)
 }
 
@@ -199,22 +202,13 @@ snic_grid_manual <- function(x,
                                      border = "#FFFF00", col = NA, lwd = 0.4
                                  )
                              )) {
-    if (!is.null(seeds)) {
-        if (is_seeds(seeds, "rc")) {
-            seeds_rc <- seeds
-        } else {
-            if (!has_crs(x)) {
-                stop("cannot use (lon,lat) seeds with non-spatial data")
-            }
-            seeds_xy <- wgs84_to_xy(x, seeds)
-            seeds_rc <- xy_to_rc(x, seeds_xy)
-        }
-
-        snic_args$seeds <- seeds_rc
-    }
+    snic_args$seeds <- check_seeds(seeds)
 
     seeds <- grid_manual(x, snic_args, snic_plot_args)
 
+    if (!has_crs(x)) {
+        return(seeds)
+    }
     rc_to_wgs84(x, seeds)
 }
 
@@ -362,7 +356,7 @@ grid_rect <- function(x, spacing, padding) {
         cols <- seq(c0, c1, length.out = size[[2]])
     }
 
-    .expand(r = rows, c = cols)
+    expand(r = rows, c = cols)
 }
 
 #' @rdname grid_utils
@@ -433,8 +427,8 @@ grid_random <- function(x, spacing, padding) {
 }
 
 #' @rdname grid_utils
-grid_manual <- function(x, snic_args, snic_plot_args) {
-    if (!.is_interactive()) {
+grid_manual <- function(x, snic_args, plot_args) {
+    if (!dev.interactive(TRUE)) {
         stop(.msg("manual_grid_interactive_only"), call. = FALSE)
     }
 
@@ -450,33 +444,30 @@ grid_manual <- function(x, snic_args, snic_plot_args) {
             border = "#FFFF00", col = NA, lwd = 0.4
         )
     )
-    plot_args <- utils::modifyList(default_plot_args, snic_plot_args)
+    plot_args <- utils::modifyList(default_plot_args, plot_args)
 
     message(.msg("manual_grid_instructions"))
 
-    # if (is.array(x)) {
-    x_plt <- arr_to_rast(x_to_arr(x))
-    # }
-
-    if (!is.null(nrow(snic_args$seeds)) && nrow(snic_args$seeds)) {
+    snic_args$seeds <- check_seeds(snic_args$seeds)
+    snic_args$seeds <- as_seeds_xy(snic_args$seeds, x)
+    if (nrow(snic_args$seeds)) {
         plot_args$seeds <- snic_args$seeds
-        plot_args$seg <- do.call(snic, c(list(x_plt), snic_args))
+        plot_args$seg <- do.call(snic, c(list(x), snic_args))
     }
-    do.call(snic_plot, c(list(x_plt), plot_args))
+    do.call(snic_plot, c(list(x), plot_args))
 
     repeat {
         p <- graphics::locator(n = 1)
         if (is.null(p)) break
 
-        new_seed <- .seeds(x = p$x, y = p$y)
-        new_seed <- xy_to_rc(x_plt, new_seed)
-        if (any(is.na(new_seed))) next
+        new_seed <- .seeds(x = p$x, y = p$y) # in x CRS
+        if (any(is.na(xy_to_rc(x, new_seed)))) next # outside image
 
         snic_args$seeds <- append_seed(snic_args$seeds, new_seed)
-        plot_args$seg <- do.call(snic, c(list(x_plt), snic_args))
+        plot_args$seg <- do.call(snic, c(list(x), snic_args))
         plot_args$seeds <- snic_args$seeds
-        do.call(snic_plot, c(list(x_plt), plot_args))
+        do.call(snic_plot, c(list(x), plot_args))
     }
 
-    snic_args$seeds
+    as_seeds_rc(snic_args$seeds, x)
 }

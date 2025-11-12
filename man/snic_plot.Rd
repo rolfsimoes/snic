@@ -12,6 +12,7 @@ snic_plot(
   b = NULL,
   col = grDevices::hcl.colors(128L, palette = "Spectral"),
   stretch = "lin",
+  maxcell = 100000L,
   ...,
   seeds = NULL,
   seeds_plot_args = list(pch = 4, col = "#FFFF00", cex = 1),
@@ -104,11 +105,11 @@ if (requireNamespace("terra", quietly = TRUE)) {
         s2,
         type = "rectangular",
         spacing = 10L,
-        padding = 50L
+        padding = 0L
     )
 
     # Run segmentation
-    seg <- snic(s2, seeds = seeds, compactness = 0.25)
+    seg <- snic(s2, seeds = seeds, compactness = 0.1)
 
     # Visualize
     snic_plot(

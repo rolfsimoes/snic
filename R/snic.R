@@ -71,31 +71,27 @@
 #' }
 #' @export
 snic <- function(x, seeds, compactness = 0.5, ...) {
-    if (is_seeds(seeds, "rc")) {
-        seeds_rc <- seeds
-    } else {
-        if (!has_crs(x)) {
-            stop("cannot use (lon,lat) seeds with non-spatial data")
-        }
-        seeds_xy <- wgs84_to_xy(x, seeds)
-        seeds_rc <- xy_to_rc(x, seeds_xy)
-    }
+    x <- check_x(x)
+    seeds <- check_seeds(seeds)
 
     arr <- x_to_arr(x)
 
-    arr <- snic_core(arr, seeds_rc, compactness)
+    arr <- snic_core(arr, as_seeds_rc(seeds, x), compactness)
 
     arr_to_x(x, arr, "snic")
 }
 
 #' @export
 snic_to_array <- function(x) {
+    x <- check_x(x)
     x_to_arr(x)
 }
 
 #' @export
-snic_to_raster <- function(x, arr) {
-    arr_to_x(x, arr)
+snic_to_raster <- function(arr, x, names = NULL) {
+    arr <- check_x(arr)
+    x <- check_x(x)
+    arr_to_x(x, arr, names)
 }
 
 #' Plot SNIC imagery
@@ -173,11 +169,11 @@ snic_to_raster <- function(x, arr) {
 #'         s2,
 #'         type = "rectangular",
 #'         spacing = 10L,
-#'         padding = 50L
+#'         padding = 0L
 #'     )
 #'
 #'     # Run segmentation
-#'     seg <- snic(s2, seeds = seeds, compactness = 0.25)
+#'     seg <- snic(s2, seeds = seeds, compactness = 0.1)
 #'
 #'     # Visualize
 #'     snic_plot(
@@ -199,6 +195,7 @@ snic_plot <- function(x,
                           palette = "Spectral"
                       ),
                       stretch = "lin",
+                      maxcell = 100000L,
                       ...,
                       seeds = NULL,
                       seeds_plot_args = list(
@@ -212,84 +209,36 @@ snic_plot <- function(x,
         stop(.msg("terra_required"), call. = FALSE)
     }
 
-    seeds_rc <- NULL
-    if (!is.null(seeds)) {
-        if (is_seeds(seeds, "rc")) {
-            seeds_rc <- seeds
-        } else {
-            if (!has_crs(x)) {
-                stop("cannot use (lon,lat) seeds with non-spatial data")
-            }
-            seeds_xy <- wgs84_to_xy(x, seeds)
-            seeds_rc <- xy_to_rc(x, seeds_xy)
-        }
+    x <- check_x(x)
+    seeds <- check_seeds(seeds)
+    if (!is.null(seg)) {
+        seg <- check_x(seg, "seg")
     }
 
-    rgb_requested <- !is.null(r) || !is.null(g) || !is.null(b)
-
-    if (is.array(x)) {
-        x <- arr_to_rast(x)
+    # convert to SpatRaster
+    if (!inherits(x, "SpatRaster")) {
+        x <- arr_to_x(rast_tmpl(x), x_to_arr(x))
     }
 
-    n_bands <- terra::nlyr(x)
+    plot_core(
+        x,
+        band = band,
+        r = r,
+        g = g,
+        b = b,
+        col = col,
+        stretch = stretch,
+        maxcell = maxcell,
+        ...
+    )
 
-    if (rgb_requested) {
-        if (is.null(r) || is.null(g) || is.null(b)) {
-            stop(.msg("plot_rgb_params_missing"), call. = FALSE)
-        }
-        rgb <- as.integer(c(r, g, b))
-        if (any(is.na(rgb))) {
-            stop(.msg("plot_rgb_params_not_integer"), call. = FALSE)
-        }
-        if (any(rgb < 1L | rgb > n_bands)) {
-            stop(.msg("plot_rgb_invalid_index_raster", n_bands), call. = FALSE)
-        }
-        terra::plotRGB(
-            x,
-            r = rgb[1L],
-            g = rgb[2L],
-            b = rgb[3L],
-            stretch = stretch,
-            ...
-        )
-    } else {
-        band <- as.integer(band)
-        if (length(band) != 1L || is.na(band)) {
-            stop(.msg("plot_band_single_integer"), call. = FALSE)
-        }
-        if (band < 1L || band > n_bands) {
-            stop(.msg("plot_band_invalid_index_raster"), call. = FALSE)
-        }
-        terra::plot(x[[band]], col = col, stretch = stretch, ...)
-    }
-
-    if (!is.null(seeds_rc)) {
-        if (is.null(seeds_plot_args)) {
-            seeds_plot_args <- list()
-        }
-        seed_defaults <- list(pch = 4, col = "#FFFF00", cex = 1)
-        seed_args <- utils::modifyList(seed_defaults, seeds_plot_args)
-        do.call(
-            graphics::points,
-            c(list(x = seeds_rc$c, y = nrow(x) - seeds_rc$r), seed_args)
-        )
+    if (nrow(seeds)) {
+        seeds_xy <- as_seeds_xy(seeds, x)
+        plot_grid(seeds_xy, x, seeds_plot_args, add = TRUE)
     }
 
     if (!is.null(seg)) {
-        if (is.null(seg_plot_args)) {
-            seg_plot_args <- list()
-        }
-        seg_plot_args$add <- TRUE
-
-        if (inherits(seg, "SpatRaster")) {
-            seg <- terra::as.polygons(seg, dissolve = TRUE, na.rm = TRUE)
-        } else if (inherits(seg, "SpatVector")) {
-            # already suitable
-        } else {
-            stop(.msg("seg_invalid_type"), call. = FALSE)
-        }
-
-        do.call(terra::plot, c(list(seg), seg_plot_args))
+        plot_segments(seg, seg_plot_args, add = TRUE)
     }
 
     invisible(NULL)
@@ -366,7 +315,7 @@ snic_plot <- function(x,
 #'             "S2_20LMR_B12_20220630.tif"
 #'         )
 #'     )
-#'     s2 <- terra::aggregate(terra::rast(band_files), factor = 10)
+#'     s2 <- terra::aggregate(terra::rast(band_files), factor = 5)
 #'
 #'     set.seed(42)
 #'     seeds <- snic_grid(s2, type = "random", spacing = 10L, padding = 0L)
@@ -375,7 +324,7 @@ snic_plot <- function(x,
 #'         s2,
 #'         seeds = seeds,
 #'         file_path = tempfile("snic-demo", fileext = ".gif"),
-#'         max_frames = 100L,
+#'         max_frames = 150L,
 #'         snic_args = list(compactness = 0.1),
 #'         r = 4, g = 3, b = 1
 #'     )
@@ -390,6 +339,7 @@ snic_animation <- function(x,
                            snic_args = list(
                                compactness = 0.5
                            ),
+                           plot_args = list(),
                            device_args = list(
                                res = 96,
                                bg = "white"
@@ -397,33 +347,25 @@ snic_animation <- function(x,
     if (!requireNamespace("terra", quietly = TRUE)) {
         stop(.msg("terra_required"), call. = FALSE)
     }
-
     if (!requireNamespace("magick", quietly = TRUE)) {
         stop(.msg("magick_required"), call. = FALSE)
     }
 
-    if (is.null(seeds)) {
-        stop(.msg("seeds_cannot_be_null"), call. = FALSE)
-    }
+    x <- check_x(x)
+    seeds <- check_seeds(seeds)
 
-    if (is_seeds(seeds, "rc")) {
-        seeds_rc <- seeds
-    } else {
-        if (!has_crs(x)) {
-            stop("cannot use (lon,lat) seeds with non-spatial data")
-        }
-        seeds_xy <- wgs84_to_xy(x, seeds)
-        seeds_rc <- xy_to_rc(x, seeds_xy)
+    if (!nrow(seeds)) {
+        stop(.msg("seeds_cannot_be_null"), call. = FALSE)
     }
 
     if (missing(file_path)) {
         stop(.msg("file_path_required"), call. = FALSE)
     }
-    if (is.null(file_path) || !is.character(file_path) || length(file_path) != 1L ||
-        is.na(file_path) || !nzchar(file_path)) {
+    if (is.null(file_path) || !is.character(file_path) ||
+        length(file_path) != 1L || is.na(file_path) || !nzchar(file_path)) {
         stop(.msg("file_path_single_path"), call. = FALSE)
     }
-    file_path <- normalizePath(file_path, mustWork = FALSE)
+    file_path <- normalizePath(path.expand(file_path), mustWork = FALSE)
     if (file.exists(file_path)) {
         stop(.msg("animation_file_exists", file_path), call. = FALSE)
     }
@@ -440,7 +382,7 @@ snic_animation <- function(x,
         stop(.msg("max_frames_positive_integer"), call. = FALSE)
     }
     max_frames <- as.integer(max_frames)
-    n_cycles <- min(nrow(seeds_rc), max_frames)
+    n_cycles <- min(nrow(seeds), max_frames)
 
     if (!is.numeric(delay) || length(delay) != 1L ||
         !is.finite(delay) || delay <= 0) {
@@ -463,20 +405,15 @@ snic_animation <- function(x,
     }
     on.exit(unlink(frame_dir, recursive = TRUE), add = TRUE)
 
-
-    if (is.array(x)) {
-        x <- arr_to_rast(x)
-    }
-
     dims <- dim(x)
-    h <- terra::nrow(x)
-    w <- terra::ncol(x)
+    h <- dims[[1]]
+    w <- dims[[2]]
 
-    pb <- utils::txtProgressBar(max = n_cycles + 1L, style = 3)
+    pb <- utils::txtProgressBar(max = n_cycles + 10L, style = 3)
     frame_files <- character(n_cycles)
     for (i in seq_len(n_cycles)) {
         utils::setTxtProgressBar(pb, i)
-        current_seeds <- seeds_rc[seq_len(i), , drop = FALSE]
+        current_seeds <- seeds[seq_len(i), , drop = FALSE]
         seg <- do.call(snic, c(list(x = x, seeds = current_seeds), snic_args))
 
         frame_file <- file.path(frame_dir, sprintf("frame-%02d.png", i))
@@ -512,28 +449,16 @@ snic_animation <- function(x,
         dispose = "previous",
         optimize = TRUE
     )
-    utils::setTxtProgressBar(pb, n_cycles + 1L)
     magick::image_write(
         animation,
         path = file_path,
         format = "gif",
         compression = "LZW"
     )
+    utils::setTxtProgressBar(pb, n_cycles + 10L)
     close(pb)
 
     message(.msg("animation_saved", file_path, total_duration, fps))
 
     invisible(file_path)
-}
-
-x_to_arr <- function(x) {
-    UseMethod("x_to_arr", x)
-}
-
-has_crs <- function(x) {
-    UseMethod("has_crs", x)
-}
-
-arr_to_x <- function(x, arr, names = NULL) {
-    UseMethod("arr_to_x", x)
 }

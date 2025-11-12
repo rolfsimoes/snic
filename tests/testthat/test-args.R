@@ -3,7 +3,7 @@ test_that("snic validates seed inputs", {
 
     expect_error(snic(img), "argument \"seeds\" is missing, with no default")
 
-    seeds_valid <- matrix(c(1L, 1L), ncol = 2L)
+    seeds_valid <- data.frame(r = 1L, c = 1L)
     expect_error(
         snic(img, seeds = seeds_valid, compactness = -1),
         "argument 'compactness' must be a non-negative finite number"
@@ -14,7 +14,7 @@ test_that("snic validates seed inputs", {
         "argument 'img' must be a numeric array"
     )
 
-    seeds <- matrix(c(0L, 1L), ncol = 2L, byrow = TRUE)
+    seeds <- data.frame(r = 0L, c = 1L)
     expect_error(
         snic(img, seeds = seeds),
         "argument 'seeds' coordinates must lie within image bounds"
@@ -25,12 +25,17 @@ test_that("snic validates seed inputs", {
     expect_equal(dim(result), c(2L, 2L, 1L))
 })
 
-test_that("snic_grid_rect and snic_count_seeds provide consistent results", {
+test_that("snic_grid and snic_count_seeds provide consistent results", {
     img <- array(runif(16), dim = c(4L, 4L, 1L))
     spacing <- c(2L, 2L)
     padding <- c(0L, 0L)
 
-    seeds <- snic_grid_rect(img, spacing = spacing, padding = padding)
+    seeds <- snic_grid(
+        img,
+        type = "rectangular",
+        spacing = spacing,
+        padding = padding
+    )
     expect_true(is.data.frame(seeds))
     expect_identical(colnames(seeds), c("r", "c"))
     expect_equal(nrow(seeds), snic_count_seeds(img, spacing, padding))
