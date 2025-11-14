@@ -31,7 +31,7 @@ xy_to_wgs84.array <- function(x, seeds_xy) {
 #' @rdname snic_backends
 #' @export
 xy_to_rc.array <- function(x, seeds_xy) {
-    stopifnot(seeds_type(seeds_xy) == "xy")
+    stopifnot(.seeds_type(seeds_xy) == "xy")
     h <- nrow(x)
     w <- ncol(x)
 
@@ -52,7 +52,7 @@ xy_to_rc.array <- function(x, seeds_xy) {
 #' @rdname snic_backends
 #' @export
 rc_to_xy.array <- function(x, seeds_rc) {
-    stopifnot(seeds_type(seeds_rc) == "rc")
+    stopifnot(.seeds_type(seeds_rc) == "rc")
     h <- nrow(x)
     w <- ncol(x)
 
@@ -76,11 +76,33 @@ x_to_arr.array <- function(x) {
 #' @rdname snic_backends
 #' @export
 arr_to_x.array <- function(x, arr, names = NULL) {
-    x_to_arr(arr)
+    arr <- x_to_arr(arr)
+    if (!is.null(names)) {
+        dimnames(arr)[[3]] <- names
+    }
+    if (!inherits(arr, "snic") &&
+        (!is.null(attr(arr, "values", exact = TRUE)) ||
+            !is.null(attr(arr, "centers", exact = TRUE)))) {
+        arr <- .new_snic(arr)
+    }
+    arr
 }
 
 #' @rdname snic_backends
 x_bbox.array <- function(x) {
     dims <- dim(x)
     c(0L, dims[[2L]], 0L, dims[[1L]])
+}
+
+#' @rdname snic_backends
+#' @export
+get_idx.array <- function(x, idx) {
+    if (is.numeric(idx)) {
+        return(idx)
+    }
+    bands <- dimnames(x)[[3]]
+    if (is.null(bands)) {
+        return(idx)
+    }
+    return(match(idx, bands))
 }

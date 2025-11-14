@@ -114,6 +114,11 @@ x_bbox <- function(x) {
 }
 
 #' @rdname snic_backends
+get_idx <- function(x, idx) {
+    UseMethod("get_idx", x)
+}
+
+#' @rdname snic_backends
 rc_to_wgs84 <- function(x, seeds_rc) {
     seeds_xy <- rc_to_xy(x, seeds_rc)
     xy_to_wgs84(x, seeds_xy)
@@ -127,7 +132,7 @@ wgs84_to_rc <- function(x, seeds_wgs84) {
 
 #' @rdname snic_backends
 #' @export
-check_x.default <- function(x) {
+check_x.default <- function(x, param_name = "x") {
     stop(.msg("unsupported_input_type", class(x)[1]), call. = FALSE)
 }
 
@@ -177,4 +182,10 @@ arr_to_x.default <- function(x, arr, names = NULL) {
 #' @export
 x_bbox.default <- function(x) {
     stop(.msg("unsupported_input_type", class(x)[1]), call. = FALSE)
+}
+
+#' @rdname snic_backends
+#' @export
+get_idx.default <- function(x, idx) {
+    stop(.msg("unsupported_input_type"), class(x)[1], call. = FALSE)
 }

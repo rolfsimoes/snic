@@ -1,0 +1,192 @@
+title: "SNIC Segmentation Pipeline - SpatRaster"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{SNIC Segmentation Pipeline - SpatRaster}
+  %\VignetteEngine{knitr::rmarkdown}
+  \usepackage[utf8]{inputenc}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  message = FALSE,
+  warning = FALSE,
+  fig.width = 6,
+  fig.height = 5
+)
+library(snic)
+```
+
+## Introduction
+
+This vignette revisits the SNIC segmentation pipeline while working directly with `terra::SpatRaster` objects. Instead of a small in-memory RGB array we use the Sentinel-2 subset (`S2-20LMR`) that ships with the package, so every step reflects a typical remote-sensing workflow: load GeoTIFF bands, downsample for experimentation, seed the image, run `snic()`, and visualize the resulting superpixels.
+
+> **Array workflow:** If you prefer to start from in-memory arrays, see the [SNIC Segmentation Pipeline - Arrays](snic-array-pipeline.html) vignette for a compact walkthrough that mirrors this tutorial without the geospatial dependencies.
+
+## Sentinel-2 preparation with terra
+
+```{r load-imagery}
+if (!requireNamespace("terra", quietly = TRUE)) {
+  stop("Install the 'terra' package to run this vignette.")
+}
+
+library(terra)
+
+data_dir <- system.file("S2-20LMR", package = "snic", mustWork = TRUE)
+band_files <- file.path(
+  data_dir,
+  c(
+    "S2_20LMR_B02_20220630.tif",
+    "S2_20LMR_B04_20220630.tif",
+    "S2_20LMR_B08_20220630.tif",
+    "S2_20LMR_B12_20220630.tif"
+  )
+)
+
+s2 <- terra::rast(band_files)
+
+names(s2) <- c("B02", "B04", "B08", "B12")
+s2
+```
+
+The four bands cover the blue, red, near-infrared, and short-wave infrared portions of the spectrum. Aggregating the raster speeds up the examples while preserving the geospatial metadata, so subsequent calls keep coordinates and the CRS intact.
+
+```{r plot-s2, fig.width = 6, fig.height = 4.5}
+snic_plot(s2, r = "B08", g = "B04", b = "B02")
+```
+
+## Seeds creation
+
+With a `SpatRaster` input, `snic_grid()` expects geographic coordinates when the data carry a CRS. The helper returns a data frame with latitude/longitude columns that can be inspected or stored for reproducibility.
+
+```{r seeds}
+seeds_rect <- snic_grid(
+  s2,
+  type = "rectangular",
+  spacing = 24,
+  padding = 2
+)
+head(seeds_rect)
+```
+
+## Run SNIC
+
+The number of seeds controls the number of output segments. The `compactness` parameter balances spatial proximity and spectral similarity; moderately low values emphasize spectral contrast, which is useful for multispectral imagery with distinct land-cover types. Here we use a compactness of `0.3`.
+
+```{r run-snic}
+seg_rect <- snic(s2, seeds_rect, compactness = 0.3)
+seg_rect
+```
+
+The result is a `SpatRaster` with same spatial extent as input but with one layer containing integer labels. The labels are 1-based and correspond to the seeds in the order they were provided.
+
+## Segments visualization
+
+`snic_plot()` understands both arrays and SpatRaster inputs. Here we plot a false-color composite using the near-infrared band as red, overlay the superpixel borders, and optionally display the seed locations.
+
+```{r plot-seg, fig.width = 6.5, fig.height = 4.5}
+snic_plot(
+  s2,
+  r = "B08", g = "B04", b = "B02",
+  stretch = "lin",
+  seg = seg_rect,
+  seeds = seeds_rect,
+  seg_plot_args = list(border = "#FFD700", col = NA, lwd = 0.5),
+  seeds_plot_args = list(pch = 3, col = "#00FFFF", cex = 0.6)
+)
+```
+
+The segmentation result is a single-band SpatRaster whose values correspond to integer labels. You can rasterize statistics per segment, convert them to polygons via `terra::as.polygons()`, or mask them back to the original resolution if finer analysis is needed.
+
+## Comparative grid types and compactness values
+
+All grid types available through `snic_grid()` operate on SpatRaster objects as well. Using the same Sentinel-2 subset, we compare rectangular, diamond, hexagonal, and random seeds combined with two compactness settings.
+
+```{r grid-types}
+seeds_rect <- snic_grid(s2, type = "rectangular", spacing = 26)
+seeds_diam <- snic_grid(s2, type = "diamond", spacing = 26)
+seeds_hex  <- snic_grid(s2, type = "hexagonal", spacing = 26)
+
+set.seed(42)
+seeds_rand <- snic_grid(s2, type = "random", spacing = 26)
+
+grids <- list(
+  seeds_rect, seeds_diam,
+  seeds_hex, seeds_rand
+)
+
+results <- lapply(grids, function(seeds) {
+  list(
+    snic(s2, seeds, compactness = 0.1),
+    snic(s2, seeds, compactness = 0.4)
+  )
+})
+```
+
+```{r grid-types-plot, fig.width = 7.5, fig.height = 12}
+par(mfrow = c(4, 2), oma = c(2, 2, 2, 0))
+
+for (res in results) {
+  snic_plot(
+    s2,
+    r = "B08", g = "B04", b = "B02",
+    seg = res[[1]],
+    seg_plot_args = list(border = "#FFFFFF", col = NA, lwd = 0.4),
+    mar = c(1, 0, 0, 0)
+  )
+  snic_plot(
+    s2,
+    r = "B08", g = "B04", b = "B02",
+    stretch = "lin",
+    seg = res[[2]],
+    seg_plot_args = list(border = "#FFFFFF", col = NA, lwd = 0.4),
+    mar = c(1, 0, 0, 0)
+  )
+}
+
+mtext("Compactness = 0.1", side = 3, outer = TRUE, at = 0.25, line = 0.5)
+mtext("Compactness = 0.4", side = 3, outer = TRUE, at = 0.75, line = 0.5)
+mtext("Rectangular", side = 2, outer = TRUE, at = 3.5 / 4, line = 0.5, las = 3)
+mtext("Diamond",    side = 2, outer = TRUE, at = 2.5 / 4, line = 0.5, las = 3)
+mtext("Hexagonal",  side = 2, outer = TRUE, at = 1.5 / 4, line = 0.5, las = 3)
+mtext("Random",     side = 2, outer = TRUE, at = 0.5 / 4, line = 0.5, las = 3)
+```
+
+Rectangular and diamond layouts align segments with cardinal directions, whereas hexagonal and random seeds spread centers more evenly in all directions. Higher compactness induces smoother, more rounded superpixels, so the right column contains fewer jagged boundaries than the left one. Regardless of the seed geometry, the workflow stays the same: read the multi-band raster, place seeds in geographic space, and call `snic()` with the desired compactness.
+
+## Fixed hexagonal seeds across resolutions
+
+Spatial datasets often come in multiple resolutions—for example, you might start from a 10 m grid and also work with 20 m or 40 m aggregates for faster experimentation. Because `snic_grid()` returns seeds with geographic coordinates, the same seed set can be re-used across rasters that share the same extent and CRS. Below we generate a hexagonal grid once, then aggregate the Sentinel-2 raster to four different resolutions with `terra::aggregate()` and run `snic()` on each version without touching the seeds.
+
+```{r hex-seeds-res}
+seeds_hex <- snic_grid(
+  s2,
+  type = "hexagonal",
+  spacing = 50,
+  padding = 5
+)
+```
+
+The figure below compares the resulting segments.
+
+```{r hex-seeds-res-plot, fig.width = 8, fig.height = 8}
+
+op <- graphics::par(mfrow = c(2, 2), oma = c(0, 0, 2, 0))
+palette_seg <- grDevices::hcl.colors(48, "Plasma")
+
+agg_facts <- c(1L, 2L, 4L, 8L)
+for (fact in agg_facts) {
+  s2_agg <- terra::aggregate(s2, fact = fact, fun = "mean", na.rm = TRUE)
+  seg_agg <- snic(s2_agg, seeds_hex, compactness = 0.2)
+  snic_plot(
+    s2_agg,
+    r = "B08", g = "B04", b = "B02",
+    seg = seg_agg,
+    seg_plot_args = list(border = "white", col = NA, lwd = 0.4),
+    main = sprintf("agg. fact = %d", fact)
+  )
+}
+```
+
+This makes it easy to benchmark the effect of resolution changes: generate seeds once, store them alongside your project, and reuse them whenever you regrid or aggregate the imagery.

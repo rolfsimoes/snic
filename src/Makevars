@@ -1,2 +1,2 @@
-PKG_CPPFLAGS = $(shell gdal-config --cflags)
-PKG_LIBS = $(shell gdal-config --libs)
+PKG_CPPFLAGS = -I/usr/include/gdal
+PKG_LIBS = -L/usr/lib64 -lgdal

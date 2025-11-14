@@ -61,54 +61,59 @@ test_that("snic_grid_manual collects locator clicks into seed data frame", {
 
     captured <- list(snic = list())
     result <- with_mocked_bindings(
-        with_mocked_bindings(
+        {
             with_mocked_bindings(
                 {
-                    local_result <- NULL
-                    expect_message(
+                    with_mocked_bindings(
                         {
-                            local_result <- snic_grid_manual(
-                                img,
-                                seeds = initial_seeds,
-                            snic_args = list(compactness = 0.25),
-                            r = 1L, g = 2L, b = 3L,
-                            seg_plot_args = list(
-                                border = "red",
-                                    col = NA,
-                                    lwd = 0.4
-                                )
+                            local_result <- NULL
+                            expect_message(
+                                {
+                                    local_result <- snic_grid_manual(
+                                        img,
+                                        seeds = initial_seeds,
+                                        snic_args = list(compactness = 0.25),
+                                        r = 1L, g = 2L, b = 3L,
+                                        seg_plot_args = list(
+                                            border = "red",
+                                            col = NA,
+                                            lwd = 0.4
+                                        )
+                                    )
+                                    local_result
+                                },
+                                "Left-click to add points; press ESC or right-click to stop."
                             )
                             local_result
                         },
-                        "Left-click to add points; press ESC or right-click to stop."
+                        locator = locator_mock,
+                        par = function(...) {
+                            invisible(NULL)
+                        },
+                        points = function(...) {
+                            invisible(NULL)
+                        },
+                        .package = "graphics"
+                    ) %>%
+                        with_mocked_bindings(
+                            plotRGB = function(...) invisible(NULL),
+                            plot = function(...) invisible(NULL),
+                            as.polygons = function(x, ...) list(id = length(captured$snic)),
+                            .package = "terra"
+                        )
+                },
+                snic = function(img, seeds, compactness, ...) {
+                    captured$snic[[length(captured$snic) + 1L]] <<- list(
+                        img = img,
+                        seeds = seeds,
+                        compactness = compactness
                     )
-                    local_result
+                    seg_dummy
                 },
-                locator = locator_mock,
-                par = function(...) {
-                    invisible(NULL)
-                },
-                points = function(...) {
-                    invisible(NULL)
-                },
-                .package = "graphics"
-            ) %>%
-                with_mocked_bindings(
-                    plotRGB = function(...) invisible(NULL),
-                    plot = function(...) invisible(NULL),
-                    as.polygons = function(x, ...) list(id = length(captured$snic)),
-                    .package = "terra"
-                ),
-            snic = function(img, seeds, compactness, ...) {
-                captured$snic[[length(captured$snic) + 1L]] <<- list(
-                    img = img,
-                    seeds = seeds,
-                    compactness = compactness
-                )
-                seg_dummy
-            },
-            .package = "snic"
-        ),
+                dev.interactive = function(...) TRUE,
+                .package = "snic"
+            )
+        },
         interactive = function() TRUE,
         .package = "base"
     )

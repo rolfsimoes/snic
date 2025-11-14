@@ -271,7 +271,7 @@ bool NodeGreater::operator()(const Node& a, const Node& b) const
 
 /*
  * SNIC segmentation function
- * Fills 'out' with segmentation labels (size img.n). Pixels masked out
+ * Fills 'segs' with segmentation labels (size img.n). Pixels masked out
  * remain 0. Segments are labeled from 1 to number of seeds.
  */
 template <typename T>
@@ -279,7 +279,8 @@ void snic_run(const Img<T>& img,
               std::vector<int>& seed_rows,
               std::vector<int>& seed_cols,
               double compactness,
-              std::vector<int>& out)
+              std::vector<Clu>& clus,
+              std::vector<int>& segs)
 {
     if (img.n <= 0) {
         throw std::runtime_error("image_must_contain_pixel");
@@ -301,7 +302,6 @@ void snic_run(const Img<T>& img,
     // prepare SNIC loop
 
     // initilize clusters
-    std::vector<Clu> clus;
     clus.reserve(seed_rows.size());
     std::vector<double> px_val;
     px_val.reserve(static_cast<std::size_t>(img.b));
@@ -332,8 +332,8 @@ void snic_run(const Img<T>& img,
       throw std::runtime_error("seeds_all_on_na");
     }
 
-    // alloc output
-    out.assign(static_cast<std::size_t>(img.n), 0);
+    // initialize output
+    segs.assign(static_cast<std::size_t>(img.n), 0);
 
     // spat-scale parameter
     const double spat_scale = std::sqrt(
@@ -354,7 +354,7 @@ void snic_run(const Img<T>& img,
         if (pid < 0 || pid >= img.n) {
             continue;
         }
-        if (out[pid] != 0) {
+        if (segs[pid] != 0) {
             continue;
         }
         if (!mask[pid]) {
@@ -366,7 +366,7 @@ void snic_run(const Img<T>& img,
         const int r = img.row(pid);
         const int c = img.col(pid);
         clus[cid].update_with_vals(px_val, r, c);
-        out[pid] = cid + 1;
+        segs[pid] = cid + 1;
 
         neighbors.clear();
         neighbors.reserve(4);
@@ -374,7 +374,7 @@ void snic_run(const Img<T>& img,
         for (int nid : neighbors) {
             if (nid < 0 || nid >= img.n) continue;
             if (!mask[nid]) continue;
-            if (out[nid] != 0) continue;
+            if (segs[nid] != 0) continue;
 
             img.vals(nid, px_val);
             const double d2 = clus[cid].dist_sq_to_vals(
@@ -385,7 +385,7 @@ void snic_run(const Img<T>& img,
             pq.emplace(d2, nid, cid);
         }
     }
-    if (static_cast<size_t>(out.size()) !=
+    if (static_cast<size_t>(segs.size()) !=
         static_cast<size_t>(img.w) * static_cast<size_t>(img.h)) {
         Rf_error("internal_segmentation_length_mismatch");
     }
@@ -427,11 +427,15 @@ extern "C" SEXP _snic(SEXP imgSEXP,
     const int h = INTEGER(dim)[0];
     const int w = INTEGER(dim)[1];
     const int b = INTEGER(dim)[2];
+
     if (h == NA_INTEGER || h <= 0 ||
         w == NA_INTEGER || w <= 0 ||
         b == NA_INTEGER || b <= 0) {
         Rf_error("img_dimensions_positive_integers");
     }
+
+    const R_xlen_t n_ = static_cast<R_xlen_t>(w) * static_cast<R_xlen_t>(h);
+    if (n_ > INT_MAX) Rf_error("image_too_large");
 
     if (!Rf_isReal(compactSEXP) || LENGTH(compactSEXP) != 1) {
         Rf_error("compactness_must_be_numeric_scalar");
@@ -503,36 +507,50 @@ extern "C" SEXP _snic(SEXP imgSEXP,
         seed_cols.push_back(c - 1);
     }
 
+    std::vector<snic::Clu> clus;
     std::vector<int> seg;
     try {
-        snic::snic_run(img, seed_rows, seed_cols, compact, seg);
+        snic::snic_run(img, seed_rows, seed_cols, compact, clus, seg);
     } catch (const std::runtime_error& err) {
         Rf_error("%s", err.what());
     }
 
-    // prepare and fill output segmentation
-    const R_xlen_t n_ = static_cast<R_xlen_t>(w) * static_cast<R_xlen_t>(h);
-    if (n_ > INT_MAX) Rf_error("image_too_large");
-    const int n = static_cast<int>(n_);
-
-    SEXP outSEXP = PROTECT(Rf_allocVector(INTSXP, n));
-    int* out_ptr = INTEGER(outSEXP);
+    // prepare and fill output segmentation ids
+    const int n = h * w;
+    SEXP segSEXP = PROTECT(Rf_allocVector(INTSXP, n));
+    int* segptr = INTEGER(segSEXP);
     for (int pid = 0; pid < n; ++pid) {
-        if (seg[pid] == 0) {
-            out_ptr[pid] = NA_INTEGER;
-        } else {
-            out_ptr[pid] = seg[pid];
-        }
+        segptr[pid] = (seg[pid] == 0) ? NA_INTEGER : seg[pid];
     }
     SEXP outdimSEXP = PROTECT(Rf_allocVector(INTSXP, 3));
     int *outdim = INTEGER(outdimSEXP);
     outdim[0] = h;
     outdim[1] = w;
     outdim[2] = 1;
-    setAttrib(outSEXP, R_DimSymbol, outdimSEXP);
+    setAttrib(segSEXP, R_DimSymbol, outdimSEXP);
 
-    UNPROTECT(2);
-    return outSEXP;
+    // prepare and fill cluster values
+    SEXP valSEXP = PROTECT(Rf_allocMatrix(REALSXP, n_seeds, b));
+    double* valptr = REAL(valSEXP);
+    for (int j = 0; j < b; ++j)
+        for (int i = 0; i < n_seeds; ++i)
+            valptr[i + j * n_seeds] = clus[i].val[j];
+
+    // prepare and fill cluster centers
+    SEXP rcSEXP = PROTECT(Rf_allocMatrix(REALSXP, n_seeds, 2));
+    double* rptr = REAL(rcSEXP);
+    double* cptr = REAL(rcSEXP) + n_seeds;
+    for (int i = 0; i < n_seeds; ++i) {
+        rptr[i] = clus[i].r;
+        cptr[i] = clus[i].c;
+    }
+
+    // prepare attributes
+    setAttrib(segSEXP, Rf_install("values"), valSEXP);
+    setAttrib(segSEXP, Rf_install("centers"), rcSEXP);
+
+    UNPROTECT(4);
+    return segSEXP;
 }
 
 // Explicit template instantiations for commonly used pixel types.

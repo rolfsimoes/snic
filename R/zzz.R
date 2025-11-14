@@ -1,6 +1,6 @@
 #' @useDynLib snic, .registration = TRUE
 #' @importFrom graphics par locator
-#' @importFrom stats quantile sd
+#' @importFrom grDevices dev.interactive
 NULL
 
 #' Package initialization hook

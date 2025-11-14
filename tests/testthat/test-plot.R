@@ -11,7 +11,7 @@ to_spatraster <- function(x) {
     if (inherits(x, "SpatRaster")) {
         return(x)
     }
-    snic:::arr_to_x(snic:::rast_tmpl(x), snic:::x_to_arr(x))
+    snic:::arr_to_x(snic:::.rast_tmpl(x), snic:::x_to_arr(x))
 }
 
 backend_bbox <- function(x) {
@@ -87,6 +87,15 @@ test_that("invalid bands, seeds, and segments fail for both backends", {
 
         expect_error(snic_plot(x, seg = list()))
     }
+})
+
+test_that("snic_plot accepts band names for SpatRaster inputs", {
+    skip_if_not_installed("terra")
+    fixture <- make_plot_fixture()
+    names(fixture$raster) <- c("B02", "B04", "B08")
+
+    expect_silent(snic_plot(fixture$raster, band = "B02"))
+    expect_silent(snic_plot(fixture$raster, r = "B08", g = "B04", b = "B02"))
 })
 
 test_that("grayscale plots honor the raster extent", {

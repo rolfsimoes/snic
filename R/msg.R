@@ -17,8 +17,8 @@
 
 #' @rdname message_helpers
 #' @param key Message identifier to retrieve.
-#' @param ... Optional `sprintf` arguments.
-#' @param lang Language override; defaults to `getOption("lang", "en")`.
+#' @param ... Optional \code{sprintf} arguments.
+#' @param lang Language override; defaults to \code{getOption("lang", "en")}.
 #' @keywords internal
 .msg <- function(key, ..., lang = getOption("lang", "en")) {
     if (!lang %in% names(.msg_env)) lang <- "en"

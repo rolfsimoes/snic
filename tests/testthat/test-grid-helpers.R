@@ -107,7 +107,7 @@ test_that("grid helpers enforce minimum image dimensions", {
     imgs <- list(array = arr, SpatRaster = rast)
     expect_grid_error(
         function(x) snic_grid(x, spacing = 2, padding = c(0, 0)),
-        "argument 'img' must have at least one row and one column",
+        "argument 'x' must have at least one row and one column",
         imgs
     )
 })

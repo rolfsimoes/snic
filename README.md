@@ -29,8 +29,8 @@ most of the plotting utilities demonstrated below.
 
 - Implements SNIC with a fast C++ core exposed to R
 - Works with in-memory arrays or `terra::SpatRaster` objects
-- Offers multiple seeding strategies (`snic_grid_rect()`,
-  `snic_grid_diamond()`, `snic_grid_hexagon()`, `snic_grid_random()`) and
+- Offers multiple seeding strategies via
+  `snic_grid(type = c("rectangular", "diamond", "hexagonal", "random"))` and
   interactive placement via `snic_grid_manual()`
 - Includes ready-to-plot utilities (`snic_plot()`) for quick inspection
   of inputs, seeds, and resulting segments
@@ -38,14 +38,53 @@ most of the plotting utilities demonstrated below.
   (`system.file("S2-20LMR", package = "snic")`) for reproducible
   examples and tests
 
+## Requirements and example data
+
+- **Raster support.** `terra (>= 1.7)` is suggested and is required for
+  most raster examples below. In-memory `array` workflows can skip it,
+  but you will lose the quick plotting helpers.
+- **Animation support.** `magick` is optional and only needed for
+  `snic_animation()`. The chunk is cached so missing the package merely
+  skips the demo.
+- **Development helpers.** The README uses `pkgload::load_all()` when
+  building from source to avoid installing the package during
+  development. Installed users can simply `library(snic)`.
+- **Sample imagery.** The bundled Sentinel-2 subset
+  (`system.file("S2-20LMR", package = "snic")`) contains four bands
+  cropped to a small agricultural site and is released under the original
+  Copernicus Sentinel data policy.
+
+## Key functions at a glance
+
+| Task | Function(s) | Notes |
+| --- | --- | --- |
+| Place seeds on a regular grid | `snic_grid(type = "rectangular" | "diamond" | "hexagonal")` | Control spacing and padding per dimension. |
+| Explore irregular layouts | `snic_grid(type = "random")`, `snic_grid_manual()` | Use random jittering or interactively edit seeds. |
+| Estimate expected superpixels | `snic_count_seeds()` | Quick diagnostic before running the algorithm. |
+| Run segmentation | `snic()` | Accepts arrays or `SpatRaster` objects and returns labeled rasters. |
+| Inspect results | `snic_plot()`, `snic_animation()` | Static overlays or GIF-based reviews for QA/QC. |
+
+## Why SNIC?
+
+SNIC produces compact superpixels in near-linear time and avoids the
+iterative updates of SLIC-like algorithms. The `snic` package exposes
+those speed benefits through:
+
+- A C++ core that processes moderate Sentinel-2 tiles (thousands ×
+  thousands of pixels × multiple bands) in a few seconds on a laptop.
+- Native `terra` integration, so you keep CRS, extent, and metadata
+  intact.
+- Reproducible seeding helpers, which makes parameter sweeps easy to
+  script and compare.
+
 ## Pipeline overview
 
 The SNIC workflow is short and reproducible:
 
 - **Step 1 – Seed placement.** Select or draw a grid of starting seeds
   that guide where the superpixels will grow. Grids can be generated
-  automatically (`snic_*_grid()`) or crafted interactively with
-  `snic_grid_manual()`.
+  automatically with `snic_grid()` (rectangular, diamond, hexagonal, or
+  random layouts) or crafted interactively with `snic_grid_manual()`.
 - **Step 2 – Segmentation.** Run `snic()` with the chosen seeds to grow
   superpixels and inspect the result with `snic_plot()` or the animated
   helper `snic_animation()`.
@@ -53,7 +92,9 @@ The SNIC workflow is short and reproducible:
 ## Quick start
 
 The example below demonstrates a typical SNIC workflow with the bundled
-Sentinel-2 subset.
+Sentinel-2 subset. The helper `load_snic()` keeps the chunk runnable both
+when building the README locally (using `pkgload`) and when the released
+package is already installed.
 
 ``` r
 load_snic <- function() {
@@ -72,7 +113,7 @@ load_snic <- function() {
       getNamespaceExports("snic"),
       error = function(e) character()
     )
-    required_exports <- c("snic_grid_rect", "snic_grid_diamond", "snic_grid_hexagon", "snic_grid_random")
+    required_exports <- c("snic_grid", "snic_grid_manual")
     if (all(required_exports %in% exports)) {
       return(library(snic))
     }
@@ -106,7 +147,7 @@ s2_small <- terra::aggregate(s2, fact = 5)
 
 # Seed generation and segmentation
 spacing <- 8L
-seeds <- snic_grid_rect(s2_small, spacing = spacing, padding = 0L)
+seeds <- snic_grid(s2_small, type = "rectangular", spacing = spacing, padding = 0L)
 segments <- snic(s2_small, seeds = seeds, compactness = 0.1)
 
 # Store for later sections
@@ -146,12 +187,14 @@ Seed placement controls the number, shape, and location of the resulting
 superpixels. The package ships with several grid generators, each
 returning a two-column (`r`, `c`) matrix ready for `snic()`:
 
-- `snic_grid_rect()` – equally spaced seeds along rows and columns.
-- `snic_grid_diamond()` – staggered rows produce a diagonal pattern that
-  better respects gradients.
-- `snic_grid_hexagon()` – hexagonal tiling for more isotropic superpixels.
-- `snic_grid_random()` – jittered seeds when structure is irregular or
-  prior knowledge is limited.
+- `snic_grid(type = "rectangular")` – equally spaced seeds along rows
+  and columns.
+- `snic_grid(type = "diamond")` – staggered rows produce a diagonal
+  pattern that better respects gradients.
+- `snic_grid(type = "hexagonal")` – hexagonal tiling for more isotropic
+  superpixels.
+- `snic_grid(type = "random")` – jittered seeds when structure is
+  irregular or prior knowledge is limited.
 
 Use `snic_count_seeds()` to forecast how many superpixels a spacing will
 produce before running the algorithm.
@@ -160,11 +203,12 @@ produce before running the algorithm.
 set.seed(42)
 spacing_demo <- 25L
 
-seed_examples <- list(
-  "Rectangular" = snic_grid_rect(s2_demo, spacing = spacing_demo, padding = 0L),
-  "Diamond" = snic_grid_diamond(s2_demo, spacing = spacing_demo, padding = 0L),
-  "Hexagonal" = snic_grid_hexagon(s2_demo, spacing = spacing_demo, padding = 0L),
-  "Random" = snic_grid_random(s2_demo, spacing = spacing_demo, padding = 0L)
+grid_types <- c("rectangular", "diamond", "hexagonal", "random")
+seed_examples <- setNames(
+  lapply(grid_types, function(tp) {
+    snic_grid(s2_demo, type = tp, spacing = spacing_demo, padding = 0L)
+  }),
+  tools::toTitleCase(grid_types)
 )
 
 op <- par(mfrow = c(2, 2), mar = c(1.5, 1.5, 2, 1))
@@ -255,5 +299,9 @@ added (random grid, 20 frames).</figcaption>
 
 Bug reports, feature requests, and pull requests are welcome in the
 [issue tracker](https://github.com/rolfsimoes/snic/issues). When
-proposing changes, please run `R CMD check` locally to ensure the
-package remains stable.
+proposing changes:
+
+- Run `R CMD check` or `devtools::check()` to keep the package stable.
+- Re-knit `README.Rmd` if you touch code chunks so plots stay in sync.
+- Mention whether raster dependencies (`terra`, `magick`) were available
+  when reproducing a bug, as it affects plotting and animation paths.

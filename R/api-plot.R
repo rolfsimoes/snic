@@ -41,7 +41,9 @@
 #'   provided \code{r}/\code{c} indices.
 #' @param seeds_plot_args Optional named list with additional arguments passed
 #'   to \code{\link[graphics:points]{graphics::points()}} when drawing
-#'   \code{seeds}.
+#'   \code{seeds}. Defaults to \code{getOption("snic.seeds_plot")}, falling
+#'   back to \code{list(pch = 16, col = "#00FFFF", cex = 1)} which mirrors
+#'   the internal \code{.plot_seeds()} defaults.
 #' @param seg For \code{\link[terra:SpatRaster-class]{SpatRaster}} inputs, an
 #'   optional segmentation raster (integer labels) or already vectorized
 #'   segments (a \code{\link[terra:SpatVector-class]{terra::SpatVector}}) to
@@ -49,6 +51,9 @@
 #' @param seg_plot_args Named list of arguments forwarded to
 #'   \code{\link[terra:plot]{terra::plot()}} for the \code{seg} overlay. The
 #'   argument \code{add = TRUE} is set automatically when not supplied.
+#'   Defaults to \code{getOption("snic.seg_plot")}, falling back to
+#'   \code{list(border = "#FFD700", col = NA, lwd = 0.6)} which matches the
+#'   defaults used inside \code{.plot_segments()}.
 #'
 #' @return Invisibly, \code{NULL}.
 #'
@@ -99,55 +104,58 @@ snic_plot <- function(x,
                       r = NULL,
                       g = NULL,
                       b = NULL,
-                      col = grDevices::hcl.colors(
-                          128L,
-                          palette = "Spectral"
+                      col = getOption(
+                          "snic.col",
+                          grDevices::hcl.colors(128L, "Spectral")
                       ),
                       stretch = "lin",
-                      maxcell = 100000L,
                       ...,
                       seeds = NULL,
-                      seeds_plot_args = list(
-                          pch = 4, col = "#FFFF00", cex = 1
+                      seeds_plot_args = getOption(
+                          "snic.seeds_plot",
+                          list(pch = 16, col = "#00FFFF", cex = 1)
                       ),
                       seg = NULL,
-                      seg_plot_args = list(
-                          border = "#FFFF00", col = NA, lwd = 0.4
+                      seg_plot_args = getOption(
+                          "snic.seg_plot",
+                          list(border = "#FFD700", col = NA, lwd = 0.6)
                       )) {
     if (!requireNamespace("terra", quietly = TRUE)) {
         stop(.msg("terra_required"), call. = FALSE)
     }
 
     x <- check_x(x)
-    seeds <- check_seeds(seeds)
+    seeds <- .seeds_check(seeds)
     if (!is.null(seg)) {
         seg <- check_x(seg, "seg")
     }
 
     # convert to SpatRaster
     if (!inherits(x, "SpatRaster")) {
-        x <- arr_to_x(rast_tmpl(x), x_to_arr(x))
+        x <- arr_to_x(.rast_tmpl(x), x_to_arr(x))
     }
 
-    plot_core(
-        x,
-        band = band,
-        r = r,
-        g = g,
-        b = b,
-        col = col,
-        stretch = stretch,
-        maxcell = maxcell,
-        ...
+    plot_args <- c(
+        list(
+            band = get_idx(x, band),
+            r = get_idx(x, r),
+            g = get_idx(x, g),
+            b = get_idx(x, b),
+            col = col,
+            stretch = stretch
+        ),
+        list(...)
     )
+
+    .plot_core(x, plot_args)
 
     if (nrow(seeds)) {
         seeds_xy <- as_seeds_xy(seeds, x)
-        plot_grid(seeds_xy, x, seeds_plot_args, add = TRUE)
+        .plot_seeds(seeds_xy, x, seeds_plot_args, add = TRUE)
     }
 
     if (!is.null(seg)) {
-        plot_segments(seg, seg_plot_args, add = TRUE)
+        .plot_segments(seg, seg_plot_args, add = TRUE)
     }
 
     invisible(NULL)
@@ -156,16 +164,18 @@ snic_plot <- function(x,
 #' @export
 #' @rdname snic_plot
 snic_plot_grid <- function(seeds, x, ..., add = FALSE) {
-    seeds <- check_seeds(seeds)
+    seeds <- .seeds_check(seeds)
 
     seeds_xy <- as_seeds_xy(seeds, x)
     plot_args <- list(...)
-    plot_grid(seeds_xy, x, plot_args, add = add)
+    .plot_seeds(seeds_xy, x, plot_args, add = add)
 }
 
 #' @export
 #' @rdname snic_plot
-snic_plot_segments <- function(x, ..., add = FALSE, maxcell = 100000L) {
+#' @param add Logical; when \code{TRUE}, seed grids or segment boundaries are
+#'   added to the current plot instead of opening a new frame.
+snic_plot_segments <- function(x, ..., add = FALSE) {
     if (!requireNamespace("terra", quietly = TRUE)) {
         stop(.msg("terra_required"), call. = FALSE)
     }
@@ -180,88 +190,8 @@ snic_plot_segments <- function(x, ..., add = FALSE, maxcell = 100000L) {
     if (!inherits(x, "SpatRaster")) {
         x <- arr_to_x(
             terra::rast(x), # template
-            x_to_arr(x[, , bands, drop = FALSE])
+            x_to_arr(x)
         )
     }
-    plot_segments(x, plot_args, add = add)
-}
-
-plot_core <- function(x, band, r, g, b, col, stretch, maxcell, ...) {
-    if (!inherits(x, "SpatRaster")) {
-        stop(.msg("plot_core_invalid_x"), call. = FALSE)
-    }
-
-    x <- check_x(x)
-
-    bands <- band
-    if (!is.null(r) || !is.null(g) || !is.null(b)) {
-        bands <- c(r, g, b)
-    }
-    n_bands <- dim(x)[[3L]]
-    if (any(bands < 1L | bands > n_bands)) {
-        stop(.msg("raster_invalid_index"), call. = FALSE)
-    }
-
-    if (length(bands) == 3L) {
-        terra::plotRGB(
-            x,
-            r = r,
-            g = g,
-            b = b,
-            mar = 0,
-            smooth = FALSE,
-            stretch = stretch,
-            axes = FALSE,
-            maxcell = maxcell,
-            ...
-        )
-    } else {
-        terra::plot(
-            x, band,
-            col = col,
-            mar = 0,
-            legend = FALSE,
-            axes = FALSE,
-            maxcell = maxcell,
-            smooth = FALSE,
-            stretch = stretch,
-            ...
-        )
-    }
-
-    invisible(NULL)
-}
-
-plot_grid <- function(seeds_xy, x, plot_args, add) {
-    default_args <- list(pch = 4, col = "black", cex = 1)
-    plot_args <- utils::modifyList(default_args, plot_args)
-
-    if (!add) {
-        oldpar <- graphics::par(mar = c(0, 0, 0, 0))
-        on.exit(graphics::par(oldpar), add = TRUE)
-        bbox <- x_bbox(x)
-        xlim <- c(bbox[[1L]], bbox[[2L]])
-        ylim <- c(bbox[[3L]], bbox[[4L]])
-        graphics::plot.new()
-        graphics::plot.window(xlim = xlim, ylim = ylim)
-    }
-
-    do.call(
-        graphics::points,
-        c(list(x = seeds_xy$x, y = seeds_xy$y), plot_args)
-    )
-}
-
-plot_segments <- function(x, plot_args, add) {
-    default_args <- list(border = "#FFFF00", col = NA, lwd = 0.4)
-    plot_args <- utils::modifyList(default_args, plot_args)
-    plot_args$add <- add
-
-    # convert to SpatRaster
-    if (!inherits(x, "SpatRaster")) {
-        x <- arr_to_x(rast_tmpl(x), x_to_arr(x))
-    }
-
-    seg <- polygonize(x)
-    do.call(terra::plot, c(list(seg), plot_args))
+    .plot_segments(x, plot_args, add = add)
 }

@@ -1,0 +1,54 @@
+#!/bin/sh
+
+set -e
+
+echo "checking for gdal-config..." >&2
+
+if test -n "${GDAL_CONFIG}"; then
+    GDAL_CONFIG_CMD="${GDAL_CONFIG}"
+else
+    GDAL_CONFIG_CMD=$(command -v gdal-config 2>/dev/null || true)
+fi
+
+if test -z "${GDAL_CPPFLAGS}"; then
+    if test -n "${GDAL_CONFIG_CMD}"; then
+        GDAL_CPPFLAGS="$(${GDAL_CONFIG_CMD} --cflags)"
+    fi
+fi
+
+if test -z "${GDAL_LIBS}"; then
+    if test -n "${GDAL_CONFIG_CMD}"; then
+        GDAL_LIBS="$(${GDAL_CONFIG_CMD} --libs)"
+    fi
+fi
+
+if test -z "${GDAL_CPPFLAGS}" || test -z "${GDAL_LIBS}"; then
+    cat <<EOF >&2
+configure: error: Unable to determine GDAL compilation flags.
+Set the environment variables GDAL_CPPFLAGS and GDAL_LIBS, or ensure 'gdal-config'
+is available on the PATH (or specify it via GDAL_CONFIG).
+EOF
+    exit 1
+fi
+
+escape_sed() {
+    printf '%s' "$1" | sed -e 's/[\\/&]/\\&/g'
+}
+
+template="src/Makevars.in"
+output="src/Makevars"
+
+if test ! -f "${template}"; then
+    echo "configure: error: missing ${template}" >&2
+    exit 1
+fi
+
+cppflags_esc=$(escape_sed "${GDAL_CPPFLAGS}")
+libs_esc=$(escape_sed "${GDAL_LIBS}")
+
+sed \
+    -e "s/@GDAL_CPPFLAGS@/${cppflags_esc}/" \
+    -e "s/@GDAL_LIBS@/${libs_esc}/" \
+    "${template}" > "${output}"
+
+echo "configure: writing ${output}" >&2

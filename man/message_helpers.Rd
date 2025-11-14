@@ -18,13 +18,13 @@ An object of class \code{environment} of length 1.
 .msg(key, ..., lang = getOption("lang", "en"))
 }
 \arguments{
-\item{lang}{Language override; defaults to `getOption("lang", "en")`.}
+\item{lang}{Language override; defaults to \code{getOption("lang", "en")}.}
 
 \item{msg_lst}{Named character vector/list of message templates.}
 
 \item{key}{Message identifier to retrieve.}
 
-\item{...}{Optional `sprintf` arguments.}
+\item{...}{Optional \code{sprintf} arguments.}
 }
 \description{
 Stores lightweight translations for user-facing messages.

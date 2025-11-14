@@ -1,7 +1,7 @@
 Package: snic
 Type: Package
 Title: Superpixel Segmentation with the SNIC Algorithm
-Version: 0.2.0
+Version: 0.3.0
 Authors@R: c(
     person(given = "Rolf", family = "Simoes", email = "rolfsimoes@gmail.com", 
     role = c("aut", "cre")),

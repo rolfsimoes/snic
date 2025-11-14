@@ -42,7 +42,6 @@
 #' @seealso
 #' \code{\link{snic_grid}} for seed generation,
 #' \code{\link{snic_grid_manual}} for interactive placement,
-#' \code{\link{snic_count_seeds}} for estimating seed counts,
 #' \code{\link{snic_plot}} for visualizing results.
 #'
 #' @examples
@@ -92,7 +91,13 @@
 #'     # Convert sRGB -> CIE Lab for perceptual clustering
 #'     dims <- dim(rgb)
 #'     dim(rgb) <- c(dims[1] * dims[2], dims[3])
-#'     lab <- grDevices::convertColor(rgb, from = "sRGB", to = "Lab", scale.in = 1, scale.out = 1 / 255)
+#'     lab <- grDevices::convertColor(
+#'         rgb,
+#'         from = "sRGB",
+#'         to = "Lab",
+#'         scale.in = 1,
+#'         scale.out = 1 / 255
+#'     )
 #'     dim(lab) <- dims
 #'     dim(rgb) <- dims
 #'
@@ -116,11 +121,11 @@
 #' @export
 snic <- function(x, seeds, compactness = 0.5, ...) {
     x <- check_x(x)
-    seeds <- check_seeds(seeds)
+    seeds <- .seeds_check(seeds)
 
     arr <- x_to_arr(x)
 
-    arr <- snic_core(arr, as_seeds_rc(seeds, x), compactness)
+    arr <- .snic_core(arr, as_seeds_rc(seeds, x), compactness)
 
     arr_to_x(x, arr, "snic")
 }
@@ -132,7 +137,7 @@ snic <- function(x, seeds, compactness = 0.5, ...) {
 #' SNIC segmentations using incremental subsets of the provided seeds
 #' and compiles the results into an animation.
 #'
-#' @param x A \code{\link[terra:SpatRaster-class]{terra::SpatRaster}}
+#' @param x A \code{\link[terra:SpatRaster-class]{SpatRaster}}
 #'   representing the image to segment. Dimensions and coordinate reference
 #'   are inferred automatically.
 #' @param seeds A two-column object specifying seed coordinates. If \code{x}
@@ -147,6 +152,8 @@ snic <- function(x, seeds, compactness = 0.5, ...) {
 #'   used.
 #' @param delay Per-frame delay in centiseconds (1/100 s). Passed to
 #'   \code{magick::image_animate()}. Default is 10 (0.1 s per frame).
+#' @param progress Logical scalar; if \code{TRUE}, show the textual progress
+#'   bar while generating frames.
 #' @param ... Additional arguments forwarded to \code{\link{snic_plot}} when
 #'   drawing each frame (e.g., RGB band indices or palette options).
 #' @param snic_args Named list of extra arguments passed to \code{\link{snic}}
@@ -205,6 +212,7 @@ snic_animation <- function(x,
                            file_path,
                            max_frames = 100L,
                            delay = 10,
+                           progress = getOption("snic.progress", FALSE),
                            ...,
                            snic_args = list(
                                compactness = 0.5
@@ -222,7 +230,7 @@ snic_animation <- function(x,
     }
 
     x <- check_x(x)
-    seeds <- check_seeds(seeds)
+    seeds <- .seeds_check(seeds)
 
     if (!nrow(seeds)) {
         stop(.msg("seeds_cannot_be_null"), call. = FALSE)
@@ -260,6 +268,10 @@ snic_animation <- function(x,
     }
     delay <- as.numeric(delay)
 
+    if (!is.logical(progress) || length(progress) != 1L || is.na(progress)) {
+        stop(.msg("progress_must_be_logical"), call. = FALSE)
+    }
+
 
     if (!is.list(snic_args)) {
         stop(.msg("snic_args_must_be_list"), call. = FALSE)
@@ -279,10 +291,16 @@ snic_animation <- function(x,
     h <- dims[[1]]
     w <- dims[[2]]
 
-    pb <- utils::txtProgressBar(max = n_cycles + 10L, style = 3)
+    pb <- if (progress) {
+        utils::txtProgressBar(max = n_cycles + 10L, style = 3)
+    } else {
+        NULL
+    }
     frame_files <- character(n_cycles)
     for (i in seq_len(n_cycles)) {
-        utils::setTxtProgressBar(pb, i)
+        if (!is.null(pb)) {
+            utils::setTxtProgressBar(pb, i)
+        }
         current_seeds <- seeds[seq_len(i), , drop = FALSE]
         seg <- do.call(snic, c(list(x = x, seeds = current_seeds), snic_args))
 
@@ -325,8 +343,10 @@ snic_animation <- function(x,
         format = "gif",
         compression = "LZW"
     )
-    utils::setTxtProgressBar(pb, n_cycles + 10L)
-    close(pb)
+    if (!is.null(pb)) {
+        utils::setTxtProgressBar(pb, n_cycles + 10L)
+        close(pb)
+    }
 
     message(.msg("animation_saved", file_path, total_duration, fps))
 
