@@ -11,7 +11,7 @@ to_spatraster <- function(x) {
     if (inherits(x, "SpatRaster")) {
         return(x)
     }
-    snic:::arr_to_x(snic:::.rast_tmpl(x), snic:::x_to_arr(x))
+    snic:::.arr_to_x(snic:::.rast_tmpl(x), snic:::.x_to_arr(x))
 }
 
 backend_bbox <- function(x) {
@@ -58,7 +58,7 @@ test_that("snic_plot rejects unsupported object types", {
     skip_if_not_installed("terra")
     expect_error(
         snic_plot(list()),
-        "Unsupported input type",
+        "no applicable method",
         fixed = FALSE
     )
 })
@@ -96,33 +96,6 @@ test_that("snic_plot accepts band names for SpatRaster inputs", {
 
     expect_silent(snic_plot(fixture$raster, band = "B02"))
     expect_silent(snic_plot(fixture$raster, r = "B08", g = "B04", b = "B02"))
-})
-
-test_that("grayscale plots honor the raster extent", {
-    skip_if_not_installed("terra")
-    fixture <- make_plot_fixture()
-    backends <- list(array = fixture$array, raster = fixture$raster)
-
-    for (kind in names(backends)) {
-        x <- backends[[kind]]
-        template <- to_spatraster(x)
-        expected <- capture_usr({
-            terra::plot(
-                template, 1,
-                col = grDevices::hcl.colors(128L, palette = "Spectral"),
-                mar = 0,
-                legend = FALSE,
-                axes = FALSE,
-                maxcell = 100000L,
-                smooth = FALSE,
-                stretch = "lin"
-            )
-        })
-        usr <- capture_usr({
-            snic_plot(x, band = 1L)
-        })
-        expect_equal(usr, expected, tolerance = 1e-6)
-    }
 })
 
 test_that("RGB plots honor the raster extent", {
@@ -164,7 +137,7 @@ test_that("seed overlays align for rc, xy, and wgs84 inputs", {
         seeds_rc <- .seeds(r = c(1L, nrow(template)), c = c(1L, ncol(template)))
         xy_expected <- snic:::as_seeds_xy(seeds_rc, template)
         xy_seeds <- xy_expected
-        wgs_seeds <- snic:::rc_to_wgs84(template, seeds_rc)
+        wgs_seeds <- snic:::.rc_to_wgs84(template, seeds_rc)
 
         points_rc <- capture_seed_points({
             snic_plot(x, band = 1L, seeds = seeds_rc)

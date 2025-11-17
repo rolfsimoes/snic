@@ -34,7 +34,7 @@ test_that("snic_grid_manual collects locator clicks into seed data frame", {
         value
     }
 
-    seg_dummy <- img[[1L]]
+    seg_dummy <- structure(list(seg = img[[1L]]), class = "snic")
     captured <- list(
         snic = list(),
         plotRGB = list(),
@@ -128,5 +128,4 @@ test_that("snic_grid_manual collects locator clicks into seed data frame", {
             logical(1)
         ))
     )
-
 })

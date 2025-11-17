@@ -20,19 +20,18 @@
 #' }
 #'
 #' @param seeds A data frame, matrix, or \code{NULL} describing seeds.
-#' @param param_name Parameter name to report in error messages.
 #' @param new_seed Single-row object to append to an existing seed set.
 #' @keywords internal
 #' @name seeds_internal
 NULL
 
 #' @rdname seeds_internal
-.seeds_check <- function(seeds, param_name = "seeds") {
+.seeds_check <- function(seeds) {
     UseMethod(".seeds_check", seeds)
 }
 
 #' @rdname seeds_internal
-.seeds_check.data.frame <- function(seeds, param_name = "seeds") {
+.seeds_check.data.frame <- function(seeds) {
     .switch_seeds(
         seeds,
         rc = seeds[, c("r", "c")],
@@ -42,25 +41,25 @@ NULL
 }
 
 #' @rdname seeds_internal
-.seeds_check.matrix <- function(seeds, param_name = "seeds") {
+.seeds_check.matrix <- function(seeds) {
     if (!is.null(colnames(seeds))) {
-        return(.seeds_check.data.frame(as.data.frame(seeds), param_name))
+        return(.seeds_check.data.frame(as.data.frame(seeds)))
     }
     if (ncol(seeds) != 2L) {
-        stop(.msg(".seeds_check_matrix_two_columns", param_name), call. = FALSE)
+        stop(.msg(".seeds_check_matrix_two_columns"), call. = FALSE)
     }
     colnames(seeds) <- c("r", "c")
     as.data.frame(seeds)
 }
 
 #' @rdname seeds_internal
-.seeds_check.NULL <- function(seeds, param_name = "seeds") {
+.seeds_check.NULL <- function(seeds) {
     data.frame(r = integer(0), c = integer(0))
 }
 
 #' @rdname seeds_internal
-.seeds_check.default <- function(seeds, param_name = "seeds") {
-    .seeds_check.data.frame(as.data.frame(seeds), param_name)
+.seeds_check.default <- function(seeds) {
+    .seeds_check.data.frame(as.data.frame(seeds))
 }
 
 #' @rdname seeds_internal

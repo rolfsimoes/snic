@@ -58,7 +58,7 @@
     seeds_columns_lonlat_or_rc = "argument 'seeds' must have columns (lon, lat) or (r, c)",
     seeds_two_columns_min = "argument 'seeds' must have at least two columns",
     seeds_matrix_two_columns = "argument 'seeds' must have exactly two columns (row, column)",
-    .seeds_check_matrix_two_columns = "argument '%s' must have exactly two columns",
+    .seeds_check_matrix_two_columns = "argument 'seeds' must have exactly two columns",
     seeds_invalid_type = "argument 'seeds' must be a data frame or matrix with columns 'r' and 'c'",
     seeds_missing_column_names = "argument 'seeds' must include column names 'r' (row) and 'c' (column)",
     seeds_must_have_coordinates = "argument 'seeds' must contain at least one coordinate",
@@ -102,7 +102,13 @@
     seed_index_out_of_bounds = "Seed index out of bounds for provided image dimensions",
     seeds_all_on_na = "All seeds fall on pixels containing NA values; SNIC cannot segment.",
     snic_expected_array = "SNIC segmentation output must be stored as a 3D array",
-    snic_expected_class = "%s expects an object created by snic()."
+    snic_expected_class = "argument 'x' must be an object created by snic()",
+    snic_expected_list = "argument 'seg' must be a list",
+    snic_expected_seg = "argument 'seg' must have an element named 'seg'",
+    seeds_expected_logical = "argument 'seeds' must be a logical scalar",
+    seg_expected_logical = "argument 'seg' must be a logical scalar",
+    plot_snic_no_seeds = "No seeds found in provided object",
+    plot_snic_no_seg = "No segments found in provided object"
 )
 
 # nolint end

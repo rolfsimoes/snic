@@ -235,7 +235,7 @@ NULL
         if (is.null(p)) break
 
         new_seed <- .seeds(x = p$x, y = p$y) # in x CRS
-        if (any(is.na(xy_to_rc(x, new_seed)))) next # outside image
+        if (any(is.na(.xy_to_rc(x, new_seed)))) next # outside image
 
         snic_args$seeds <- .append_seed(snic_args$seeds, new_seed)
         plot_args$seg <- do.call(snic, c(list(x), snic_args))

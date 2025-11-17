@@ -36,8 +36,11 @@
 #' spectral similarity and spatial distance, weighted by \code{compactness}.
 #'
 #' @return
-#' A single-band object with the same spatial dimensions as \code{x}, where
-#' each pixel value is the integer label of its assigned superpixel.
+#' An object of class \code{snic} bundling the segmentation result together
+#' with per-cluster summaries produced by the SNIC algorithm. The segmentation
+#' result can be accessed using \code{\link{snic_get_seg}}. The per-cluster
+#' summaries can be accessed using \code{\link{snic_get_means}} and
+#' \code{\link{snic_get_centroids}}.
 #'
 #' @seealso
 #' \code{\link{snic_grid}} for seed generation,
@@ -47,9 +50,9 @@
 #' @examples
 #' # Example 1: Terra raster workflow with visual feedback
 #' if (requireNamespace("terra", quietly = TRUE)) {
-#'     tdir <- system.file("S2-20LMR", package = "snic", mustWork = TRUE)
+#'     path <- system.file("S2-20LMR", package = "snic", mustWork = TRUE)
 #'     files <- file.path(
-#'         tdir,
+#'         path,
 #'         c(
 #'             "S2_20LMR_B02_20220630.tif",
 #'             "S2_20LMR_B04_20220630.tif",
@@ -85,7 +88,11 @@
 #' # Example 2: In-memory image (JPEG) + Lab transform
 #' # Uses an example image shipped with the package (no terra needed)
 #' if (requireNamespace("jpeg", quietly = TRUE)) {
-#'     img_path <- system.file("clownfish.jpeg", package = "snic", mustWork = TRUE)
+#'     img_path <- system.file(
+#'         "clownfish.jpeg",
+#'         package = "snic",
+#'         mustWork = TRUE
+#'     )
 #'     rgb <- jpeg::readJPEG(img_path) # h x w x 3 in [0, 1]
 #'
 #'     # Convert sRGB -> CIE Lab for perceptual clustering
@@ -102,7 +109,7 @@
 #'     dim(rgb) <- dims
 #'
 #'     # Seeds in pixel coordinates for array inputs
-#'     seeds_rc <- snic_grid(lab, type = "hexagonal", spacing = 20L, padding = 4L)
+#'     seeds_rc <- snic_grid(lab, type = "hexagonal", spacing = 20L)
 #'
 #'     # Segment in Lab space and plot L channel with boundaries
 #'     seg <- snic(lab, seeds_rc, compactness = 0.1)
@@ -120,15 +127,115 @@
 #' }
 #' @export
 snic <- function(x, seeds, compactness = 0.5, ...) {
-    x <- check_x(x)
+    x <- .check_x(x)
     seeds <- .seeds_check(seeds)
 
-    arr <- x_to_arr(x)
+    arr <- .x_to_arr(x)
 
     arr <- .snic_core(arr, as_seeds_rc(seeds, x), compactness)
 
-    arr_to_x(x, arr, "snic")
+    seg <- .arr_to_x(x, arr, "snic")
+
+    .snic_new(seg)
 }
+
+#' SNIC segmentation container
+#'
+#' Objects returned by \code{\link{snic}} inherit from the \code{snic}
+#' S3 class. They are lightweight containers bundling the segmentation
+#' result together with per-cluster summaries produced by the SNIC
+#' algorithm.
+#'
+#' @section Accessors:
+#'
+#'   - \code{\link{snic_get_seg}}: Retrieve the segmentation result.
+#'   - \code{\link{snic_get_means}}: Retrieve per-cluster feature means.
+#'   - \code{\link{snic_get_centroids}}: Retrieve per-cluster centroids.
+#'
+#' @section Methods:
+#'
+#'   - \code{\link{snic_animation}}: Animate the segmentation process.
+#'   - \code{\link{print}}: Print a summary of the segmentation result.
+#'   - \code{\link{plot}}: Visualize the segmentation result.
+#'
+#' @param x A \code{snic} object, typically the result of a call to
+#'   \code{\link{snic}}. It stores the segmentation map along with
+#'   per-cluster summaries (means, centroids, and metadata) produced
+#'   by the SNIC algorithm.
+#'
+#' @param ... Additional arguments passed to or from methods.
+#'   Currently unused, but included for compatibility with
+#'   S3 method dispatch.
+#'
+#' @name snic_class
+NULL
+
+#' @rdname snic_class
+#' @export
+snic_get_means <- function(x) {
+    UseMethod("snic_get_means", x)
+}
+
+#' @rdname snic_class
+#' @export
+snic_get_centroids <- function(x) {
+    UseMethod("snic_get_centroids", x)
+}
+
+#' @rdname snic_class
+#' @export
+snic_get_seg <- function(x) {
+    UseMethod("snic_get_seg", x)
+}
+
+#' @rdname snic_class
+#' @export
+snic_get_means.snic <- function(x) {
+    x <- .snic_check(x)
+    .snic_means(x)
+}
+
+#' @rdname snic_class
+#' @export
+snic_get_centroids.snic <- function(x) {
+    x <- .snic_check(x)
+    .snic_centroids(x)
+}
+
+#' @rdname snic_class
+#' @export
+snic_get_seg.snic <- function(x) {
+    x <- .snic_check(x)
+    .snic_seg(x)
+}
+
+#' @rdname snic_class
+#' @export
+print.snic <- function(x, ...) {
+    x <- .snic_check(x)
+    seg <- .snic_seg(x)
+    dims <- dim(seg)
+
+    cat("SNIC segmentation\n")
+    cat("  Size (rows x cols):  ", dims[1L], " x ", dims[2L], "\n", sep = "")
+
+    means <- .snic_means(x)
+    if (!is.null(means)) {
+        cat("  Clusters:    ", nrow(means), "\n", sep = "")
+        cat("  Features:    ", ncol(means), "\n", sep = "")
+        features <- dimnames(seg)[[3L]]
+        if (!is.null(features)) {
+            cat("        (", paste(features, collapse = ", "), ")\n", sep = "")
+        }
+    }
+
+    cat("Viewing first rows and columns:\n")
+    rows <- min(6L, dims[[1L]])
+    cols <- min(6, dims[[2L]])
+    print(seg[seq_len(rows), seq_len(cols), 1L, drop = FALSE])
+    invisible(x)
+}
+
 
 #' Animated visualization of SNIC seeding and segmentation
 #'
@@ -229,7 +336,7 @@ snic_animation <- function(x,
         stop(.msg("magick_required"), call. = FALSE)
     }
 
-    x <- check_x(x)
+    x <- .check_x(x)
     seeds <- .seeds_check(seeds)
 
     if (!nrow(seeds)) {
@@ -328,9 +435,6 @@ snic_animation <- function(x,
 
     animation <- magick::image_read(frame_files)
     animation <- magick::image_coalesce(animation)
-    # TODO: implement a method to reduce image
-    # size like animation <- magick::image_quantize(
-    # animation, max = 64, dither = TRUE)
     animation <- magick::image_animate(
         animation,
         delay = delay,

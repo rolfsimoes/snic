@@ -9,6 +9,11 @@
 #' @param x Image data. For the array method this must be a numeric array
 #'   with dimensions \code{(height, width, bands)}. For the raster method
 #'   the object must be a \code{\link[terra:SpatRaster-class]{SpatRaster}}.
+#' @param ... Additional arguments forwarded to the underlying plotting
+#'   function. For arrays, these are passed to
+#'   \code{\link[graphics:image]{graphics::image()}}; for raster inputs they
+#'   are forwarded to \code{\link[terra:plot]{terra::snic_plot()}} (single band)
+#'   or \code{\link[terra:plotRGB]{terra::plotRGB()}} (RGB composites).
 #' @param band Integer index of the band to display when producing a
 #'   single-band plot. Defaults to the first band.
 #' @param r,g,b Integer indices (1-based) of the bands to use when composing
@@ -28,11 +33,6 @@
 #'       \eqn{\text{mean} \pm 2 \times \text{sd}}, then scale).
 #'   }
 #'   Non-numeric arrays or bands with only constant values are plotted as-is.
-#' @param ... Additional arguments forwarded to the underlying plotting
-#'   function. For arrays, these are passed to
-#'   \code{\link[graphics:image]{graphics::image()}}; for raster inputs they
-#'   are forwarded to \code{\link[terra:plot]{terra::plot()}} (single band)
-#'   or \code{\link[terra:plotRGB]{terra::plotRGB()}} (RGB composites).
 #' @param seeds Optional object containing seed coordinates with
 #'   columns \code{r} and \code{c}. Additional columns are preserved; when
 #'   plotting \code{\link[terra:SpatRaster-class]{SpatRaster}} inputs,
@@ -49,7 +49,7 @@
 #'   segments (a \code{\link[terra:SpatVector-class]{terra::SpatVector}}) to
 #'   be drawn over the image.
 #' @param seg_plot_args Named list of arguments forwarded to
-#'   \code{\link[terra:plot]{terra::plot()}} for the \code{seg} overlay. The
+#'   \code{\link[terra:plot]{terra::snic_plot()}} for the \code{seg} overlay. The
 #'   argument \code{add = TRUE} is set automatically when not supplied.
 #'   Defaults to \code{getOption("snic.seg_plot")}, falling back to
 #'   \code{list(border = "#FFD700", col = NA, lwd = 0.6)} which matches the
@@ -93,13 +93,22 @@
 #'         seg = seg
 #'     )
 #' }
-#' @export
 #' @name snic_plot
 NULL
 
-#' @export
 #' @rdname snic_plot
+#' @export
+snic_plot <- function(x, ...) {
+    if (!requireNamespace("terra", quietly = TRUE)) {
+        stop(.msg("terra_required"), call. = FALSE)
+    }
+    UseMethod("snic_plot", x)
+}
+
+#' @rdname snic_plot
+#' @export
 snic_plot <- function(x,
+                      ...,
                       band = 1L,
                       r = NULL,
                       g = NULL,
@@ -109,7 +118,6 @@ snic_plot <- function(x,
                           grDevices::hcl.colors(128L, "Spectral")
                       ),
                       stretch = "lin",
-                      ...,
                       seeds = NULL,
                       seeds_plot_args = getOption(
                           "snic.seeds_plot",
@@ -120,78 +128,39 @@ snic_plot <- function(x,
                           "snic.seg_plot",
                           list(border = "#FFD700", col = NA, lwd = 0.6)
                       )) {
-    if (!requireNamespace("terra", quietly = TRUE)) {
-        stop(.msg("terra_required"), call. = FALSE)
-    }
-
-    x <- check_x(x)
-    seeds <- .seeds_check(seeds)
-    if (!is.null(seg)) {
-        seg <- check_x(seg, "seg")
-    }
+    # extract original image
+    x <- .check_x(x)
 
     # convert to SpatRaster
     if (!inherits(x, "SpatRaster")) {
-        x <- arr_to_x(.rast_tmpl(x), x_to_arr(x))
+        x <- .arr_to_x(.rast_tmpl(x), .x_to_arr(x))
     }
 
     plot_args <- c(
         list(
-            band = get_idx(x, band),
-            r = get_idx(x, r),
-            g = get_idx(x, g),
-            b = get_idx(x, b),
+            band = .get_idx(x, band),
+            r = .get_idx(x, r),
+            g = .get_idx(x, g),
+            b = .get_idx(x, b),
             col = col,
             stretch = stretch
         ),
         list(...)
     )
-
     .plot_core(x, plot_args)
 
-    if (nrow(seeds)) {
+
+    # plot seeds
+    if (!is.null(seeds) && !is.null(seeds_plot_args)) {
+        seeds <- .seeds_check(seeds)
         seeds_xy <- as_seeds_xy(seeds, x)
         .plot_seeds(seeds_xy, x, seeds_plot_args, add = TRUE)
     }
 
-    if (!is.null(seg)) {
+    # plot segments
+    if (!is.null(seg) && !is.null(seg_plot_args)) {
+        seg <- .snic_check(seg)
+        seg <- .snic_seg(seg)
         .plot_segments(seg, seg_plot_args, add = TRUE)
     }
-
-    invisible(NULL)
-}
-
-#' @export
-#' @rdname snic_plot
-snic_plot_grid <- function(seeds, x, ..., add = FALSE) {
-    seeds <- .seeds_check(seeds)
-
-    seeds_xy <- as_seeds_xy(seeds, x)
-    plot_args <- list(...)
-    .plot_seeds(seeds_xy, x, plot_args, add = add)
-}
-
-#' @export
-#' @rdname snic_plot
-#' @param add Logical; when \code{TRUE}, seed grids or segment boundaries are
-#'   added to the current plot instead of opening a new frame.
-snic_plot_segments <- function(x, ..., add = FALSE) {
-    if (!requireNamespace("terra", quietly = TRUE)) {
-        stop(.msg("terra_required"), call. = FALSE)
-    }
-
-    if (dim(x)[[3]] != 1L) {
-        stop(.msg("plot_segments_single_band"), call. = FALSE)
-    }
-
-    plot_args <- list(...)
-
-    # convert to SpatRaster
-    if (!inherits(x, "SpatRaster")) {
-        x <- arr_to_x(
-            terra::rast(x), # template
-            x_to_arr(x)
-        )
-    }
-    .plot_segments(x, plot_args, add = add)
 }

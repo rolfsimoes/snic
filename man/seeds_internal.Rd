@@ -13,15 +13,15 @@
 \alias{.seeds}
 \title{Internal seed utilities}
 \usage{
-.seeds_check(seeds, param_name = "seeds")
+.seeds_check(seeds)
 
-\method{.seeds_check}{data.frame}(seeds, param_name = "seeds")
+\method{.seeds_check}{data.frame}(seeds)
 
-\method{.seeds_check}{matrix}(seeds, param_name = "seeds")
+\method{.seeds_check}{matrix}(seeds)
 
-\method{.seeds_check}{`NULL`}(seeds, param_name = "seeds")
+\method{.seeds_check}{`NULL`}(seeds)
 
-\method{.seeds_check}{default}(seeds, param_name = "seeds")
+\method{.seeds_check}{default}(seeds)
 
 .seeds_type(seeds)
 
@@ -33,8 +33,6 @@
 }
 \arguments{
 \item{seeds}{A data frame, matrix, or \code{NULL} describing seeds.}
-
-\item{param_name}{Parameter name to report in error messages.}
 
 \item{new_seed}{Single-row object to append to an existing seed set.}
 }

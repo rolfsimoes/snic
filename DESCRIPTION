@@ -10,7 +10,8 @@ Authors@R: c(
     person('Gilberto', 'Camara', role = c('ctb', 'rth'), email = 'gilberto.camara.inpe@gmail.com')
     )
 Description: Implementation of the Simple Non-Iterative Clustering (SNIC) 
-    algorithm for superpixel segmentation of multi-band images.  The core 
+    algorithm for superpixel segmentation of multi-band images, following 
+    Achanta and Susstrunk (2017) <doi:10.1109/CVPR.2017.355>.  The core 
     algorithm is written in C++ and exposed to R via a small interface.  
     The implementation uses a priority queue (min-heap) to grow compact, 
     homogeneous segments from uniformly distributed seeds.  Supports 

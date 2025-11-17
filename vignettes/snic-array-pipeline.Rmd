@@ -20,7 +20,7 @@ library(snic)
 
 ## Introduction
 
-The snic package implements the Simple Non-Iterative Clustering (SNIC) algorithm for image segmentation. The objective of this tutorial is to present the segmentation pipeline in a compact, reproducible manner using a small example. 
+The snic package implements the Simple Non-Iterative Clustering (SNIC) algorithm for image segmentation, originally proposed by Achanta and Susstrunk (2017). The objective of this tutorial is to present the segmentation pipeline in a compact, reproducible manner using a small example. 
 
 > **Remote sensing workflow:** If you work with `terra` objects, see the [SNIC Segmentation Pipeline - SpatRaster](snic-spatraster-pipeline.html) vignette for a step-by-step walkthrough tailored to multispectral imagery.
 
@@ -207,3 +207,7 @@ mtext(
 ```
 
 Under identical conditions, the rectangular and diamond arrangements yield more axis-aligned boundary structure, while the hexagonal and randomised seeds distribute initial cluster centres more evenly in all directions. The choice among these layouts is task-dependent; the pipeline itself remains the same: define seeds, run `snic()`, and examine the resulting segments.
+
+## References
+
+Achanta, R., & Susstrunk, S. (2017). Superpixels and polygons using simple non-iterative clustering. *Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition (CVPR)*. <doi:10.1109/CVPR.2017.355>

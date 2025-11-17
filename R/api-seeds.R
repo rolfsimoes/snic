@@ -51,8 +51,8 @@ as_seeds_rc <- function(seeds, x) {
     .switch_seeds(
         seeds,
         rc = seeds,
-        wgs84 = wgs84_to_rc(x, seeds),
-        xy = xy_to_rc(x, seeds)
+        wgs84 = .wgs84_to_rc(x, seeds),
+        xy = .xy_to_rc(x, seeds)
     )
 }
 
@@ -61,8 +61,8 @@ as_seeds_rc <- function(seeds, x) {
 as_seeds_xy <- function(seeds, x) {
     .switch_seeds(
         seeds,
-        rc = rc_to_xy(x, seeds),
-        wgs84 = wgs84_to_xy(x, seeds),
+        rc = .rc_to_xy(x, seeds),
+        wgs84 = .wgs84_to_xy(x, seeds),
         xy = seeds
     )
 }
@@ -75,8 +75,8 @@ as_seeds_xy <- function(seeds, x) {
 as_seeds_wgs84 <- function(seeds, x) {
     .switch_seeds(
         seeds,
-        rc = rc_to_wgs84(x, seeds),
+        rc = .rc_to_wgs84(x, seeds),
         wgs84 = seeds,
-        xy = rc_to_wgs84(x, seeds)
+        xy = .rc_to_wgs84(x, seeds)
     )
 }

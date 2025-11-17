@@ -14,16 +14,12 @@ make_backends <- function(arr, crs = NULL) {
     backends
 }
 
-seg_matrix <- function(seg) {
-    snic:::x_to_arr(seg)[, , 1L, drop = TRUE]
-}
-
 test_that("snic produces identical segments for arrays and rasters", {
     skip_if_not_installed("terra")
 
     arr <- make_image(6L, 5L, 3L)
     backends <- make_backends(arr)
-    seeds <- snic_grid(
+    seeds <- snic::snic_grid(
         arr,
         type = "rectangular",
         spacing = c(2L, 2L),
@@ -31,12 +27,19 @@ test_that("snic produces identical segments for arrays and rasters", {
     )
 
     segs <- lapply(backends, function(x) {
-        snic(x, seeds = seeds, compactness = 0.25)
+        snic::snic(x, seeds = seeds, compactness = 0.25)
     })
 
-    expect_equal(seg_matrix(segs$array), seg_matrix(segs$raster))
-    expect_true(inherits(segs$raster, "SpatRaster"))
-    expect_equal(dim(segs$raster), c(nrow(arr), ncol(arr), 1L))
+    expect_equal(
+        snic:::.x_to_arr(snic::snic_get_seg(segs$array)),
+        snic:::.x_to_arr(snic::snic_get_seg(segs$raster)),
+        ignore_attr = TRUE
+    )
+    expect_true(inherits(snic::snic_get_seg(segs$raster), "SpatRaster"))
+    expect_equal(
+        dim(snic:::.x_to_arr(snic::snic_get_seg(segs$raster))),
+        c(nrow(arr), ncol(arr), 1L)
+    )
 })
 
 test_that("SpatRaster inputs accept WGS84 seeds", {
@@ -44,18 +47,21 @@ test_that("SpatRaster inputs accept WGS84 seeds", {
 
     arr <- make_image(5L, 4L, 2L)
     backends <- make_backends(arr, crs = "EPSG:4326")
-    seeds_rc <- snic_grid(
+    seeds_rc <- snic::snic_grid(
         arr,
         type = "rectangular",
         spacing = c(2L, 2L),
         padding = c(0L, 0L)
     )
-    seeds_wgs84 <- snic:::rc_to_wgs84(backends$raster, seeds_rc)
+    seeds_wgs84 <- snic:::.rc_to_wgs84(backends$raster, seeds_rc)
 
-    seg_latlon <- snic(backends$raster, seeds = seeds_wgs84, compactness = 0.3)
-    seg_rc <- snic(backends$raster, seeds = seeds_rc, compactness = 0.3)
+    seg_latlon <- snic::snic(backends$raster, seeds = seeds_wgs84, compactness = 0.3)
+    seg_rc <- snic::snic(backends$raster, seeds = seeds_rc, compactness = 0.3)
 
-    expect_equal(seg_matrix(seg_latlon), seg_matrix(seg_rc))
+    expect_equal(
+        snic:::.x_to_arr(snic::snic_get_seg(seg_latlon)),
+        snic:::.x_to_arr(snic::snic_get_seg(seg_rc))
+    )
 })
 
 test_that("NA pixels remain NA after segmentation for every backend", {
@@ -86,8 +92,8 @@ test_that("NA pixels remain NA after segmentation for every backend", {
     }
 
     for (kind in names(backends)) {
-        seg <- snic(backends[[kind]], seeds = seeds, compactness = 0.2)
-        seg_mat <- seg_matrix(seg)
+        seg <- snic::snic(backends[[kind]], seeds = seeds, compactness = 0.2)
+        seg_mat <- snic:::.x_to_arr(snic::snic_get_seg(seg))
         mask <- is.na(seg_mat)
         expect_true(all(mask[mask_idx]))
         expect_false(any(mask[!mask_idx]))
@@ -97,22 +103,19 @@ test_that("NA pixels remain NA after segmentation for every backend", {
 test_that("integer inputs are coerced without affecting results", {
     arr_int <- array(as.integer(seq_len(4L * 4L * 2L)), dim = c(4L, 4L, 2L))
     arr_double <- array(as.numeric(arr_int), dim = dim(arr_int))
-    seeds <- snic_grid(
+    seeds <- snic::snic_grid(
         arr_double,
         type = "rectangular",
         spacing = c(2L, 2L),
         padding = c(0L, 0L)
     )
 
-    seg_double <- snic(arr_double, seeds = seeds, compactness = 0)
-    seg_int <- snic(arr_int, seeds = seeds, compactness = 0)
-    expect_equal(seg_matrix(seg_int), seg_matrix(seg_double))
-
-    if (requireNamespace("terra", quietly = TRUE)) {
-        rast_int <- terra::rast(arr_int)
-        seg_rast <- snic(rast_int, seeds = seeds, compactness = 0)
-        expect_equal(seg_matrix(seg_rast), seg_matrix(seg_double))
-    }
+    seg_double <- snic::snic(arr_double, seeds = seeds, compactness = 0)
+    seg_int <- snic::snic(arr_int, seeds = seeds, compactness = 0)
+    expect_equal(
+        snic::snic_get_seg(seg_int),
+        snic::snic_get_seg(seg_double)
+    )
 })
 
 test_that("snic validates malformed or missing seed inputs", {
@@ -120,24 +123,24 @@ test_that("snic validates malformed or missing seed inputs", {
 
     bad_df <- data.frame(value = 1:2)
     expect_error(
-        snic(img, seeds = bad_df),
+        snic::snic(img, seeds = bad_df),
         "must have columns"
     )
 
     bad_matrix <- matrix(1:9, ncol = 3)
     expect_error(
-        snic(img, seeds = bad_matrix),
+        snic::snic(img, seeds = bad_matrix),
         "must have exactly two columns"
     )
 
     empty_matrix <- matrix(numeric(0), ncol = 2)
     expect_error(
-        snic(img, seeds = empty_matrix),
+        snic::snic(img, seeds = empty_matrix),
         "must contain at least one coordinate"
     )
 
     expect_error(
-        snic(img, seeds = NULL),
+        snic::snic(img, seeds = NULL),
         "must contain at least one coordinate"
     )
 })

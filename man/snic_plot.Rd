@@ -2,19 +2,17 @@
 % Please edit documentation in R/api-plot.R
 \name{snic_plot}
 \alias{snic_plot}
-\alias{snic_plot_grid}
-\alias{snic_plot_segments}
 \title{Plot SNIC imagery}
 \usage{
 snic_plot(
   x,
+  ...,
   band = 1L,
   r = NULL,
   g = NULL,
   b = NULL,
   col = getOption("snic.col", grDevices::hcl.colors(128L, "Spectral")),
   stretch = "lin",
-  ...,
   seeds = NULL,
   seeds_plot_args = getOption("snic.seeds_plot", list(pch = 16, col = "#00FFFF", cex =
     1)),
@@ -23,14 +21,33 @@ snic_plot(
     0.6))
 )
 
-snic_plot_grid(seeds, x, ..., add = FALSE)
-
-snic_plot_segments(x, ..., add = FALSE)
+snic_plot(
+  x,
+  ...,
+  band = 1L,
+  r = NULL,
+  g = NULL,
+  b = NULL,
+  col = getOption("snic.col", grDevices::hcl.colors(128L, "Spectral")),
+  stretch = "lin",
+  seeds = NULL,
+  seeds_plot_args = getOption("snic.seeds_plot", list(pch = 16, col = "#00FFFF", cex =
+    1)),
+  seg = NULL,
+  seg_plot_args = getOption("snic.seg_plot", list(border = "#FFD700", col = NA, lwd =
+    0.6))
+)
 }
 \arguments{
 \item{x}{Image data. For the array method this must be a numeric array
 with dimensions \code{(height, width, bands)}. For the raster method
 the object must be a \code{\link[terra:SpatRaster-class]{SpatRaster}}.}
+
+\item{...}{Additional arguments forwarded to the underlying plotting
+function. For arrays, these are passed to
+\code{\link[graphics:image]{graphics::image()}}; for raster inputs they
+are forwarded to \code{\link[terra:plot]{terra::snic_plot()}} (single band)
+or \code{\link[terra:plotRGB]{terra::plotRGB()}} (RGB composites).}
 
 \item{band}{Integer index of the band to display when producing a
 single-band plot. Defaults to the first band.}
@@ -55,12 +72,6 @@ plotting. One of:
 }
 Non-numeric arrays or bands with only constant values are plotted as-is.}
 
-\item{...}{Additional arguments forwarded to the underlying plotting
-function. For arrays, these are passed to
-\code{\link[graphics:image]{graphics::image()}}; for raster inputs they
-are forwarded to \code{\link[terra:plot]{terra::plot()}} (single band)
-or \code{\link[terra:plotRGB]{terra::plotRGB()}} (RGB composites).}
-
 \item{seeds}{Optional object containing seed coordinates with
 columns \code{r} and \code{c}. Additional columns are preserved; when
 plotting \code{\link[terra:SpatRaster-class]{SpatRaster}} inputs,
@@ -80,14 +91,11 @@ segments (a \code{\link[terra:SpatVector-class]{terra::SpatVector}}) to
 be drawn over the image.}
 
 \item{seg_plot_args}{Named list of arguments forwarded to
-\code{\link[terra:plot]{terra::plot()}} for the \code{seg} overlay. The
+\code{\link[terra:plot]{terra::snic_plot()}} for the \code{seg} overlay. The
 argument \code{add = TRUE} is set automatically when not supplied.
 Defaults to \code{getOption("snic.seg_plot")}, falling back to
 \code{list(border = "#FFD700", col = NA, lwd = 0.6)} which matches the
 defaults used inside \code{.plot_segments()}.}
-
-\item{add}{Logical; when \code{TRUE}, seed grids or segment boundaries are
-added to the current plot instead of opening a new frame.}
 }
 \value{
 Invisibly, \code{NULL}.

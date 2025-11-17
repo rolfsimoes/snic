@@ -21,8 +21,8 @@ test_that("snic validates seed inputs", {
     )
 
     result <- snic(img, seeds = seeds_valid, compactness = 0)
-    expect_true(is.array(result))
-    expect_equal(dim(result), c(2L, 2L, 1L))
+    expect_true(is.list(result))
+    expect_equal(dim(snic_get_seg(result)), c(2L, 2L, 1L))
 })
 
 test_that("snic_grid and snic_count_seeds provide consistent results", {

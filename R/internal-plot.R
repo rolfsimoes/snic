@@ -28,7 +28,7 @@ NULL
         stop(.msg("plot_core_invalid_x"), call. = FALSE)
     }
 
-    x <- check_x(x)
+    x <- .check_x(x)
 
     default_args <- list(
         band = 1L,
@@ -85,7 +85,7 @@ NULL
     if (!add) {
         oldpar <- graphics::par(mar = c(0, 0, 0, 0))
         on.exit(graphics::par(oldpar), add = TRUE)
-        bbox <- x_bbox(x)
+        bbox <- .x_bbox(x)
         xlim <- c(bbox[[1L]], bbox[[2L]])
         ylim <- c(bbox[[3L]], bbox[[4L]])
         graphics::plot.new()
@@ -108,7 +108,7 @@ NULL
 
     # convert to SpatRaster
     if (!inherits(x, "SpatRaster")) {
-        x <- arr_to_x(.rast_tmpl(x), x_to_arr(x))
+        x <- .arr_to_x(.rast_tmpl(x), .x_to_arr(x))
     }
 
     seg <- .polygonize(x)

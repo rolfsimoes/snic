@@ -66,10 +66,10 @@ expect_grid_consistency <- function(type,
         with_seed(seed, function() grid_call(imgs$SpatRaster))
     }
 
-    arr_xy <- rc_to_xy(imgs$SpatRaster, arr_seeds)
-    arr_rc <- xy_to_rc(imgs$SpatRaster, arr_xy)
+    arr_xy <- .rc_to_xy(imgs$SpatRaster, arr_seeds)
+    arr_rc <- .xy_to_rc(imgs$SpatRaster, arr_xy)
     if (with_crs) {
-        rast_rc <- wgs84_to_rc(imgs$SpatRaster, rast_seeds)
+        rast_rc <- .wgs84_to_rc(imgs$SpatRaster, rast_seeds)
         expect_equal(arr_rc, rast_rc)
     } else {
         rast_rc <- rast_seeds

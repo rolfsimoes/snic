@@ -2,6 +2,7 @@
 ^\.Rproj\.user$
 ^\.lintr$
 ^LICENSE\.md$
+^CONTRIBUTING\.md$
 ^\.github$
 ^README\.Rmd$
 ^README_files$

@@ -75,7 +75,8 @@
 #'     for (tp in types) {
 #'         seeds <- snic_grid(s2, type = tp, spacing = 12L, padding = 18L)
 #'         snic_plot(
-#'             s2, r = 4, g = 3, b = 1, stretch = "lin",
+#'             s2,
+#'             r = 4, g = 3, b = 1, stretch = "lin",
 #'             seeds = seeds,
 #'             main = paste("Grid:", tp)
 #'         )
@@ -111,10 +112,10 @@ snic_grid <- function(x,
         stop(.msg("grid_type_invalid"), call. = FALSE)
     )
 
-    if (!has_crs(x)) {
+    if (!.has_crs(x)) {
         return(seeds)
     }
-    rc_to_wgs84(x, seeds)
+    .rc_to_wgs84(x, seeds)
 }
 
 #' Interactive seed selection for SNIC segmentation
@@ -215,17 +216,17 @@ snic_grid_manual <- function(x,
 
     seeds <- .grid_manual(x, snic_args, snic_plot_args)
 
-    if (!has_crs(x)) {
+    if (!.has_crs(x)) {
         return(seeds)
     }
     if (is.null(return_type)) {
-        return(rc_to_wgs84(x, seeds))
+        return(.rc_to_wgs84(x, seeds))
     }
 
     switch(return_type,
         rc = seeds,
-        xy = rc_to_xy(x, seeds),
-        wgs84 = rc_to_wgs84(x, seeds)
+        xy = .rc_to_xy(x, seeds),
+        wgs84 = .rc_to_wgs84(x, seeds)
     )
 }
 

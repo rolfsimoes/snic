@@ -26,15 +26,15 @@ Backends adapt external image types to the minimal interface that SNIC needs. Th
 
 Required S3 methods to implement for your class `Cls` (pick only those that make sense for your data type):
 
-- `check_x.Cls(x, param_name = "x")` - validate the input type; return `x` invisibly or `stop()` with a friendly message. See `R/backend-array.R:2` and `R/backend-terra.R:2`.
-- `has_crs.Cls(x)` - return `TRUE` if the object carries a spatial reference. See `R/backend-terra.R:12`.
+- `.check_x.Cls(x, param_name = "x")` - validate the input type; return `x` invisibly or `stop()` with a friendly message. See `R/backend-array.R:2` and `R/backend-terra.R:2`.
+- `.has_crs.Cls(x)` - return `TRUE` if the object carries a spatial reference. See `R/backend-terra.R:12`.
 - Coordinate transforms:
-  - `wgs84_to_xy.Cls(x, seeds_wgs84)` and `xy_to_wgs84.Cls(x, seeds_xy)` when CRS-aware.
-  - `xy_to_rc.Cls(x, seeds_xy)` and `rc_to_xy.Cls(x, seeds_rc)` must round-trip pixel indices and map coordinates. See `R/backend-terra.R:24` and `R/backend-terra.R:36`.
+  - `.wgs84_to_xy.Cls(x, seeds_wgs84)` and `.xy_to_wgs84.Cls(x, seeds_xy)` when CRS-aware.
+  - `.xy_to_rc.Cls(x, seeds_xy)` and `.rc_to_xy.Cls(x, seeds_rc)` must round-trip pixel indices and map coordinates. See `R/backend-terra.R:24` and `R/backend-terra.R:36`.
 - Array translation:
-  - `x_to_arr.Cls(x)` must return a numeric array `(height, width, bands)` in column-major order. See `R/backend-terra.R:48`.
-  - `arr_to_x.Cls(x, arr, names = NULL)` must wrap a single-band `(h, w)` array back into the native type, preserving extent/CRS/metadata. See `R/backend-terra.R:57`.
-- `x_bbox.Cls(x)` - return `c(xmin, xmax, ymin, ymax)` in the object’s CRS. See `R/backend-terra.R:74`.
+  - `.x_to_arr.Cls(x)` must return a numeric array `(height, width, bands)` in column-major order. See `R/backend-terra.R:48`.
+  - `.arr_to_x.Cls(x, arr, names = NULL)` must wrap a single-band `(h, w)` array back into the native type, preserving extent/CRS/metadata. See `R/backend-terra.R:57`.
+- `.x_bbox.Cls(x)` - return `c(xmin, xmax, ymin, ymax)` in the object’s CRS. See `R/backend-terra.R:74`.
 
 Placement and scaffolding:
 
@@ -49,45 +49,45 @@ Minimal example skeleton for a spatial backend (pseudo-code):
 # R/backend-stars.R
 #' @rdname snic_backends
 #' @export
-check_x.stars <- function(x, param_name = "x") {
+.check_x.stars <- function(x, param_name = "x") {
   if (!inherits(x, "stars")) stop(.msg("unsupported_input_type", class(x)[1]), call. = FALSE)
   x
 }
 
 #' @rdname snic_backends
 #' @export
-has_crs.stars <- function(x) {
+.has_crs.stars <- function(x) {
   # return TRUE when CRS is present
 }
 
 #' @rdname snic_backends
 #' @export
-wgs84_to_xy.stars <- function(x, seeds_wgs84) { /* ... */ }
+.wgs84_to_xy.stars <- function(x, seeds_wgs84) { /* ... */ }
 
 #' @rdname snic_backends
 #' @export
-xy_to_rc.stars <- function(x, seeds_xy) { /* ... */ }
+.xy_to_rc.stars <- function(x, seeds_xy) { /* ... */ }
 
 #' @rdname snic_backends
 #' @export
-rc_to_xy.stars <- function(x, seeds_rc) { /* ... */ }
+.rc_to_xy.stars <- function(x, seeds_rc) { /* ... */ }
 
 #' @rdname snic_backends
 #' @export
-x_to_arr.stars <- function(x) { /* return (h, w, bands) numeric array */ }
+.x_to_arr.stars <- function(x) { /* return (h, w, bands) numeric array */ }
 
 #' @rdname snic_backends
 #' @export
-arr_to_x.stars <- function(x, arr, names = NULL) { /* wrap back into stars */ }
+.arr_to_x.stars <- function(x, arr, names = NULL) { /* wrap back into stars */ }
 
-x_bbox.stars <- function(x) { /* xmin, xmax, ymin, ymax */ }
+.x_bbox.stars <- function(x) { /* xmin, xmax, ymin, ymax */ }
 ```
 
 Tips:
 
-- For non-spatial data (plain arrays), it’s acceptable for `wgs84_to_xy.*` and `xy_to_wgs84.*` to `stop(.msg("array_no_projection_support"))`, as in `R/backend-array.R:17` and `R/backend-array.R:23`.
-- `x_to_arr.*` must not normalize or reorder bands - just expose raw numeric values.
-- `arr_to_x.*` should validate spatial dimensions and preserve metadata (names, CRS, extent) when possible.
+- For non-spatial data (plain arrays), it’s acceptable for `.wgs84_to_xy.*` and `.xy_to_wgs84.*` to `stop(.msg("array_no_projection_support"))`, as in `R/backend-array.R:17` and `R/backend-array.R:23`.
+- `.x_to_arr.*` must not normalize or reorder bands - just expose raw numeric values.
+- `.arr_to_x.*` should validate spatial dimensions and preserve metadata (names, CRS, extent) when possible.
 
 
 **Seed Helpers**

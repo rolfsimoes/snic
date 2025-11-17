@@ -91,7 +91,8 @@ if (requireNamespace("terra", quietly = TRUE)) {
     for (tp in types) {
         seeds <- snic_grid(s2, type = tp, spacing = 12L, padding = 18L)
         snic_plot(
-            s2, r = 4, g = 3, b = 1, stretch = "lin",
+            s2,
+            r = 4, g = 3, b = 1, stretch = "lin",
             seeds = seeds,
             main = paste("Grid:", tp)
         )

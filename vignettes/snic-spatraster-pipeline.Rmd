@@ -20,7 +20,7 @@ library(snic)
 
 ## Introduction
 
-This vignette revisits the SNIC segmentation pipeline while working directly with `terra::SpatRaster` objects. Instead of a small in-memory RGB array we use the Sentinel-2 subset (`S2-20LMR`) that ships with the package, so every step reflects a typical remote-sensing workflow: load GeoTIFF bands, downsample for experimentation, seed the image, run `snic()`, and visualize the resulting superpixels.
+This vignette revisits the SNIC segmentation pipeline, originally proposed by Achanta and Susstrunk (2017), while working directly with `terra::SpatRaster` objects. Instead of a small in-memory RGB array we use the Sentinel-2 subset (`S2-20LMR`) that ships with the package, so every step reflects a typical remote-sensing workflow: load GeoTIFF bands, downsample for experimentation, seed the image, run `snic()`, and visualize the resulting superpixels.
 
 > **Array workflow:** If you prefer to start from in-memory arrays, see the [SNIC Segmentation Pipeline - Arrays](snic-array-pipeline.html) vignette for a compact walkthrough that mirrors this tutorial without the geospatial dependencies.
 
@@ -190,3 +190,7 @@ for (fact in agg_facts) {
 ```
 
 This makes it easy to benchmark the effect of resolution changes: generate seeds once, store them alongside your project, and reuse them whenever you regrid or aggregate the imagery.
+
+## References
+
+Achanta, R., & Susstrunk, S. (2017). Superpixels and polygons using simple non-iterative clustering. *Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition (CVPR)*. <doi:10.1109/CVPR.2017.355>

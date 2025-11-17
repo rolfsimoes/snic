@@ -33,8 +33,11 @@ Larger values produce more spatially compact superpixels.}
 \item{...}{Currently unused; reserved for future extensions.}
 }
 \value{
-A single-band object with the same spatial dimensions as \code{x}, where
-each pixel value is the integer label of its assigned superpixel.
+An object of class \code{snic} bundling the segmentation result together
+with per-cluster summaries produced by the SNIC algorithm. The segmentation
+result can be accessed using \code{\link{snic_get_seg}}. The per-cluster
+summaries can be accessed using \code{\link{snic_get_means}} and
+\code{\link{snic_get_centroids}}.
 }
 \description{
 Segment an image into superpixels using the SNIC algorithm. This function
@@ -50,9 +53,9 @@ spectral similarity and spatial distance, weighted by \code{compactness}.
 \examples{
 # Example 1: Terra raster workflow with visual feedback
 if (requireNamespace("terra", quietly = TRUE)) {
-    tdir <- system.file("S2-20LMR", package = "snic", mustWork = TRUE)
+    path <- system.file("S2-20LMR", package = "snic", mustWork = TRUE)
     files <- file.path(
-        tdir,
+        path,
         c(
             "S2_20LMR_B02_20220630.tif",
             "S2_20LMR_B04_20220630.tif",
@@ -88,7 +91,11 @@ if (requireNamespace("terra", quietly = TRUE)) {
 # Example 2: In-memory image (JPEG) + Lab transform
 # Uses an example image shipped with the package (no terra needed)
 if (requireNamespace("jpeg", quietly = TRUE)) {
-    img_path <- system.file("clownfish.jpeg", package = "snic", mustWork = TRUE)
+    img_path <- system.file(
+        "clownfish.jpeg",
+        package = "snic",
+        mustWork = TRUE
+    )
     rgb <- jpeg::readJPEG(img_path) # h x w x 3 in [0, 1]
 
     # Convert sRGB -> CIE Lab for perceptual clustering
@@ -105,7 +112,7 @@ if (requireNamespace("jpeg", quietly = TRUE)) {
     dim(rgb) <- dims
 
     # Seeds in pixel coordinates for array inputs
-    seeds_rc <- snic_grid(lab, type = "hexagonal", spacing = 20L, padding = 4L)
+    seeds_rc <- snic_grid(lab, type = "hexagonal", spacing = 20L)
 
     # Segment in Lab space and plot L channel with boundaries
     seg <- snic(lab, seeds_rc, compactness = 0.1)

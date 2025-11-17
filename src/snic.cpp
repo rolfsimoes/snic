@@ -309,6 +309,7 @@ void snic_run(const Img<T>& img,
     // min-heap
     std::priority_queue<Node, std::vector<Node>, NodeGreater> pq;
 
+    // the number of clusters is the number of seeds
     for (int i = 0; i < static_cast<int>(seed_rows.size()); i++) {
         const int r = seed_rows[i];
         const int c = seed_cols[i];
@@ -317,7 +318,7 @@ void snic_run(const Img<T>& img,
           throw std::runtime_error("seed_index_out_of_bounds");
         }
         if (!mask[pid]) {
-          continue;
+            continue;
         }
         // get pixel values at seed's pixel
         img.vals(pid, px_val);
@@ -328,8 +329,8 @@ void snic_run(const Img<T>& img,
         pq.emplace(0.0, pid, cid);
     }
 
-    if (clus.empty()) {
-      throw std::runtime_error("seeds_all_on_na");
+    if (pq.empty()) {
+        throw std::runtime_error("seeds_all_on_na");
     }
 
     // initialize output
@@ -530,24 +531,25 @@ extern "C" SEXP _snic(SEXP imgSEXP,
     setAttrib(segSEXP, R_DimSymbol, outdimSEXP);
 
     // prepare and fill cluster values
-    SEXP valSEXP = PROTECT(Rf_allocMatrix(REALSXP, n_seeds, b));
+    const int n_segs = static_cast<int>(clus.size());
+    SEXP valSEXP = PROTECT(Rf_allocMatrix(REALSXP, n_segs, b));
     double* valptr = REAL(valSEXP);
     for (int j = 0; j < b; ++j)
-        for (int i = 0; i < n_seeds; ++i)
-            valptr[i + j * n_seeds] = clus[i].val[j];
+        for (int i = 0; i < n_segs; ++i)
+            valptr[i + j * n_segs] = clus[i].val[j];
 
     // prepare and fill cluster centers
-    SEXP rcSEXP = PROTECT(Rf_allocMatrix(REALSXP, n_seeds, 2));
+    SEXP rcSEXP = PROTECT(Rf_allocMatrix(REALSXP, n_segs, 2));
     double* rptr = REAL(rcSEXP);
-    double* cptr = REAL(rcSEXP) + n_seeds;
-    for (int i = 0; i < n_seeds; ++i) {
+    double* cptr = rptr + n_segs;
+    for (int i = 0; i < n_segs; ++i) {
         rptr[i] = clus[i].r;
         cptr[i] = clus[i].c;
     }
 
     // prepare attributes
-    setAttrib(segSEXP, Rf_install("values"), valSEXP);
-    setAttrib(segSEXP, Rf_install("centers"), rcSEXP);
+    setAttrib(segSEXP, Rf_install("snic.values"), valSEXP);
+    setAttrib(segSEXP, Rf_install("snic.centers"), rcSEXP);
 
     UNPROTECT(4);
     return segSEXP;
