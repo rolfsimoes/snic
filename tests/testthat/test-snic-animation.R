@@ -24,7 +24,10 @@ test_that("snic_animation creates gif from sequential seeds", {
     tmp_dir <- tempfile("snic-animation-")
     dir.create(tmp_dir, recursive = TRUE, showWarnings = FALSE)
     on.exit(unlink(tmp_dir, recursive = TRUE), add = TRUE)
-    output_file <- file.path(tmp_dir, "animation.gif")
+    output_file <- normalizePath(
+        file.path(tmp_dir, "animation.gif"),
+        mustWork = FALSE
+    )
 
     expect_message(
         gif_path <- snic_animation(

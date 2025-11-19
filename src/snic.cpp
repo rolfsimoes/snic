@@ -258,6 +258,9 @@ Node::Node(double d_, int pid_, int cid_)
 
 bool NodeGreater::operator()(const Node& a, const Node& b) const
 {
+    if (a.d == b.d) {
+      return a.cid < b.cid;
+    }
     return a.d > b.d;
 }
 
