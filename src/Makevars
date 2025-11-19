@@ -1,2 +1,0 @@
-PKG_CPPFLAGS = -I/usr/include/gdal
-PKG_LIBS = -L/usr/lib64 -lgdal

@@ -32,7 +32,6 @@ Suggests:
     rmarkdown
 VignetteBuilder: knitr
 License: MIT + file LICENSE
-SystemRequirements: GDAL (>= 2.0), PROJ (>= 4.8.0)
 Encoding: UTF-8
 RoxygenNote: 7.3.3
 Config/testthat/edition: 3
