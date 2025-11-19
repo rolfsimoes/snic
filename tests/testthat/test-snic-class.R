@@ -34,9 +34,21 @@ test_that("print.snic summarizes segmentation and returns input invisibly", {
     )
     seg <- snic::snic(img, seeds = seeds, compactness = 0)
 
-    expect_snapshot_output(print(seg))
+    expected_output <- c(
+        "SNIC segmentation",
+        "  Size (rows x cols):  3 x 3",
+        "Viewing first rows and columns:",
+        ", , snic",
+        "",
+        "     [,1] [,2] [,3]",
+        "[1,]    1    2    3",
+        "[2,]    2    2    4",
+        "[3,]    2    2    4",
+        ""
+    )
 
-    capture.output(printed <- print(seg))
+    printed_output <- capture.output(printed <- print(seg))
+    expect_equal(printed_output, expected_output)
     expect_s3_class(printed, "snic")
     expect_identical(printed, seg)
 })
