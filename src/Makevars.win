@@ -5,5 +5,5 @@
 # This may require OSGeo4W or similar distribution
 
 PKG_CPPFLAGS = -I$(GDAL_HOME)/include
-PKG_LIBS = -L$(GDAL_HOME)/lib -lgdal
-
+## Windows GDAL from rtools is static and needs kealib linked explicitly
+PKG_LIBS = -L$(GDAL_HOME)/lib -lgdal -lkea
