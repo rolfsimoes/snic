@@ -11,11 +11,10 @@
 #'     drops row attributes and prevents factor coercion.
 #'   \item \code{.set_dim(x, dim)} Re-shapes \code{x} by delegating to the
 #'     \code{snic_set_dim} native routine.
-#'   \item \code{.snic_core(arr, seeds_rc, compactness)} The main C++ entry
-#'     point for SNIC segmentation.
 #'   \item \code{.polygonize(x)} Converts a segmentation raster into polygons.
 #'   \item \code{.rast_tmpl(x)} Builds an empty \code{terra::rast()} template
 #'     matching the array's footprint.
+#'   \item \code{.modify_list(x, y)} Modifies x list using named entries from y
 #' }
 #'
 #' @keywords internal
@@ -47,30 +46,6 @@ NULL
 }
 
 #' @rdname internal_utils
-.snic_core <- function(arr, seeds_rc, compactness) {
-    if ((!is.array(arr) || !is.numeric(arr) || length(dim(arr)) != 3)) {
-        stop(.msg("img_must_be_numeric_array_three_dimensions"))
-    }
-    if (is.integer(arr)) {
-        storage.mode(arr) <- "double"
-    }
-
-    if (.seeds_type(seeds_rc) != "rc") {
-        stop(.msg("seeds_invalid_type"))
-    }
-
-    if (!nrow(seeds_rc)) {
-        stop(.msg("seeds_must_have_coordinates"))
-    }
-    seeds_rc <- as.matrix(round(seeds_rc))
-    storage.mode(seeds_rc) <- "integer"
-
-    compactness <- as.numeric(compactness)
-
-    .call("snic_snic", arr, seeds_rc, compactness, "F")
-}
-
-#' @rdname internal_utils
 .polygonize <- function(x) {
     terra::as.polygons(x, dissolve = TRUE, na.rm = TRUE)
 }
@@ -85,4 +60,15 @@ NULL
         ymin = 0,
         ymax = nrow(x)
     )
+}
+
+#' @rdname internal_utils
+.modify_list <- function(x, y) {
+    stopifnot(!is.null(names(y)))
+    for (p in names(y)) {
+        if (nzchar(p)) {
+            x[[p]] <- y[[p]]
+        }
+    }
+    x
 }

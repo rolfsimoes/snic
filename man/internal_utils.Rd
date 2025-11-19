@@ -5,9 +5,9 @@
 \alias{.call}
 \alias{.expand}
 \alias{.set_dim}
-\alias{.snic_core}
 \alias{.polygonize}
 \alias{.rast_tmpl}
+\alias{.modify_list}
 \title{Internal utilities for native calls and helpers}
 \usage{
 .call(fn_name, ...)
@@ -16,11 +16,11 @@
 
 .set_dim(x, dim)
 
-.snic_core(arr, seeds_rc, compactness)
-
 .polygonize(x)
 
 .rast_tmpl(x)
+
+.modify_list(x, y)
 }
 \description{
 Lightweight wrappers for calling into the C++ backend plus helper utilities
@@ -35,11 +35,10 @@ reused throughout the package.
     drops row attributes and prevents factor coercion.
   \item \code{.set_dim(x, dim)} Re-shapes \code{x} by delegating to the
     \code{snic_set_dim} native routine.
-  \item \code{.snic_core(arr, seeds_rc, compactness)} The main C++ entry
-    point for SNIC segmentation.
   \item \code{.polygonize(x)} Converts a segmentation raster into polygons.
   \item \code{.rast_tmpl(x)} Builds an empty \code{terra::rast()} template
     matching the array's footprint.
+  \item \code{.modify_list(x, y)} Modifies x list using named entries from y
 }
 }
 

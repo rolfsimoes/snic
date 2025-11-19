@@ -207,7 +207,7 @@ NULL
     }
 
     default_snic_args <- list(seeds = NULL, compactness = 0.5)
-    snic_args <- utils::modifyList(default_snic_args, snic_args)
+    snic_args <- .modify_list(default_snic_args, snic_args)
 
     default_plot_args <- list(
         stretch = "lin",
@@ -218,17 +218,21 @@ NULL
             border = "#FFFF00", col = NA, lwd = 0.4
         )
     )
-    plot_args <- utils::modifyList(default_plot_args, plot_args)
+    plot_args <- .modify_list(default_plot_args, plot_args)
 
     message(.msg("manual_grid_instructions"))
 
     snic_args$seeds <- .seeds_check(snic_args$seeds)
     snic_args$seeds <- as_seeds_xy(snic_args$seeds, x)
+    snic_args <- .modify_list(snic_args, list(x = x))
     if (nrow(snic_args$seeds)) {
         plot_args$seeds <- snic_args$seeds
-        plot_args$seg <- do.call(snic, c(list(x), snic_args))
+        plot_args$seg <- do.call(snic, snic_args)
     }
-    do.call(snic_plot, c(list(x), plot_args))
+    plot_args <- .modify_list(
+        plot_args, list(x = x)
+    )
+    do.call(snic_plot, plot_args)
 
     repeat {
         p <- graphics::locator(n = 1)
@@ -238,9 +242,9 @@ NULL
         if (any(is.na(.xy_to_rc(x, new_seed)))) next # outside image
 
         snic_args$seeds <- .append_seed(snic_args$seeds, new_seed)
-        plot_args$seg <- do.call(snic, c(list(x), snic_args))
+        plot_args$seg <- do.call(snic, snic_args)
         plot_args$seeds <- snic_args$seeds
-        do.call(snic_plot, c(list(x), plot_args))
+        do.call(snic_plot, plot_args)
     }
 
     as_seeds_rc(snic_args$seeds, x)

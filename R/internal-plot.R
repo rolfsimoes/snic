@@ -40,7 +40,7 @@ NULL
         smooth = FALSE,
         axes = FALSE
     )
-    plot_args <- utils::modifyList(default_args, plot_args)
+    plot_args <- .modify_list(default_args, plot_args)
 
     band <- plot_args$band
     r <- plot_args$r
@@ -80,7 +80,7 @@ NULL
 #' @rdname internal_plot_helpers
 .plot_seeds <- function(seeds_xy, x, plot_args, add) {
     default_args <- list(pch = 16, col = "#00FFFF", cex = 1)
-    plot_args <- utils::modifyList(default_args, plot_args)
+    plot_args <- .modify_list(default_args, plot_args)
 
     if (!add) {
         oldpar <- graphics::par(mar = c(0, 0, 0, 0))
@@ -103,7 +103,7 @@ NULL
 #' @rdname internal_plot_helpers
 .plot_segments <- function(x, plot_args, add) {
     default_args <- list(border = "#FFD700", col = NA, lwd = 0.6)
-    plot_args <- utils::modifyList(default_args, plot_args)
+    plot_args <- .modify_list(default_args, plot_args)
     plot_args$add <- add
 
     # convert to SpatRaster
@@ -112,5 +112,7 @@ NULL
     }
 
     seg <- .polygonize(x)
-    do.call(terra::plot, c(list(seg), plot_args))
+
+    plot_args <- .modify_list(plot_args, list(x = seg))
+    do.call(terra::plot, plot_args)
 }

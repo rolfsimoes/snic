@@ -349,7 +349,8 @@ snic_animation <- function(x,
         length(file_path) != 1L || is.na(file_path) || !nzchar(file_path)) {
         stop(.msg("file_path_single_path"), call. = FALSE)
     }
-    file_path <- normalizePath(path.expand(file_path), mustWork = FALSE)
+    file_path <- path.expand(file_path)
+    file_path <- normalizePath(file_path, mustWork = FALSE)
     if (file.exists(file_path)) {
         stop(.msg("animation_file_exists", file_path), call. = FALSE)
     }
@@ -383,75 +384,17 @@ snic_animation <- function(x,
         stop(.msg("snic_args_must_be_list"), call. = FALSE)
     }
 
-    # temp files for frames
-    timestamp <- format(Sys.time(), "%Y%m%d%H%M%S")
-    tmp_name <- sprintf(".snic-seeding-%s-%d", timestamp, Sys.getpid())
-    frame_dir <- file.path(tempdir(), tmp_name)
-    if (!dir.create(frame_dir, recursive = TRUE, showWarnings = FALSE) &&
-        !dir.exists(frame_dir)) {
-        stop(.msg("animation_dir_create_failed", frame_dir), call. = FALSE)
-    }
-    on.exit(unlink(frame_dir, recursive = TRUE), add = TRUE)
+    plot_args <- list(...)
 
-    dims <- dim(x)
-    h <- dims[[1]]
-    w <- dims[[2]]
-
-    pb <- if (progress) {
-        utils::txtProgressBar(max = n_cycles + 10L, style = 3)
-    } else {
-        NULL
-    }
-    frame_files <- character(n_cycles)
-    for (i in seq_len(n_cycles)) {
-        if (!is.null(pb)) {
-            utils::setTxtProgressBar(pb, i)
-        }
-        current_seeds <- seeds[seq_len(i), , drop = FALSE]
-        seg <- do.call(snic, c(list(x = x, seeds = current_seeds), snic_args))
-
-        frame_file <- file.path(frame_dir, sprintf("frame-%02d.png", i))
-        frame_files[[i]] <- frame_file
-
-        default_device_args <- list(height = h, width = w)
-        device_args <- utils::modifyList(default_device_args, device_args)
-        device_args$filename <- frame_file
-        do.call(grDevices::png, device_args)
-        tryCatch(
-            {
-                snic_plot(x, seeds = current_seeds, seg = seg, ...)
-            },
-            error = function(err) {
-                grDevices::dev.off()
-                stop(err)
-            }
-        )
-        grDevices::dev.off()
-    }
-
-    total_duration <- (n_cycles * delay) / 100
-    fps <- 100 / delay
-
-    animation <- magick::image_read(frame_files)
-    animation <- magick::image_coalesce(animation)
-    animation <- magick::image_animate(
-        animation,
+    .snic_animation(
+        x = x,
+        seeds = seeds,
+        file_path = file_path,
+        n_cycles = n_cycles,
         delay = delay,
-        dispose = "previous",
-        optimize = TRUE
+        progress = progress,
+        plot_args = plot_args,
+        snic_args = snic_args,
+        device_args = device_args
     )
-    magick::image_write(
-        animation,
-        path = file_path,
-        format = "gif",
-        compression = "LZW"
-    )
-    if (!is.null(pb)) {
-        utils::setTxtProgressBar(pb, n_cycles + 10L)
-        close(pb)
-    }
-
-    message(.msg("animation_saved", file_path, total_duration, fps))
-
-    invisible(file_path)
 }

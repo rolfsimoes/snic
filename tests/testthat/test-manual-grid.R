@@ -102,9 +102,9 @@ test_that("snic_grid_manual collects locator clicks into seed data frame", {
                             .package = "terra"
                         )
                 },
-                snic = function(img, seeds, compactness, ...) {
+                snic = function(x, seeds, compactness, ...) {
                     captured$snic[[length(captured$snic) + 1L]] <<- list(
-                        img = img,
+                        x = x,
                         seeds = seeds,
                         compactness = compactness
                     )
