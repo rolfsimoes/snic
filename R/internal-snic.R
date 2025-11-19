@@ -109,19 +109,9 @@ NULL
 
         default_device_args <- list(height = h, width = w, units = "px")
         device_args <- .modify_list(default_device_args, user_device_args)
-        if (is.null(device_args$units)) {
-            device_args$units <- "px"
-        }
-        # if (identical(device_args$units, "px")) {
-        #     min_dim <- min(as.numeric(c(device_args$height, device_args$width)))
-        #     if (is.finite(min_dim) && min_dim > 0 && min_dim < 20) {
-        #         scale_factor <- ceiling(20 / min_dim)
-        #         device_args$height <- device_args$height * scale_factor
-        #         device_args$width <- device_args$width * scale_factor
-        #     }
-        # }
+
         device_args$filename <- frame_file
-        do.call(grDevices::png, device_args)
+        suppressWarnings(do.call(grDevices::png, device_args))
         tryCatch(
             {
                 plot_args <- .modify_list(
