@@ -266,7 +266,6 @@ print.snic <- function(x, ...) {
 #' @param snic_args Named list of extra arguments passed to \code{\link{snic}}
 #'   on every iteration (e.g., \code{compactness}). Arguments \code{x} and
 #'   \code{seeds} are reserved and cannot be overridden.
-#' @param plot_args Reserved for future use. Currently ignored.
 #' @param device_args Named list of arguments passed to
 #'   \code{grDevices::png()} when rendering frames. Defaults to
 #'   \code{list(res = 96, bg = "white")}. Values such as \code{width},
@@ -298,7 +297,7 @@ print.snic <- function(x, ...) {
 #'             "S2_20LMR_B12_20220630.tif"
 #'         )
 #'     )
-#'     s2 <- terra::aggregate(terra::rast(band_files), fact = 5)
+#'     s2 <- terra::aggregate(terra::rast(band_files), fact = 8)
 #'
 #'     set.seed(42)
 #'     seeds <- snic_grid(s2, type = "random", spacing = 10L, padding = 0L)
@@ -307,9 +306,10 @@ print.snic <- function(x, ...) {
 #'         s2,
 #'         seeds = seeds,
 #'         file_path = tempfile("snic-demo", fileext = ".gif"),
-#'         max_frames = 150L,
+#'         max_frames = 20L,
 #'         snic_args = list(compactness = 0.1),
-#'         r = 4, g = 3, b = 1
+#'         r = 4, g = 3, b = 1,
+#'         device_args = list(height = 192, width = 256)
 #'     )
 #'     gif_file
 #' }
@@ -324,7 +324,6 @@ snic_animation <- function(x,
                            snic_args = list(
                                compactness = 0.5
                            ),
-                           plot_args = list(),
                            device_args = list(
                                res = 96,
                                bg = "white"

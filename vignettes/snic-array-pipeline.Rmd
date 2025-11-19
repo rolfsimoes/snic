@@ -1,8 +1,10 @@
+---
 title: "SNIC Segmentation Pipeline - Arrays"
 output: rmarkdown::html_vignette
-vignette: >
+vignette: |
   %\VignetteIndexEntry{SNIC Segmentation Pipeline - Arrays}
   %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
   \usepackage[utf8]{inputenc}
 ---
 
@@ -20,9 +22,9 @@ library(snic)
 
 ## Introduction
 
-The snic package implements the Simple Non-Iterative Clustering (SNIC) algorithm for image segmentation, originally proposed by Achanta and Susstrunk (2017). The objective of this tutorial is to present the segmentation pipeline in a compact, reproducible manner using a small example. 
+The snic package implements the Simple Non-Iterative Clustering (SNIC) algorithm for image segmentation, originally proposed by Achanta and Süsstrunk (2017). The objective of this tutorial is to present the segmentation pipeline in a compact, reproducible manner using a small example. 
 
-> **Remote sensing workflow:** If you work with `terra` objects, see the [SNIC Segmentation Pipeline - SpatRaster](snic-spatraster-pipeline.html) vignette for a step-by-step walkthrough tailored to multispectral imagery.
+> **Remote sensing workflow:** If you work with `terra` objects, see the [SNIC Segmentation Pipeline - SpatRaster](snic-spatraster-pipeline.html) vignette for a step-by-step tutorial tailored to multispectral imagery.
 
 ## Image preparation
 
@@ -45,7 +47,7 @@ snic_plot(rgb, r = 1, g = 2, b = 3)
 
 ### Lab color space
 
-Achanta et al. (2017) use the Lab color space. To convert the RGB image to Lab, we use the `convertColor()` function from the `grDevices` package. First we have to reshape the image to a matrix with rows as image pixels and columns as color channels. 
+Achanta and Süsstrunk (2017) use the Lab color space. To convert the RGB image to Lab, we use the `convertColor()` function from the `grDevices` package. First we have to reshape the image to a matrix with rows as image pixels and columns as color channels. 
 
 ```{r image-lab}
 dims <- dim(rgb)
@@ -206,8 +208,8 @@ mtext(
 )
 ```
 
-Under identical conditions, the rectangular and diamond arrangements yield more axis-aligned boundary structure, while the hexagonal and randomised seeds distribute initial cluster centres more evenly in all directions. The choice among these layouts is task-dependent; the pipeline itself remains the same: define seeds, run `snic()`, and examine the resulting segments.
+Under moderate to high compactness condition, the rectangular and diamond arrangements yield more axis-aligned boundary structure, while the hexagonal and randomized seeds distribute initial cluster centers more evenly in all directions. The choice among these layouts is task-dependent; the pipeline itself remains the same: define seeds, run `snic()`, and examine the resulting segments.
 
 ## References
 
-Achanta, R., & Susstrunk, S. (2017). Superpixels and polygons using simple non-iterative clustering. *Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition (CVPR)*. <doi:10.1109/CVPR.2017.355>
+Achanta, R., & Süsstrunk, S. (2017). Superpixels and polygons using simple non-iterative clustering. *Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition (CVPR)*. <doi:10.1109/CVPR.2017.520>

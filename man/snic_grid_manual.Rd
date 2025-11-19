@@ -18,18 +18,14 @@ snic_grid_manual(
 with a valid spatial reference and extent. Mouse clicks are interpreted
 in map coordinates.}
 
-\item{seeds}{Optional existing seed set to display and extend. May be given as:
-\itemize{
-  \item a two-column data frame \code{(lat, lon)} in \code{EPSG:4326}, or
-  \item a two-column data frame \code{(r, c)} containing pixel coordinates, or
-  \item map coordinates \code{(x, y)} in the raster's native CRS.
-}
+\item{seeds}{Optional existing seed set to display and extend.
 If pixel coordinates are supplied, they are internally converted. If
-\code{NULL}, the seed set is initialized empty and populated interactively.}
+\code{NULL}, the seed set is initialized empty and populated
+interactively.}
 
-\item{...}{Arguments forwarded to \code{\link{snic_plot}} for display control.
-These may include \code{band}, \code{r}, \code{g}, \code{b}, \code{stretch},
-\code{seeds_plot_args}, or \code{seg_plot_args}.}
+\item{...}{Arguments forwarded to \code{\link{snic_plot}} for display
+control. These may include \code{band}, \code{r}, \code{g}, \code{b},
+\code{stretch}, \code{seeds_plot_args}, or \code{seg_plot_args}.}
 
 \item{snic_args}{A list of arguments passed to \code{\link{snic}}, such as
 \code{compactness}.}
@@ -72,7 +68,7 @@ if (interactive() && requireNamespace("terra", quietly = TRUE)) {
             "S2_20LMR_B12_20220630.tif"
         )
     )
-    s2 <- terra::aggregate(terra::rast(files), fact = 5)
+    s2 <- terra::aggregate(terra::rast(files), fact = 8)
 
     seeds <- snic_grid_manual(
         s2,

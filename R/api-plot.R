@@ -3,8 +3,8 @@
 #' Render image data processed by SNIC either from in-memory numeric arrays
 #' or from \code{\link[terra:SpatRaster-class]{terra::SpatRaster}} objects
 #' provided by the \pkg{terra} package. The function supports plotting a
-#' single band (default grayscale palette) or a three-channel RGB composite,
-#' with optional overlays for seed points and segmentation boundaries.
+#' single band or a three-channel RGB composite, with optional overlays for
+#' seed points and segmentation boundaries.
 #'
 #' @param x Image data. For the array method this must be a numeric array
 #'   with dimensions \code{(height, width, bands)}. For the raster method
@@ -34,11 +34,9 @@
 #'   }
 #'   Non-numeric arrays or bands with only constant values are plotted as-is.
 #' @param seeds Optional object containing seed coordinates with
-#'   columns \code{r} and \code{c}. Additional columns are preserved; when
-#'   plotting \code{\link[terra:SpatRaster-class]{SpatRaster}} inputs,
-#'   \code{lat} and \code{lon} columns expressed in \code{"EPSG:4326"} (when
-#'   present) are projected to the raster's CRS and take precedence over the
-#'   provided \code{r}/\code{c} indices.
+#'   columns \code{r} and \code{c}. Alternately, it can have
+#'   \code{\link[terra:SpatRaster-class]{SpatRaster}} inputs, \code{lat} and
+#'   \code{lon} columns expressed in \code{"EPSG:4326"}.
 #' @param seeds_plot_args Optional named list with additional arguments passed
 #'   to \code{\link[graphics:points]{graphics::points()}} when drawing
 #'   \code{seeds}. Defaults to \code{getOption("snic.seeds_plot")}, falling
@@ -59,9 +57,9 @@
 #'
 #' @examples
 #' if (requireNamespace("terra", quietly = TRUE)) {
-#'     tdir <- system.file("S2-20LMR", package = "snic", mustWork = TRUE)
+#'     tiff_dir <- system.file("S2-20LMR", package = "snic", mustWork = TRUE)
 #'     files <- file.path(
-#'         tdir,
+#'         tiff_dir,
 #'         c(
 #'             "S2_20LMR_B02_20220630.tif",
 #'             "S2_20LMR_B04_20220630.tif",
@@ -71,7 +69,7 @@
 #'     )
 #'
 #'     # Load and optionally downsample for faster segmentation
-#'     s2 <- terra::aggregate(terra::rast(files), fact = 5)
+#'     s2 <- terra::aggregate(terra::rast(files), fact = 8)
 #'
 #'     # Generate seeds (lat/lon coordinates because s2 has a CRS)
 #'     seeds <- snic_grid(
@@ -98,15 +96,6 @@ NULL
 
 #' @rdname snic_plot
 #' @export
-snic_plot <- function(x, ...) {
-    if (!requireNamespace("terra", quietly = TRUE)) {
-        stop(.msg("terra_required"), call. = FALSE)
-    }
-    UseMethod("snic_plot", x)
-}
-
-#' @rdname snic_plot
-#' @export
 snic_plot <- function(x,
                       ...,
                       band = 1L,
@@ -121,7 +110,7 @@ snic_plot <- function(x,
                       seeds = NULL,
                       seeds_plot_args = getOption(
                           "snic.seeds_plot",
-                          list(pch = 16, col = "#00FFFF", cex = 1)
+                          list(pch = 20, col = "#00FFFF", cex = 1)
                       ),
                       seg = NULL,
                       seg_plot_args = getOption(

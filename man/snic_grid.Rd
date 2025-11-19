@@ -83,7 +83,7 @@ if (requireNamespace("terra", quietly = TRUE)) {
         "S2_20LMR_B08_20220630.tif",
         "S2_20LMR_B12_20220630.tif"
     ))
-    s2 <- terra::aggregate(terra::rast(files), fact = 5)
+    s2 <- terra::aggregate(terra::rast(files), fact = 8)
 
     # Compare grid types visually using snic_plot for immediate feedback
     types <- c("rectangular", "diamond", "hexagonal", "random")

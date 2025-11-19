@@ -14,24 +14,7 @@ snic_plot(
   col = getOption("snic.col", grDevices::hcl.colors(128L, "Spectral")),
   stretch = "lin",
   seeds = NULL,
-  seeds_plot_args = getOption("snic.seeds_plot", list(pch = 16, col = "#00FFFF", cex =
-    1)),
-  seg = NULL,
-  seg_plot_args = getOption("snic.seg_plot", list(border = "#FFD700", col = NA, lwd =
-    0.6))
-)
-
-snic_plot(
-  x,
-  ...,
-  band = 1L,
-  r = NULL,
-  g = NULL,
-  b = NULL,
-  col = getOption("snic.col", grDevices::hcl.colors(128L, "Spectral")),
-  stretch = "lin",
-  seeds = NULL,
-  seeds_plot_args = getOption("snic.seeds_plot", list(pch = 16, col = "#00FFFF", cex =
+  seeds_plot_args = getOption("snic.seeds_plot", list(pch = 20, col = "#00FFFF", cex =
     1)),
   seg = NULL,
   seg_plot_args = getOption("snic.seg_plot", list(border = "#FFD700", col = NA, lwd =
@@ -73,11 +56,9 @@ plotting. One of:
 Non-numeric arrays or bands with only constant values are plotted as-is.}
 
 \item{seeds}{Optional object containing seed coordinates with
-columns \code{r} and \code{c}. Additional columns are preserved; when
-plotting \code{\link[terra:SpatRaster-class]{SpatRaster}} inputs,
-\code{lat} and \code{lon} columns expressed in \code{"EPSG:4326"} (when
-present) are projected to the raster's CRS and take precedence over the
-provided \code{r}/\code{c} indices.}
+columns \code{r} and \code{c}. Alternately, it can have
+\code{\link[terra:SpatRaster-class]{SpatRaster}} inputs, \code{lat} and
+\code{lon} columns expressed in \code{"EPSG:4326"}.}
 
 \item{seeds_plot_args}{Optional named list with additional arguments passed
 to \code{\link[graphics:points]{graphics::points()}} when drawing
@@ -104,14 +85,14 @@ Invisibly, \code{NULL}.
 Render image data processed by SNIC either from in-memory numeric arrays
 or from \code{\link[terra:SpatRaster-class]{terra::SpatRaster}} objects
 provided by the \pkg{terra} package. The function supports plotting a
-single band (default grayscale palette) or a three-channel RGB composite,
-with optional overlays for seed points and segmentation boundaries.
+single band or a three-channel RGB composite, with optional overlays for
+seed points and segmentation boundaries.
 }
 \examples{
 if (requireNamespace("terra", quietly = TRUE)) {
-    tdir <- system.file("S2-20LMR", package = "snic", mustWork = TRUE)
+    tiff_dir <- system.file("S2-20LMR", package = "snic", mustWork = TRUE)
     files <- file.path(
-        tdir,
+        tiff_dir,
         c(
             "S2_20LMR_B02_20220630.tif",
             "S2_20LMR_B04_20220630.tif",
@@ -121,7 +102,7 @@ if (requireNamespace("terra", quietly = TRUE)) {
     )
 
     # Load and optionally downsample for faster segmentation
-    s2 <- terra::aggregate(terra::rast(files), fact = 5)
+    s2 <- terra::aggregate(terra::rast(files), fact = 8)
 
     # Generate seeds (lat/lon coordinates because s2 has a CRS)
     seeds <- snic_grid(

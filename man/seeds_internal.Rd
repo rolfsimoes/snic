@@ -38,7 +38,7 @@
 }
 \description{
 Low-level helpers shared across the seed conversion and validation stack.
-These functions never touch disk or user I/O; they simply standardise how
+These functions never touch disk or user I/O; they simply standardize how
 seeds are checked, typed, and appended so that downstream helpers can focus
 on the conversions.
 }

@@ -4,8 +4,8 @@
 #' a different coordinate system. Seeds are accepted when they already contain
 #' the target column pair and otherwise are projected using the provided raster.
 #'
-#' @param seeds A data frame, tibble, or matrix that contains one of the column
-#'   pairs \code{(r, c)}, \code{(x, y)}, or \code{(lat, lon)}.
+#' @param seeds A data frame, \code{tibble}, or matrix that contains one of the
+#'   column pairs \code{(r, c)}, \code{(x, y)}, or \code{(lat, lon)}.
 #' @param x A \code{\link[terra:SpatRaster-class]{SpatRaster}} or in-memory
 #'   array that supplies the metadata needed to perform conversions. For array
 #'   inputs, note that the internal coordinate system has its y-axis inverted
@@ -27,7 +27,10 @@
 #' @examples
 #' if (requireNamespace("terra", quietly = TRUE)) {
 #'     # Load a test Sentinel-2 band
-#'     s2_file <- system.file("S2-20LMR/S2_20LMR_B04_20220630.tif", package = "snic")
+#'     s2_file <- system.file(
+#'         "S2-20LMR/S2_20LMR_B04_20220630.tif",
+#'         package = "snic"
+#'     )
 #'     s2_rast <- terra::rast(s2_file)
 #'
 #'     # Create some test coordinates in pixel space
@@ -37,9 +40,7 @@
 #'     seeds_xy <- as_seeds_xy(seeds_rc, s2_rast)
 #'
 #'     # Convert to geographic coordinates (lat,lon)
-#'     if (terra::crs(s2_rast) != "") {
-#'         seeds_wgs84 <- as_seeds_wgs84(seeds_rc, s2_rast)
-#'     }
+#'     seeds_wgs84 <- as_seeds_wgs84(seeds_rc, s2_rast)
 #' }
 #'
 #' @name seeds_api

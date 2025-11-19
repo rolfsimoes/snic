@@ -105,7 +105,7 @@
 These generics define the minimal interface required for SNIC to operate on
 different raster / array backends. Implementations must convert between:
 \itemize{
-  \item geographic coordinates (\code{lat, lon}),
+  \item geographic coordinates \code{(lat, lon)},
   \item projected map coordinates (\code{x, y}), and
   \item pixel indices (\code{r, c}) in image space,
 }
@@ -127,7 +127,7 @@ interface methods.
 Backends may differ dramatically in how they internally represent
 coordinates and storage layouts. The only requirement is that these
 methods form a consistent round-trip:
-\preformatted{
+\code{
     lat/lon  <->  (x, y)  <->  (r, c)  <->  arr
 }
 }
@@ -141,7 +141,8 @@ methods form a consistent round-trip:
 
   \item \code{.has_crs(x)}
   Return \code{TRUE} if \code{x} carries a spatial reference system. Used
-  to decide whether seeds are interpreted as pixel coordinates or lat/lon.
+  to decide whether seeds are interpreted as pixel coordinates or
+  \code{(lat, lon)}.
 
   \item \code{.wgs84_to_xy(x, seeds_wgs84)}
   Convert \code{(lat, lon)} coordinates in \code{EPSG:4326} to projected

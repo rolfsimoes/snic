@@ -1,5 +1,4 @@
 Package: snic
-Type: Package
 Title: Superpixel Segmentation with the SNIC Algorithm
 Version: 0.3.0
 Authors@R: c(
@@ -9,14 +8,17 @@ Authors@R: c(
     person('Felipe', 'Carlos', role = c('ctb'), email = "efelipecarlos@gmail.com"),
     person('Gilberto', 'Camara', role = c('ctb', 'rth'), email = 'gilberto.camara.inpe@gmail.com')
     )
-Description: Implementation of the Simple Non-Iterative Clustering (SNIC) 
-    algorithm for superpixel segmentation of multi-band images, following 
-    Achanta and Susstrunk (2017) <doi:10.1109/CVPR.2017.355>.  The core 
-    algorithm is written in C++ and exposed to R via a small interface.  
-    The implementation uses a priority queue (min-heap) to grow compact, 
-    homogeneous segments from uniformly distributed seeds.  Supports 
-    images with an arbitrary number of spectral bands and returns an integer 
-    matrix of segment labels covering the input scene.
+Description: Implements the Simple Non-Iterative Clustering (SNIC) algorithm 
+    for superpixel segmentation of multi-band images, as introduced by Achanta 
+    and Süsstrunk (2017) <doi:10.1109/CVPR.2017.520>. Supports both standard 
+    image arrays and geospatial raster objects (currently via the terra 
+    package), with a design that can be extended to other spatial data 
+    frameworks. SNIC rapidly groups adjacent pixels into compact, coherent 
+    regions ("superpixels") based on spectral similarity and spatial 
+    proximity. This high-performance C++ implementation supports images 
+    with arbitrary spectral bands and is exposed to R via a small interface. 
+    The main function snic() returns objects of class "snic", which bundle 
+    the labels with per-segment summaries and centroids. 
 Depends: R (>= 3.5.0)
 Suggests: 
     testthat (>= 3.0.0),
