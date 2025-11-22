@@ -1,13 +1,14 @@
 Package: snic
 Title: Superpixel Segmentation with the SNIC Algorithm
-Version: 0.3.0
+Version: 0.5.0
 Authors@R: c(
     person(given = "Rolf", family = "Simoes", email = "rolfsimoes@gmail.com", 
     role = c("aut", "cre")),
-    person('Felipe', 'Souza', role = c('ctb'), email = 'felipe.carvalho@inpe.br'),
-    person('Felipe', 'Carlos', role = c('ctb'), email = "efelipecarlos@gmail.com"),
-    person('Gilberto', 'Camara', role = c('ctb', 'rth'), email = 'gilberto.camara.inpe@gmail.com')
+    person('Felipe', 'Souza', role = c('aut'), email = 'felipe.carvalho@inpe.br'),
+    person('Felipe', 'Carlos', role = c('aut'), email = "efelipecarlos@gmail.com"),
+    person('Gilberto', 'Camara', role = c('aut', 'rth'), email = 'gilberto.camara.inpe@gmail.com')
     )
+Maintainer: Rolf Simoes <rolfsimoes@gmail.com>
 Description: Implements the Simple Non-Iterative Clustering (SNIC) algorithm 
     for superpixel segmentation of multi-band images, as introduced by Achanta 
     and Süsstrunk (2017) <doi:10.1109/CVPR.2017.520>. Supports both standard 
@@ -30,9 +31,12 @@ Suggests:
     png,
     knitr,
     rmarkdown
+URL: https://github.com/rolfsimoes/snic, https://rolfsimoes.github.io/snic
+BugReports: https://github.com/rolfsimoes/snic/issues
+ByteCompile: true
 VignetteBuilder: knitr
-License: MIT + file LICENSE
-Encoding: UTF-8
 RoxygenNote: 7.3.3
 Config/testthat/edition: 3
+Encoding: UTF-8
 Language: en-US
+License: GPL (>= 2)

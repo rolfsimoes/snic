@@ -74,9 +74,13 @@ includes geographic coordinates (\code{lat}, \code{lon}) in \code{EPSG:4326}.
 }
 \examples{
 \dontrun{
+# Example 1: Geospatial raster
 if (requireNamespace("terra", quietly = TRUE)) {
     # Load example multi-band image (Sentinel-2 subset) and downsample
-    tiff_dir <- system.file("S2-20LMR", package = "snic", mustWork = TRUE)
+    tiff_dir <- system.file("demo-geotiff",
+        package = "snic",
+        mustWork = TRUE
+    )
     files <- file.path(tiff_dir, c(
         "S2_20LMR_B02_20220630.tif",
         "S2_20LMR_B04_20220630.tif",
@@ -101,6 +105,30 @@ if (requireNamespace("terra", quietly = TRUE)) {
 
     # Estimate seed counts for planning
     snic_count_seeds(s2, spacing = 12L, padding = 18L)
+}
+
+# Example 2: In-memory image (JPEG)
+if (requireNamespace("jpeg", quietly = TRUE)) {
+    img_path <- system.file(
+        "demo-jpeg/clownfish.jpeg",
+        package = "snic",
+        mustWork = TRUE
+    )
+    rgb <- jpeg::readJPEG(img_path)
+
+    # Compare grid types visually using snic_plot for immediate feedback
+    types <- c("rectangular", "diamond", "hexagonal", "random")
+    par(mfrow = c(2, 2), mar = c(2, 2, 2, 2))
+    for (tp in types) {
+        seeds <- snic_grid(rgb, type = tp, spacing = 12L, padding = 18L)
+        snic_plot(
+            rgb,
+            r = 1, g = 2, b = 3,
+            seeds = seeds,
+            main = paste("Grid:", tp)
+        )
+    }
+    par(mfrow = c(1, 1))
 }
 }
 }

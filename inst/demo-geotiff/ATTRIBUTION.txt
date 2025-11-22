@@ -1,0 +1,7 @@
+Contains modified Copernicus Sentinel data (2022).
+Copernicus Sentinel data (2022) retrieved from Sentinel-2, tile 20LMR, acquired on 2022-06-30.
+
+Data provided by Microsoft Planetary Computer.
+
+Legal Notice on the use of Copernicus Sentinel Data and Service Information:
+https://scihub.copernicus.eu/twiki/pub/SciHubWebPortal/TermsConditions/Sentinel_Data_Terms_and_Conditions.pdf

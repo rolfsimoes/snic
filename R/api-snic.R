@@ -48,9 +48,9 @@
 #' \code{\link{snic_plot}} for visualizing results.
 #'
 #' @examples
-#' # Example 1: Terra raster workflow with visual feedback
+#' # Example 1: Geospatial raster
 #' if (requireNamespace("terra", quietly = TRUE)) {
-#'     path <- system.file("S2-20LMR", package = "snic", mustWork = TRUE)
+#'     path <- system.file("demo-geotiff", package = "snic", mustWork = TRUE)
 #'     files <- file.path(
 #'         path,
 #'         c(
@@ -62,14 +62,14 @@
 #'     )
 #'
 #'     # Downsample for speed (optional)
-#'     s2 <- terra::aggregate(terra::rast(files), fact = 5)
+#'     s2 <- terra::aggregate(terra::rast(files), fact = 8)
 #'
 #'     # Generate a regular grid of seeds (lat/lon because CRS is present)
 #'     seeds <- snic_grid(
 #'         s2,
 #'         type    = "rectangular",
 #'         spacing = 10L,
-#'         padding = 50L
+#'         padding = 18L
 #'     )
 #'
 #'     # Run segmentation
@@ -89,7 +89,7 @@
 #' # Uses an example image shipped with the package (no terra needed)
 #' if (requireNamespace("jpeg", quietly = TRUE)) {
 #'     img_path <- system.file(
-#'         "clownfish.jpeg",
+#'         "demo-jpeg/clownfish.jpeg",
 #'         package = "snic",
 #'         mustWork = TRUE
 #'     )
@@ -287,8 +287,8 @@ print.snic <- function(x, ...) {
 #' @examples
 #' if (requireNamespace("terra", quietly = TRUE) &&
 #'     requireNamespace("magick", quietly = TRUE)) {
-#'     tif_dir <- system.file("S2-20LMR", package = "snic", mustWork = TRUE)
-#'     band_files <- file.path(
+#'     tif_dir <- system.file("demo-geotiff", package = "snic", mustWork = TRUE)
+#'     files <- file.path(
 #'         tif_dir,
 #'         c(
 #'             "S2_20LMR_B02_20220630.tif",
@@ -297,7 +297,7 @@ print.snic <- function(x, ...) {
 #'             "S2_20LMR_B12_20220630.tif"
 #'         )
 #'     )
-#'     s2 <- terra::aggregate(terra::rast(band_files), fact = 8)
+#'     s2 <- terra::aggregate(terra::rast(files), fact = 8)
 #'
 #'     set.seed(42)
 #'     seeds <- snic_grid(s2, type = "random", spacing = 10L, padding = 0L)

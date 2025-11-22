@@ -72,8 +72,8 @@ and parameters such as \code{compactness}.
 \examples{
 if (requireNamespace("terra", quietly = TRUE) &&
     requireNamespace("magick", quietly = TRUE)) {
-    tif_dir <- system.file("S2-20LMR", package = "snic", mustWork = TRUE)
-    band_files <- file.path(
+    tif_dir <- system.file("demo-geotiff", package = "snic", mustWork = TRUE)
+    files <- file.path(
         tif_dir,
         c(
             "S2_20LMR_B02_20220630.tif",
@@ -82,7 +82,7 @@ if (requireNamespace("terra", quietly = TRUE) &&
             "S2_20LMR_B12_20220630.tif"
         )
     )
-    s2 <- terra::aggregate(terra::rast(band_files), fact = 8)
+    s2 <- terra::aggregate(terra::rast(files), fact = 8)
 
     set.seed(42)
     seeds <- snic_grid(s2, type = "random", spacing = 10L, padding = 0L)

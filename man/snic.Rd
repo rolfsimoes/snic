@@ -51,9 +51,9 @@ region, and pixels are assigned based on the SNIC distance metric combining
 spectral similarity and spatial distance, weighted by \code{compactness}.
 }
 \examples{
-# Example 1: Terra raster workflow with visual feedback
+# Example 1: Geospatial raster
 if (requireNamespace("terra", quietly = TRUE)) {
-    path <- system.file("S2-20LMR", package = "snic", mustWork = TRUE)
+    path <- system.file("demo-geotiff", package = "snic", mustWork = TRUE)
     files <- file.path(
         path,
         c(
@@ -65,14 +65,14 @@ if (requireNamespace("terra", quietly = TRUE)) {
     )
 
     # Downsample for speed (optional)
-    s2 <- terra::aggregate(terra::rast(files), fact = 5)
+    s2 <- terra::aggregate(terra::rast(files), fact = 8)
 
     # Generate a regular grid of seeds (lat/lon because CRS is present)
     seeds <- snic_grid(
         s2,
         type    = "rectangular",
         spacing = 10L,
-        padding = 50L
+        padding = 18L
     )
 
     # Run segmentation
@@ -92,7 +92,7 @@ if (requireNamespace("terra", quietly = TRUE)) {
 # Uses an example image shipped with the package (no terra needed)
 if (requireNamespace("jpeg", quietly = TRUE)) {
     img_path <- system.file(
-        "clownfish.jpeg",
+        "demo-jpeg/clownfish.jpeg",
         package = "snic",
         mustWork = TRUE
     )

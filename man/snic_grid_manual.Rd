@@ -58,7 +58,10 @@ provide immediate feedback on how the seed placement affects clustering.
 \examples{
 \dontrun{
 if (interactive() && requireNamespace("terra", quietly = TRUE)) {
-    tiff_dir <- system.file("S2-20LMR", package = "snic", mustWork = TRUE)
+    tiff_dir <- system.file("demo-geotiff",
+        package = "snic",
+        mustWork = TRUE
+    )
     files <- file.path(
         tiff_dir,
         c(

@@ -57,7 +57,8 @@
 #'
 #' @examples
 #' if (requireNamespace("terra", quietly = TRUE)) {
-#'     tiff_dir <- system.file("S2-20LMR", package = "snic", mustWork = TRUE)
+#'     tiff_dir <- system.file("demo-geotiff", package = "snic",
+#'         mustWork = TRUE)
 #'     files <- file.path(
 #'         tiff_dir,
 #'         c(
@@ -71,25 +72,20 @@
 #'     # Load and optionally downsample for faster segmentation
 #'     s2 <- terra::aggregate(terra::rast(files), fact = 8)
 #'
-#'     # Generate seeds (lat/lon coordinates because s2 has a CRS)
-#'     seeds <- snic_grid(
-#'         s2,
-#'         type = "rectangular",
-#'         spacing = 10L,
-#'         padding = 0L
-#'     )
+#'     # Visualize
+#'     snic_plot(s2, r = 4, g = 3, b = 1, stretch = "lin")
+#' }
 #'
-#'     # Run segmentation
-#'     seg <- snic(s2, seeds = seeds, compactness = 0.1)
+#' # Simple array example using bundled JPEG
+#' if (requireNamespace("jpeg", quietly = TRUE)) {
+#'     img_path <- system.file("demo-jpeg/clownfish.jpeg", package = "snic",
+#'         mustWork = TRUE)
+#'
+#'     # Load
+#'     rgb <- jpeg::readJPEG(img_path)
 #'
 #'     # Visualize
-#'     snic_plot(
-#'         s2,
-#'         r = 4, g = 3, b = 1,
-#'         stretch = "lin",
-#'         seeds = seeds,
-#'         seg = seg
-#'     )
+#'     snic_plot(rgb, r = 1, g = 2, b = 3, stretch = "none")
 #' }
 #' @name snic_plot
 NULL

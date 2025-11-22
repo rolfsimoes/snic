@@ -46,7 +46,7 @@ NULL
         return(.seeds_check.data.frame(as.data.frame(seeds)))
     }
     if (ncol(seeds) != 2L) {
-        stop(.msg(".seeds_check_matrix_two_columns"), call. = FALSE)
+        stop(.msg("seeds_check_matrix_two_columns"), call. = FALSE)
     }
     colnames(seeds) <- c("r", "c")
     as.data.frame(seeds)
@@ -88,7 +88,7 @@ NULL
         return(new_seed)
     }
     if (.seeds_type(seeds) != .seeds_type(new_seed)) {
-        stop(.msg(".seeds_type_mismatch"), call. = FALSE)
+        stop(.msg("seeds_type_mismatch"), call. = FALSE)
     }
     rbind(seeds, new_seed)
 }

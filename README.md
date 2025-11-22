@@ -85,7 +85,7 @@ library(terra)
 #> terra 1.8.70
 
 # Sentinel-2 subset packaged with snic
-data_dir <- system.file("S2-20LMR", package = "snic", mustWork = TRUE)
+data_dir <- system.file("demo-geotiff", package = "snic", mustWork = TRUE)
 bands <- c("B02", "B04", "B08", "B12")
 paths <- file.path(
   data_dir,

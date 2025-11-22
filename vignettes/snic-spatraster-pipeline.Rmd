@@ -22,7 +22,7 @@ library(snic)
 
 ## Introduction
 
-This vignette revisits the SNIC segmentation pipeline, originally proposed by Achanta and Süsstrunk (2017). It works with `terra::SpatRaster` objects, instead of a small in-memory RGB array. We will use the Sentinel-2 subset (`S2-20LMR`) that ships with the package. Every step reflects a typical remote-sensing workflow: load raster bands, seed the image, run `snic()`, and visualize the resulting segments.
+This vignette revisits the SNIC segmentation pipeline, originally proposed by Achanta and Süsstrunk (2017). It works with `terra::SpatRaster` objects, instead of a small in-memory RGB array. We will use the Sentinel-2 subset (`demo-geotiff`) that ships with the package. Every step reflects a typical remote-sensing workflow: load raster bands, seed the image, run `snic()`, and visualize the resulting segments.
 
 > **Array workflow:** If you prefer to start from in-memory arrays, see the [SNIC Segmentation Pipeline - Arrays](snic-array-pipeline.html) vignette for a compact tutorial that mirrors this tutorial without the geospatial dependencies.
 
@@ -31,7 +31,7 @@ This vignette revisits the SNIC segmentation pipeline, originally proposed by Ac
 ```{r load-imagery}
 library(terra)
 
-data_dir <- system.file("S2-20LMR", package = "snic", mustWork = TRUE)
+data_dir <- system.file("demo-geotiff", package = "snic", mustWork = TRUE)
 band_files <- file.path(
   data_dir,
   c(

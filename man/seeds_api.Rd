@@ -52,7 +52,7 @@ Only rasters with a defined coordinate reference system (CRS) can be
 if (requireNamespace("terra", quietly = TRUE)) {
     # Load a test Sentinel-2 band
     s2_file <- system.file(
-        "S2-20LMR/S2_20LMR_B04_20220630.tif",
+        "demo-geotiff/S2_20LMR_B04_20220630.tif",
         package = "snic"
     )
     s2_rast <- terra::rast(s2_file)
