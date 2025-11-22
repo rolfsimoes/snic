@@ -1,30 +1,42 @@
 Package: snic
-Type: Package
 Title: Superpixel Segmentation with the SNIC Algorithm
-Version: 0.2.0
+Version: 0.5.0
 Authors@R: c(
     person(given = "Rolf", family = "Simoes", email = "rolfsimoes@gmail.com", 
     role = c("aut", "cre")),
-    person('Felipe', 'Souza', role = c('ctb'), email = 'felipe.carvalho@inpe.br'),
-    person('Felipe', 'Carlos', role = c('ctb'), email = "efelipecarlos@gmail.com"),
-    person('Gilberto', 'Camara', role = c('ctb', 'rth'), email = 'gilberto.camara.inpe@gmail.com')
+    person('Felipe', 'Souza', role = c('aut'), email = 'felipe.carvalho@inpe.br'),
+    person('Felipe', 'Carlos', role = c('aut'), email = "efelipecarlos@gmail.com"),
+    person('Gilberto', 'Camara', role = c('aut', 'rth'), email = 'gilberto.camara.inpe@gmail.com')
     )
-Description: Implementation of the Simple Non-Iterative Clustering (SNIC) 
-    algorithm for superpixel segmentation of multi-band images.  The core 
-    algorithm is written in C++ and exposed to R via a small interface.  
-    The implementation uses a priority queue (min-heap) to grow compact, 
-    homogeneous segments from uniformly distributed seeds.  Supports 
-    images with an arbitrary number of spectral bands and returns an integer 
-    matrix of segment labels covering the input scene.
+Maintainer: Rolf Simoes <rolfsimoes@gmail.com>
+Description: Implements the Simple Non-Iterative Clustering (SNIC) algorithm 
+    for superpixel segmentation of multi-band images, as introduced by Achanta 
+    and Süsstrunk (2017) <doi:10.1109/CVPR.2017.520>. Supports both standard 
+    image arrays and geospatial raster objects (currently via the terra 
+    package), with a design that can be extended to other spatial data 
+    frameworks. SNIC rapidly groups adjacent pixels into compact, coherent 
+    regions ("superpixels") based on spectral similarity and spatial 
+    proximity. This high-performance C++ implementation supports images 
+    with arbitrary spectral bands and is exposed to R via a small interface. 
+    The main function snic() returns objects of class "snic", which bundle 
+    the labels with per-segment summaries and centroids. 
 Depends: R (>= 3.5.0)
 Suggests: 
     testthat (>= 3.0.0),
     terra,
     spelling,
     covr,
-    magick
-License: MIT + file LICENSE
-Encoding: UTF-8
+    magick,
+    jpeg,
+    png,
+    knitr,
+    rmarkdown
+URL: https://github.com/rolfsimoes/snic, https://rolfsimoes.github.io/snic
+BugReports: https://github.com/rolfsimoes/snic/issues
+ByteCompile: true
+VignetteBuilder: knitr
 RoxygenNote: 7.3.3
 Config/testthat/edition: 3
+Encoding: UTF-8
 Language: en-US
+License: GPL (>= 2)
