@@ -2,7 +2,7 @@ name: test-coverage
 
 on:
   push:
-    branches: [main, master]
+    branches: [dev]
   pull_request:
 
 jobs:
@@ -19,6 +19,11 @@ jobs:
           extra-packages: any::covr
           needs: coverage
       - name: Run test coverage
-        run: |
-          covr::codecov(quiet = FALSE, clean = FALSE)
+        run: covr::covr(filename = "coverage.xml", export = "coverage")
         shell: Rscript {0}
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          file: coverage.xml
