@@ -4,7 +4,7 @@
 
 The snic package implements the Simple Non-Iterative Clustering (SNIC)
 algorithm for image segmentation, originally proposed by Achanta and
-Süsstrunk (2017). The objective of this tutorial is to present the
+Susstrunk (2017). The objective of this tutorial is to present the
 segmentation pipeline in a compact, reproducible manner using a small
 example.
 
@@ -44,7 +44,7 @@ clownfish.](snic-array-pipeline_files/figure-html/image-rgb-1.png)
 
 ### Lab color space
 
-Achanta and Süsstrunk (2017) use the Lab color space. To convert the RGB
+Achanta and Susstrunk (2017) use the Lab color space. To convert the RGB
 image to Lab, we use the
 [`convertColor()`](https://rdrr.io/r/grDevices/convertColor.html)
 function from the `grDevices` package. First we have to reshape the
@@ -263,7 +263,7 @@ examine the resulting segments.
 
 ## References
 
-Achanta, R., & Süsstrunk, S. (2017). Superpixels and polygons using
+Achanta, R., & Susstrunk, S. (2017). Superpixels and polygons using
 simple non-iterative clustering. *Proceedings of the IEEE Conference on
 Computer Vision and Pattern Recognition (CVPR)*.
 <doi:10.1109/CVPR.2017.520>

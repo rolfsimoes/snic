@@ -4,7 +4,8 @@
 <!-- badges: start -->
 
 [![Check](https://github.com/rolfsimoes/snic/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/rolfsimoes/snic/actions/workflows/R-CMD-check.yaml)
-[![Codecov](https://codecov.io/gh/rolfsimoes/snic/branch/main/graph/badge.svg)](https://app.codecov.io/gh/rolfsimoes/snic?branch=main)
+[![Code
+Coverage](https://codecov.io/gh/rolfsimoes/snic/branch/dev/graph/badge.svg)](https://app.codecov.io/gh/rolfsimoes/snic?branch=dev)
 <!-- badges: end -->
 
 Efficient superpixel segmentation for multi-band imagery using the
@@ -83,7 +84,6 @@ Sentinel-2 subset.
 ``` r
 library(snic)
 library(terra)
-#> terra 1.8.80
 
 # Sentinel-2 subset packaged with snic
 data_dir <- system.file("demo-geotiff", package = "snic", mustWork = TRUE)
@@ -103,7 +103,12 @@ snic_plot(
 )
 ```
 
-<img src="man/figures/README-quick-start-1.png" alt="RGB composite of the Sentinel-2 subset with SNIC superpixel boundaries."  />
+<figure>
+<img src="man/figures/quick-start-1.png"
+alt="RGB composite of the Sentinel-2 subset with SNIC superpixel boundaries." />
+<figcaption aria-hidden="true">RGB composite of the Sentinel-2 subset
+with SNIC superpixel boundaries.</figcaption>
+</figure>
 
 ## Step 1 - Seed placement
 
@@ -147,7 +152,7 @@ for (i in seq_along(seed_examples)) {
 ```
 
 <figure>
-<img src="man/figures/README-seed-strategies-1.png"
+<img src="man/figures/seed-strategies-1.png"
 alt="Seed placement strategies on the Sentinel-2 example (spacing = 30)." />
 <figcaption aria-hidden="true">Seed placement strategies on the
 Sentinel-2 example (spacing = 30).</figcaption>
@@ -202,7 +207,12 @@ snic_plot(
 )
 ```
 
-<img src="man/figures/README-segmentation-plot-1.png" alt="SNIC segmentation output overlaid on the Sentinel-2 composite."  />
+<figure>
+<img src="man/figures/segmentation-plot-1.png"
+alt="SNIC segmentation output overlaid on the Sentinel-2 composite." />
+<figcaption aria-hidden="true">SNIC segmentation output overlaid on the
+Sentinel-2 composite.</figcaption>
+</figure>
 
 ## Animated seeding review
 
@@ -233,7 +243,6 @@ gif_path <- snic_animation(
   snic_args = list(compactness = 0.1),
   device_args = list(height = 192, width = 256, res = 120, bg = "white")
 )
-#> Saved animation to man/figures/segmentation-animation.gif (6.0 s, 3.3 fps)
 ```
 
 <img src="man/figures/segmentation-animation.gif" alt="Animated SNIC seeding and segmentation over the Sentinel-2 subset." />

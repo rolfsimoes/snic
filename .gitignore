@@ -11,3 +11,4 @@ src/Makevars
 *.tar.gz
 Rplots.pdf
 /Meta/
+/doc/

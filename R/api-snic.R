@@ -147,16 +147,18 @@ snic <- function(x, seeds, compactness = 0.5, ...) {
 #' algorithm.
 #'
 #' @section Accessors:
-#'
-#'   - \code{\link{snic_get_seg}}: Retrieve the segmentation result.
-#'   - \code{\link{snic_get_means}}: Retrieve per-cluster feature means.
-#'   - \code{\link{snic_get_centroids}}: Retrieve per-cluster centroids.
+#' \itemize{
+#'   \item \code{\link{snic_get_seg}}: Retrieve the segmentation result.
+#'   \item \code{\link{snic_get_means}}: Retrieve per-cluster feature means.
+#'   \item \code{\link{snic_get_centroids}}: Retrieve per-cluster centroids.
+#' }
 #'
 #' @section Methods:
-#'
-#'   - \code{\link{snic_animation}}: Animate the segmentation process.
-#'   - \code{\link{print}}: Print a summary of the segmentation result.
-#'   - \code{\link{plot}}: Visualize the segmentation result.
+#' \itemize{
+#'   \item \code{\link{snic_animation}}: Animate the segmentation process.
+#'   \item \code{\link{print}}: Print a summary of the segmentation result.
+#'   \item \code{\link{plot}}: Visualize the segmentation result.
+#' }
 #'
 #' @param x A \code{snic} object, typically the result of a call to
 #'   \code{\link{snic}}. It stores the segmentation map along with
