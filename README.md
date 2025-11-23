@@ -103,7 +103,7 @@ snic_plot(
 )
 ```
 
-![](README_files/figure-gfm/quick-start-1.png)<!-- -->
+<img src="man/figures/README-quick-start-1.png" alt="RGB composite of the Sentinel-2 subset with SNIC superpixel boundaries."  />
 
 ## Step 1 - Seed placement
 
@@ -147,7 +147,7 @@ for (i in seq_along(seed_examples)) {
 ```
 
 <figure>
-<img src="README_files/figure-gfm/seed-strategies-1.png"
+<img src="man/figures/README-seed-strategies-1.png"
 alt="Seed placement strategies on the Sentinel-2 example (spacing = 30)." />
 <figcaption aria-hidden="true">Seed placement strategies on the
 Sentinel-2 example (spacing = 30).</figcaption>
@@ -202,7 +202,7 @@ snic_plot(
 )
 ```
 
-![](README_files/figure-gfm/segmentation-plot-1.png)<!-- -->
+<img src="man/figures/README-segmentation-plot-1.png" alt="SNIC segmentation output overlaid on the Sentinel-2 composite."  />
 
 ## Animated seeding review
 
@@ -215,7 +215,7 @@ if (!requireNamespace("magick", quietly = TRUE)) {
   stop("Install the 'magick' package to render the animation.")
 }
 
-unlink("README_files/figure-gfm/segmentation-animation.gif")
+unlink("man/figures/segmentation-animation.gif")
 
 set.seed(123)
 animation_seeds <- snic_grid(s2, type = "random", spacing = 20L, padding = 0L)
@@ -223,7 +223,7 @@ animation_seeds <- snic_grid(s2, type = "random", spacing = 20L, padding = 0L)
 gif_path <- snic_animation(
   s2,
   seeds = animation_seeds,
-  file_path = "README_files/figure-gfm/segmentation-animation.gif",
+  file_path = "man/figures/segmentation-animation.gif",
   max_frames = 20L,
   delay = 30,
   r = 4, g = 3, b = 1,
@@ -233,10 +233,10 @@ gif_path <- snic_animation(
   snic_args = list(compactness = 0.1),
   device_args = list(height = 192, width = 256, res = 120, bg = "white")
 )
-#> Saved animation to README_files/figure-gfm/segmentation-animation.gif (6.0 s, 3.3 fps)
+#> Saved animation to man/figures/segmentation-animation.gif (6.0 s, 3.3 fps)
 ```
 
-<img src="README_files/figure-gfm/segmentation-animation.gif" />
+<img src="man/figures/segmentation-animation.gif" alt="Animated SNIC seeding and segmentation over the Sentinel-2 subset." />
 
 ## Contributing
 

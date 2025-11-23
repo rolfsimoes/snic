@@ -34,14 +34,15 @@ if (!requireNamespace("jpeg", quietly = TRUE)) {
 }
 
 # Example RGB image shipped with the package (values in [0, 1])
-img_path <- system.file("demo-jpeg/clownfish.jpeg", package = "snic", mustWork = TRUE)
+img_path <- system.file("demo-jpeg/clownfish.jpeg", package = "snic",
+  mustWork = TRUE)
 rgb <- jpeg::readJPEG(img_path)
 dim(rgb) # rows, cols, channels
 ```
 
 The `rgb` array is a 3-channel RGB image with dimensions 900 x 1200 pixels. R arrays are stored in column-major order, that means the contiguous memory layout stores pixels of a column before moving to the next column. Once all columns of a channel are stored, a new channel begins.
 
-```{r image-rgb, fig.width = 4, fig.height = 3}
+```{r image-rgb, fig.width = 4, fig.height = 3, fig.alt = "An RGB image of a clownfish."}
 snic_plot(rgb, r = 1, g = 2, b = 3)
 ```
 
@@ -62,7 +63,7 @@ dim(lab) <- dims
 
 We can use the `snic_plot()` function to display the Lab image and visualize such transformations by comparing Lab channels with RGB channels as follows.
 
-```{r compare-lab-rgb, fig.width = 8, fig.height = 4}
+```{r compare-lab-rgb, fig.width = 8, fig.height = 4, fig.alt = "Comparison of the L, a, b channels (Lab color space) with the R, G, B channels (RGB color space)."}
 
 # Grayscale palette
 gray <- grDevices::gray.colors(256)
@@ -109,7 +110,7 @@ Here, we defined a compactness of 0.25, which means that the algorithm will bala
 
 ## Segments visualization
 
-```{r pipeline-step-3, fig.width = 4, fig.height = 3}
+```{r pipeline-step-3, fig.width = 4, fig.height = 3, fig.alt = "The clownfish image with superpixel segmentation boundaries overlaid."}
 # Prepare figure layout
 par(mfrow = c(1, 1))
 
@@ -158,7 +159,7 @@ results <- lapply(grids, function(seeds) {
 
 The panels below display the RGB image with superpixel boundaries overlaid for each grid type (rows) and compactness value (columns).
 
-```{r grid-types-plot, fig.width = 7.5, fig.height = 12}
+```{r grid-types-plot, fig.width = 7.5, fig.height = 12, fig.alt = "Superpixel segmentation results on the clownfish image. Rows correspond to different seed grid types (rectangular, diamond, hexagonal, random) and columns to different compactness values (0.1 and 0.5)."}
 
 # Prepare figure layout
 par(mfrow = c(4, 2), oma = c(2, 2, 2, 0))

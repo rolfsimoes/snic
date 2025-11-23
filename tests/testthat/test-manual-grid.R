@@ -62,61 +62,57 @@ test_that("snic_grid_manual collects locator clicks into seed data frame", {
     captured <- list(snic = list())
     result <- with_mocked_bindings(
         {
-            with_mocked_bindings(
+            local_result <- NULL
+            expect_message(
                 {
-                    with_mocked_bindings(
-                        {
-                            local_result <- NULL
-                            expect_message(
-                                {
-                                    local_result <- snic_grid_manual(
-                                        img,
-                                        seeds = initial_seeds,
-                                        snic_args = list(compactness = 0.25),
-                                        r = 1L, g = 2L, b = 3L,
-                                        seg_plot_args = list(
-                                            border = "red",
-                                            col = NA,
-                                            lwd = 0.4
-                                        )
-                                    )
-                                    local_result
-                                },
-                                "Left-click to add points; press ESC or right-click to stop."
-                            )
-                            local_result
-                        },
-                        locator = locator_mock,
-                        par = function(...) {
-                            invisible(NULL)
-                        },
-                        points = function(...) {
-                            invisible(NULL)
-                        },
-                        .package = "graphics"
-                    ) %>%
-                        with_mocked_bindings(
-                            plotRGB = function(...) invisible(NULL),
-                            plot = function(...) invisible(NULL),
-                            as.polygons = function(x, ...) list(id = length(captured$snic)),
-                            .package = "terra"
+                    local_result <- snic_grid_manual(
+                        img,
+                        seeds = initial_seeds,
+                        snic_args = list(compactness = 0.25),
+                        r = 1L, g = 2L, b = 3L,
+                        seg_plot_args = list(
+                            border = "red",
+                            col = NA,
+                            lwd = 0.4
                         )
-                },
-                snic = function(x, seeds, compactness, ...) {
-                    captured$snic[[length(captured$snic) + 1L]] <<- list(
-                        x = x,
-                        seeds = seeds,
-                        compactness = compactness
                     )
-                    seg_dummy
+                    local_result
                 },
-                dev.interactive = function(...) TRUE,
-                .package = "snic"
+                "Left-click to add points; press ESC or right-click to stop."
             )
+            local_result
         },
-        interactive = function() TRUE,
-        .package = "base"
-    )
+        locator = locator_mock,
+        par = function(...) {
+            invisible(NULL)
+        },
+        points = function(...) {
+            invisible(NULL)
+        },
+        .package = "graphics"
+    ) %>%
+        with_mocked_bindings(
+            snic = function(x, seeds, compactness, ...) {
+                captured$snic[[length(captured$snic) + 1L]] <<- list(
+                    x = x,
+                    seeds = seeds,
+                    compactness = compactness
+                )
+                seg_dummy
+            },
+            dev.interactive = function(...) TRUE,
+            .package = "snic"
+        ) %>%
+        with_mocked_bindings(
+            plotRGB = function(...) invisible(NULL),
+            plot = function(...) invisible(NULL),
+            as.polygons = function(x, ...) list(id = length(captured$snic)),
+            .package = "terra"
+        ) %>%
+        with_mocked_bindings(
+            interactive = function() TRUE,
+            .package = "base"
+        )
 
     expect_true(all(c("r", "c") %in% names(result)))
     expect_equal(result[, c("r", "c")], expected_rc)

@@ -5,8 +5,10 @@ output: github_document
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
-  comment = "#>"
+  comment = "#>",
+  fig.path = "man/figures/README-"
 )
+dir.create("man/figures", recursive = TRUE, showWarnings = FALSE)
 ```
 
 # snic <a id="top"></a>
@@ -66,7 +68,7 @@ The SNIC workflow is short and reproducible:
 
 The example below demonstrates a typical SNIC workflow with the bundled Sentinel-2 subset.
 
-```{r quick-start, eval = TRUE}
+```{r quick-start, eval = TRUE, fig.alt = "RGB composite of the Sentinel-2 subset with SNIC superpixel boundaries."}
 library(snic)
 library(terra)
 
@@ -149,7 +151,7 @@ seg_manual <- snic(
 
 Once seeds are defined, pass them to `snic()` together with the imagery and a `compactness` factor. The result is a labeled raster that can be visualized alongside the seeds for validation.
 
-```{r segmentation-plot, eval = TRUE}
+```{r segmentation-plot, eval = TRUE, fig.alt = "SNIC segmentation output overlaid on the Sentinel-2 composite."}
 
 seg_hex <- snic(s2, seeds = seed_examples[[3L]], compactness = 0.2)
 
@@ -171,7 +173,7 @@ if (!requireNamespace("magick", quietly = TRUE)) {
   stop("Install the 'magick' package to render the animation.")
 }
 
-unlink("README_files/figure-gfm/segmentation-animation.gif")
+unlink("man/figures/segmentation-animation.gif")
 
 set.seed(123)
 animation_seeds <- snic_grid(s2, type = "random", spacing = 20L, padding = 0L)
@@ -179,7 +181,7 @@ animation_seeds <- snic_grid(s2, type = "random", spacing = 20L, padding = 0L)
 gif_path <- snic_animation(
   s2,
   seeds = animation_seeds,
-  file_path = "README_files/figure-gfm/segmentation-animation.gif",
+  file_path = "man/figures/segmentation-animation.gif",
   max_frames = 20L,
   delay = 30,
   r = 4, g = 3, b = 1,
@@ -192,7 +194,7 @@ gif_path <- snic_animation(
 
 ```
 
-<img src="README_files/figure-gfm/segmentation-animation.gif" />
+<img src="man/figures/segmentation-animation.gif" alt="Animated SNIC seeding and segmentation over the Sentinel-2 subset." />
 
 ## Contributing
 

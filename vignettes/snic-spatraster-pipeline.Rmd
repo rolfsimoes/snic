@@ -50,7 +50,7 @@ s2
 
 The four bands cover the blue (B02), red (B04), near-infrared (B08), and short-wave infrared (B12) portions of the spectrum. `snic` package comes with a helper function to plot false-color composites easily. `snic_plot()` understands both `arrays` and `SpatRaster` inputs.
 
-```{r plot-s2, fig.width = 6, fig.height = 4.5}
+```{r plot-s2, fig.width = 6, fig.height = 4.5, fig.alt = "A false-color composite of a Sentinel-2 scene, showing vegetation in shades of green and urban areas in shades of purple."}
 snic_plot(s2, r = "B08", g = "B04", b = "B02")
 ```
 
@@ -81,7 +81,7 @@ The result is a `snic` object that contains a `SpatRaster` with same spatial ext
 
 Here we plot the seed locations and the resulting segments on top of a false-color composite.
 
-```{r plot-seg, fig.width = 6.5, fig.height = 4.5}
+```{r plot-seg, fig.width = 6.5, fig.height = 4.5, fig.alt = "The Sentinel-2 false-color composite with superpixel segmentation boundaries overlaid in yellow and seed points marked with cyan crosses."}
 snic_plot(
   s2,
   r = "B08", g = "B04", b = "B02",
@@ -120,7 +120,7 @@ results <- lapply(grids, function(seeds) {
 })
 ```
 
-```{r grid-types-plot, fig.width = 7.5, fig.height = 12}
+```{r grid-types-plot, fig.width = 7.5, fig.height = 12, fig.alt = "A 4x2 grid of plots showing superpixel segmentation results on the Sentinel-2 scene. Rows correspond to different seed grid types (rectangular, diamond, hexagonal, random) and columns correspond to different compactness values (0.1 and 0.4)."}
 par(mfrow = c(4, 2), oma = c(2, 2, 2, 0))
 
 for (res in results) {
@@ -166,7 +166,7 @@ seeds_hex <- snic_grid(
 
 The figure below compares the resulting segments.
 
-```{r hex-seeds-res-plot, fig.width = 8, fig.height = 8}
+```{r hex-seeds-res-plot, fig.width = 8, fig.height = 8, fig.alt = "A 2x2 grid of plots showing superpixel segmentation results on the Sentinel-2 scene at different aggregation factors (1, 2, 4, 8)."}
 
 op <- graphics::par(mfrow = c(2, 2), oma = c(0, 0, 2, 0))
 palette_seg <- grDevices::hcl.colors(48, "Plasma")
