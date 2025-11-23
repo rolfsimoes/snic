@@ -60,6 +60,7 @@ jobs:
 
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
+          lockfile: .github/pkg.lock
           extra-packages: any::pkgdown, local::.
           needs: website
 
