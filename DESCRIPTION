@@ -3,10 +3,11 @@ Title: Superpixel Segmentation with the SNIC Algorithm
 Version: 0.5.0
 Authors@R: c(
     person(given = "Rolf", family = "Simoes", email = "rolfsimoes@gmail.com", 
-    role = c("aut", "cre")),
+    role = c("aut", "cre"), comment = c(ORCID = "0000-0003-0953-4132")),
     person('Felipe', 'Souza', role = c('aut'), email = 'felipe.carvalho@inpe.br'),
     person('Felipe', 'Carlos', role = c('aut'), email = "efelipecarlos@gmail.com"),
-    person('Gilberto', 'Camara', role = c('aut', 'rth'), email = 'gilberto.camara.inpe@gmail.com')
+    person('Gilberto', 'Camara', email = 'gilberto.camara.inpe@gmail.com',
+    role = c('aut', 'rth'), comment = c(ORCID = "0000-0002-3681-487X"))
     )
 Maintainer: Rolf Simoes <rolfsimoes@gmail.com>
 Description: Implements the Simple Non-Iterative Clustering (SNIC) algorithm 
