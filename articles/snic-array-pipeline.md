@@ -4,7 +4,7 @@
 
 The snic package implements the Simple Non-Iterative Clustering (SNIC)
 algorithm for image segmentation, originally proposed by Achanta and
-Süsstrunk (2017). The objective of this tutorial is to present the
+Susstrunk (2017). The objective of this tutorial is to present the
 segmentation pipeline in a compact, reproducible manner using a small
 example.
 
@@ -40,11 +40,13 @@ snic_plot(rgb, r = 1, g = 2, b = 3)
 ```
 
 ![An RGB image of a
-clownfish.](snic-array-pipeline_files/figure-html/image-rgb-1.png)
+clownfish.](snic-array-pipeline_files/figure-html/array-image-rgb-1.png)
+
+An RGB image of a clownfish.
 
 ### Lab color space
 
-Achanta and Süsstrunk (2017) use the Lab color space. To convert the RGB
+Achanta and Susstrunk (2017) use the Lab color space. To convert the RGB
 image to Lab, we use the
 [`convertColor()`](https://rdrr.io/r/grDevices/convertColor.html)
 function from the `grDevices` package. First we have to reshape the
@@ -88,7 +90,10 @@ snic_plot(rgb, band = 3, col = gray, main = "B")
 
 ![Comparison of the L, a, b channels (Lab color space) with the R, G, B
 channels (RGB color
-space).](snic-array-pipeline_files/figure-html/compare-lab-rgb-1.png)
+space).](snic-array-pipeline_files/figure-html/array-image-lab-rgb-1.png)
+
+Comparison of the L, a, b channels (Lab color space) with the R, G, B
+channels (RGB color space).
 
 The Lab transformation cannot be done if one want use multispectral
 images like satellite images, which have more than three channels and
@@ -143,7 +148,9 @@ snic_plot(rgb, r = 1, g = 2, b = 3, seg = segs)
 ```
 
 ![The clownfish image with superpixel segmentation boundaries
-overlaid.](snic-array-pipeline_files/figure-html/pipeline-step-3-1.png)
+overlaid.](snic-array-pipeline_files/figure-html/array-image-seg-1.png)
+
+The clownfish image with superpixel segmentation boundaries overlaid.
 
 The variable `segs` is an array of the same dimensions as the input
 image, containing the segment labels for each pixel. It can be used to
@@ -251,7 +258,11 @@ mtext(
 ![Superpixel segmentation results on the clownfish image. Rows
 correspond to different seed grid types (rectangular, diamond,
 hexagonal, random) and columns to different compactness values (0.1 and
-0.5).](snic-array-pipeline_files/figure-html/grid-types-plot-1.png)
+0.5).](snic-array-pipeline_files/figure-html/array-image-grid-types-1.png)
+
+Superpixel segmentation results on the clownfish image. Rows correspond
+to different seed grid types (rectangular, diamond, hexagonal, random)
+and columns to different compactness values (0.1 and 0.5).
 
 Under moderate to high compactness condition, the rectangular and
 diamond arrangements yield more axis-aligned boundary structure, while
@@ -263,7 +274,7 @@ examine the resulting segments.
 
 ## References
 
-Achanta, R., & Süsstrunk, S. (2017). Superpixels and polygons using
+Achanta, R., & Susstrunk, S. (2017). Superpixels and polygons using
 simple non-iterative clustering. *Proceedings of the IEEE Conference on
 Computer Vision and Pattern Recognition (CVPR)*.
 <doi:10.1109/CVPR.2017.520>

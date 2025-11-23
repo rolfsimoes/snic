@@ -70,7 +70,7 @@
 </h2>
 <p>The snic package implements the Simple Non-Iterative Clustering
 (SNIC) algorithm for image segmentation, originally proposed by Achanta
-and Süsstrunk (2017). The objective of this tutorial is to present the
+and Susstrunk (2017). The objective of this tutorial is to present the
 segmentation pipeline in a compact, reproducible manner using a small
 example.</p>
 <blockquote>
@@ -101,11 +101,13 @@ the next column. Once all columns of a channel are stored, a new channel
 begins.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/snic_plot.html">snic_plot</a></span><span class="op">(</span><span class="va">rgb</span>, r <span class="op">=</span> <span class="fl">1</span>, g <span class="op">=</span> <span class="fl">2</span>, b <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span></code></pre></div>
-<p><img src="snic-array-pipeline_files/figure-html/image-rgb-1.png" class="r-plt" alt="An RGB image of a clownfish." width="384"></p>
+<div class="float">
+<img src="snic-array-pipeline_files/figure-html/array-image-rgb-1.png" alt="An RGB image of a clownfish."><div class="figcaption">An RGB image of a clownfish.</div>
+</div>
 <div class="section level3">
 <h3 id="lab-color-space">Lab color space<a class="anchor" aria-label="anchor" href="#lab-color-space"></a>
 </h3>
-<p>Achanta and Süsstrunk (2017) use the Lab color space. To convert the
+<p>Achanta and Susstrunk (2017) use the Lab color space. To convert the
 RGB image to Lab, we use the <code><a href="https://rdrr.io/r/grDevices/convertColor.html" class="external-link">convertColor()</a></code> function from
 the <code>grDevices</code> package. First we have to reshape the image
 to a matrix with rows as image pixels and columns as color channels.</p>
@@ -138,7 +140,10 @@ RGB channels as follows.</p>
 <span><span class="fu"><a href="../reference/snic_plot.html">snic_plot</a></span><span class="op">(</span><span class="va">rgb</span>, band <span class="op">=</span> <span class="fl">1</span>, col <span class="op">=</span> <span class="va">gray</span>, main <span class="op">=</span> <span class="st">"R"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/snic_plot.html">snic_plot</a></span><span class="op">(</span><span class="va">rgb</span>, band <span class="op">=</span> <span class="fl">2</span>, col <span class="op">=</span> <span class="va">gray</span>, main <span class="op">=</span> <span class="st">"G"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/snic_plot.html">snic_plot</a></span><span class="op">(</span><span class="va">rgb</span>, band <span class="op">=</span> <span class="fl">3</span>, col <span class="op">=</span> <span class="va">gray</span>, main <span class="op">=</span> <span class="st">"B"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="snic-array-pipeline_files/figure-html/compare-lab-rgb-1.png" class="r-plt" alt="Comparison of the L, a, b channels (Lab color space) with the R, G, B channels (RGB color space)." width="768"></p>
+<div class="float">
+<img src="snic-array-pipeline_files/figure-html/array-image-lab-rgb-1.png" alt="Comparison of the L, a, b channels (Lab color space) with the R, G, B channels (RGB color space)."><div class="figcaption">Comparison of the L, a, b channels (Lab color
+space) with the R, G, B channels (RGB color space).</div>
+</div>
 <p>The Lab transformation cannot be done if one want use multispectral
 images like satellite images, which have more than three channels and
 comprise of different wavelengths other than red, green and blue.</p>
@@ -185,7 +190,10 @@ algorithm will balance compactness and connectivity.</p>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/par.html" class="external-link">par</a></span><span class="op">(</span>mfrow <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="../reference/snic_plot.html">snic_plot</a></span><span class="op">(</span><span class="va">rgb</span>, r <span class="op">=</span> <span class="fl">1</span>, g <span class="op">=</span> <span class="fl">2</span>, b <span class="op">=</span> <span class="fl">3</span>, seg <span class="op">=</span> <span class="va">segs</span><span class="op">)</span></span></code></pre></div>
-<p><img src="snic-array-pipeline_files/figure-html/pipeline-step-3-1.png" class="r-plt" alt="The clownfish image with superpixel segmentation boundaries overlaid." width="384"></p>
+<div class="float">
+<img src="snic-array-pipeline_files/figure-html/array-image-seg-1.png" alt="The clownfish image with superpixel segmentation boundaries overlaid."><div class="figcaption">The clownfish image with superpixel segmentation
+boundaries overlaid.</div>
+</div>
 <p>The variable <code>segs</code> is an array of the same dimensions as
 the input image, containing the segment labels for each pixel. It can be
 used to extract features from the image, or to apply other image
@@ -277,7 +285,12 @@ overlaid for each grid type (rows) and compactness value (columns).</p>
 <span>  outer <span class="op">=</span> <span class="cn">TRUE</span>, at <span class="op">=</span> <span class="fl">0.5</span> <span class="op">/</span> <span class="fl">4</span>,</span>
 <span>  line <span class="op">=</span> <span class="fl">0.5</span>, font <span class="op">=</span> <span class="fl">1</span>, las <span class="op">=</span> <span class="fl">3</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<p><img src="snic-array-pipeline_files/figure-html/grid-types-plot-1.png" class="r-plt" alt="Superpixel segmentation results on the clownfish image. Rows correspond to different seed grid types (rectangular, diamond, hexagonal, random) and columns to different compactness values (0.1 and 0.5)." width="720"></p>
+<div class="float">
+<img src="snic-array-pipeline_files/figure-html/array-image-grid-types-1.png" alt="Superpixel segmentation results on the clownfish image. Rows correspond to different seed grid types (rectangular, diamond, hexagonal, random) and columns to different compactness values (0.1 and 0.5)."><div class="figcaption">Superpixel segmentation results on the clownfish
+image. Rows correspond to different seed grid types (rectangular,
+diamond, hexagonal, random) and columns to different compactness values
+(0.1 and 0.5).</div>
+</div>
 <p>Under moderate to high compactness condition, the rectangular and
 diamond arrangements yield more axis-aligned boundary structure, while
 the hexagonal and randomized seeds distribute initial cluster centers
@@ -288,7 +301,7 @@ task-dependent; the pipeline itself remains the same: define seeds, run
 <div class="section level2">
 <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
 </h2>
-<p>Achanta, R., &amp; Süsstrunk, S. (2017). Superpixels and polygons
+<p>Achanta, R., &amp; Susstrunk, S. (2017). Superpixels and polygons
 using simple non-iterative clustering. <em>Proceedings of the IEEE
 Conference on Computer Vision and Pattern Recognition (CVPR)</em>. <a href="doi:10.1109/CVPR.2017.520" class="uri">doi:10.1109/CVPR.2017.520</a></p>
 </div>
