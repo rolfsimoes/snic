@@ -132,6 +132,6 @@ if (requireNamespace("terra", quietly = TRUE) &&
     )
     gif_file
 }
-#> Saved animation to /tmp/RtmpjvDh6w/snic-demo1e861c61fedd.gif (2.0 s, 10.0 fps)
-#> [1] "/tmp/RtmpjvDh6w/snic-demo1e861c61fedd.gif"
+#> Saved animation to /tmp/RtmpOZPVJC/snic-demo1eacc75749.gif (2.0 s, 10.0 fps)
+#> [1] "/tmp/RtmpOZPVJC/snic-demo1eacc75749.gif"
 ```

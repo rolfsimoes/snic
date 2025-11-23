@@ -44,15 +44,19 @@ print(x, ...)
 
 ## Accessors
 
-`snic_get_seg`: Retrieve the segmentation result. `snic_get_means`:
-Retrieve per-cluster feature means. `snic_get_centroids`: Retrieve
-per-cluster centroids.
+- `snic_get_seg`: Retrieve the segmentation result.
+
+- `snic_get_means`: Retrieve per-cluster feature means.
+
+- `snic_get_centroids`: Retrieve per-cluster centroids.
 
 ## Methods
 
-[`snic_animation`](https://rolfsimoes.github.io/snic/reference/snic_animation.md):
-Animate the segmentation process.
-[`print`](https://rdrr.io/r/base/print.html): Print a summary of the
-segmentation result.
-[`plot`](https://rspatial.github.io/terra/reference/plot.html):
-Visualize the segmentation result.
+- [`snic_animation`](https://rolfsimoes.github.io/snic/reference/snic_animation.md):
+  Animate the segmentation process.
+
+- [`print`](https://rdrr.io/r/base/print.html): Print a summary of the
+  segmentation result.
+
+- [`plot`](https://rspatial.github.io/terra/reference/plot.html):
+  Visualize the segmentation result.
