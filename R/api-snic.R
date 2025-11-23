@@ -147,14 +147,14 @@ snic <- function(x, seeds, compactness = 0.5, ...) {
 #' algorithm.
 #'
 #' @section Accessors:
-#' \itemized{
+#' \itemize{
 #'   \item \code{\link{snic_get_seg}}: Retrieve the segmentation result.
 #'   \item \code{\link{snic_get_means}}: Retrieve per-cluster feature means.
 #'   \item \code{\link{snic_get_centroids}}: Retrieve per-cluster centroids.
 #' }
 #'
 #' @section Methods:
-#' \itemized{
+#' \itemize{
 #'   \item \code{\link{snic_animation}}: Animate the segmentation process.
 #'   \item \code{\link{print}}: Print a summary of the segmentation result.
 #'   \item \code{\link{plot}}: Visualize the segmentation result.
