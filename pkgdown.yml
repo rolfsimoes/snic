@@ -4,7 +4,7 @@ pkgdown_sha: ~
 articles:
   snic-array-pipeline: snic-array-pipeline.html
   snic-spatraster-pipeline: snic-spatraster-pipeline.html
-last_built: 2025-11-23T13:00Z
+last_built: 2025-11-23T13:24Z
 urls:
   reference: https://rolfsimoes.github.io/snic/reference
   article: https://rolfsimoes.github.io/snic/articles
