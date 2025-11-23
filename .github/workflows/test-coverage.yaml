@@ -45,9 +45,9 @@ jobs:
       - uses: r-lib/actions/setup-pandoc@v2
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
-          lockfile: .github/pkg.lock
           extra-packages: any::covr
           needs: coverage
+          cache: false
       - name: Run test coverage
         run: |
           cov <- covr::package_coverage()
