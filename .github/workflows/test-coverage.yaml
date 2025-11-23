@@ -19,7 +19,9 @@ jobs:
           extra-packages: any::covr
           needs: coverage
       - name: Run test coverage
-        run: covr::covr(filename = "coverage.xml", export = "coverage")
+        run: |
+          cov <- covr::package_coverage()
+          covr::to_cobertura(cov, "coverage.xml")
         shell: Rscript {0}
 
       - name: Upload coverage to Codecov
