@@ -14,7 +14,33 @@ on:
 permissions: read-all
 
 jobs:
+  check-pr-open:
+    runs-on: ubuntu-latest
+    outputs:
+      has_pr: ${{ steps.find-pr.outputs.has_pr }}
+    steps:
+      - id: find-pr
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const isDevPush = context.eventName === 'push' && context.ref === 'refs/heads/dev';
+            if (!isDevPush) {
+              core.setOutput('has_pr', false);
+              return;
+            }
+            const head = `${context.repo.owner}:dev`;
+            const { data: pulls } = await github.rest.pulls.list({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              head,
+              base: 'main',
+            });
+            core.setOutput('has_pr', pulls.length > 0);
+
   pkgdown:
+    needs: check-pr-open
+    if: github.event_name != 'push' || needs.check-pr-open.outputs.has_pr != 'true'
     runs-on: ubuntu-latest
     # Only restrict concurrency for non-PR jobs
     concurrency:

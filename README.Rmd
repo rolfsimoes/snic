@@ -15,7 +15,7 @@ dir.create("man/figures", recursive = TRUE, showWarnings = FALSE)
 
 <!-- badges: start -->
 [![Check](https://github.com/rolfsimoes/snic/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/rolfsimoes/snic/actions/workflows/R-CMD-check.yaml)
-[![Codecov](https://codecov.io/gh/rolfsimoes/snic/branch/main/graph/badge.svg)](https://app.codecov.io/gh/rolfsimoes/snic?branch=main)
+[![Codecov](https://codecov.io/gh/rolfsimoes/snic/branch/dev/graph/badge.svg)](https://app.codecov.io/gh/rolfsimoes/snic?branch=dev)
 <!-- badges: end -->
 
 Efficient superpixel segmentation for multi-band imagery using the Simple Non-Iterative Clustering (SNIC) algorithm. The package wraps a C++ implementation with an ergonomic R interface, integrates with `terra` for raster workflows, and provides helpers for seed placement, plotting, and reproducibility.
