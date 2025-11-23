@@ -1,6 +1,8 @@
 ---
 title: "SNIC Segmentation Pipeline - Arrays"
-output: rmarkdown::html_vignette
+output:
+  rmarkdown::html_vignette:
+    self_contained: true
 vignette: |
   %\VignetteIndexEntry{SNIC Segmentation Pipeline - Arrays}
   %\VignetteEngine{knitr::rmarkdown}
@@ -14,15 +16,16 @@ knitr::opts_chunk$set(
   comment = "#>",
   message = FALSE,
   warning = FALSE,
-  fig.width = 6,
-  fig.height = 5
+  fig.retina = 1,
+  quality = 0.3,
+  dpi = 50
 )
 library(snic)
 ```
 
 ## Introduction
 
-The snic package implements the Simple Non-Iterative Clustering (SNIC) algorithm for image segmentation, originally proposed by Achanta and Süsstrunk (2017). The objective of this tutorial is to present the segmentation pipeline in a compact, reproducible manner using a small example. 
+The snic package implements the Simple Non-Iterative Clustering (SNIC) algorithm for image segmentation, originally proposed by Achanta and Susstrunk (2017). The objective of this tutorial is to present the segmentation pipeline in a compact, reproducible manner using a small example. 
 
 > **Remote sensing workflow:** If you work with `terra` objects, see the [SNIC Segmentation Pipeline - SpatRaster](snic-spatraster-pipeline.html) vignette for a step-by-step tutorial tailored to multispectral imagery.
 
@@ -42,15 +45,15 @@ dim(rgb) # rows, cols, channels
 
 The `rgb` array is a 3-channel RGB image with dimensions 900 x 1200 pixels. R arrays are stored in column-major order, that means the contiguous memory layout stores pixels of a column before moving to the next column. Once all columns of a channel are stored, a new channel begins.
 
-```{r image-rgb, fig.width = 4, fig.height = 3, fig.alt = "An RGB image of a clownfish."}
+```{r array-image-rgb, fig.width = 8, fig.height = 6, fig.cap = "An RGB image of a clownfish."}
 snic_plot(rgb, r = 1, g = 2, b = 3)
 ```
 
 ### Lab color space
 
-Achanta and Süsstrunk (2017) use the Lab color space. To convert the RGB image to Lab, we use the `convertColor()` function from the `grDevices` package. First we have to reshape the image to a matrix with rows as image pixels and columns as color channels. 
+Achanta and Susstrunk (2017) use the Lab color space. To convert the RGB image to Lab, we use the `convertColor()` function from the `grDevices` package. First we have to reshape the image to a matrix with rows as image pixels and columns as color channels. 
 
-```{r image-lab}
+```{r rgb-to-lab}
 dims <- dim(rgb)
 dim(rgb) <- c(dims[1] * dims[2], dims[3])
 
@@ -63,7 +66,7 @@ dim(lab) <- dims
 
 We can use the `snic_plot()` function to display the Lab image and visualize such transformations by comparing Lab channels with RGB channels as follows.
 
-```{r compare-lab-rgb, fig.width = 8, fig.height = 4, fig.alt = "Comparison of the L, a, b channels (Lab color space) with the R, G, B channels (RGB color space)."}
+```{r array-image-lab-rgb, fig.width = 7, fig.height = 4, fig.cap = "Comparison of the L, a, b channels (Lab color space) with the R, G, B channels (RGB color space)."}
 
 # Grayscale palette
 gray <- grDevices::gray.colors(256)
@@ -110,7 +113,7 @@ Here, we defined a compactness of 0.25, which means that the algorithm will bala
 
 ## Segments visualization
 
-```{r pipeline-step-3, fig.width = 4, fig.height = 3, fig.alt = "The clownfish image with superpixel segmentation boundaries overlaid."}
+```{r array-image-seg, fig.width = 8, fig.height = 6, fig.cap = "The clownfish image with superpixel segmentation boundaries overlaid."}
 # Prepare figure layout
 par(mfrow = c(1, 1))
 
@@ -159,7 +162,7 @@ results <- lapply(grids, function(seeds) {
 
 The panels below display the RGB image with superpixel boundaries overlaid for each grid type (rows) and compactness value (columns).
 
-```{r grid-types-plot, fig.width = 7.5, fig.height = 12, fig.alt = "Superpixel segmentation results on the clownfish image. Rows correspond to different seed grid types (rectangular, diamond, hexagonal, random) and columns to different compactness values (0.1 and 0.5)."}
+```{r array-image-grid-types, fig.width = 8, fig.height = 12, fig.cap = "Superpixel segmentation results on the clownfish image. Rows correspond to different seed grid types (rectangular, diamond, hexagonal, random) and columns to different compactness values (0.1 and 0.5)."}
 
 # Prepare figure layout
 par(mfrow = c(4, 2), oma = c(2, 2, 2, 0))
@@ -213,4 +216,4 @@ Under moderate to high compactness condition, the rectangular and diamond arrang
 
 ## References
 
-Achanta, R., & Süsstrunk, S. (2017). Superpixels and polygons using simple non-iterative clustering. *Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition (CVPR)*. <doi:10.1109/CVPR.2017.520>
+Achanta, R., & Susstrunk, S. (2017). Superpixels and polygons using simple non-iterative clustering. *Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition (CVPR)*. <doi:10.1109/CVPR.2017.520>

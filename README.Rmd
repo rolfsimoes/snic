@@ -6,7 +6,12 @@ output: github_document
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
-  fig.path = "man/figures/README-"
+  message = FALSE,
+  warning = FALSE,
+  fig.retina = 1,
+  quality = 0.2,
+  dpi = 50,
+  fig.path = "man/figures/"
 )
 dir.create("man/figures", recursive = TRUE, showWarnings = FALSE)
 ```
@@ -68,7 +73,7 @@ The SNIC workflow is short and reproducible:
 
 The example below demonstrates a typical SNIC workflow with the bundled Sentinel-2 subset.
 
-```{r quick-start, eval = TRUE, fig.alt = "RGB composite of the Sentinel-2 subset with SNIC superpixel boundaries."}
+```{r quick-start, fig.width = 8, fig.height=6, fig.cap = "RGB composite of the Sentinel-2 subset with SNIC superpixel boundaries."}
 library(snic)
 library(terra)
 
@@ -101,7 +106,7 @@ Seed placement controls the number, shape, and location of the resulting superpi
 
 Use `snic_count_seeds()` to forecast how many superpixels a spacing will produce before running the algorithm.
 
-```{r seed-strategies, eval = TRUE, fig.width = 8, fig.height = 7, fig.cap = "Seed placement strategies on the Sentinel-2 example (spacing = 30)."}
+```{r seed-strategies, eval = TRUE, fig.width = 9, fig.height = 7, fig.cap = "Seed placement strategies on the Sentinel-2 example (spacing = 30)."}
 set.seed(42)
 
 grid_types <- c("rectangular", "diamond", "hexagonal", "random")
@@ -151,7 +156,7 @@ seg_manual <- snic(
 
 Once seeds are defined, pass them to `snic()` together with the imagery and a `compactness` factor. The result is a labeled raster that can be visualized alongside the seeds for validation.
 
-```{r segmentation-plot, eval = TRUE, fig.alt = "SNIC segmentation output overlaid on the Sentinel-2 composite."}
+```{r segmentation-plot, eval = TRUE, fig.width = 8, fig.height = 7, fig.cap = "SNIC segmentation output overlaid on the Sentinel-2 composite."}
 
 seg_hex <- snic(s2, seeds = seed_examples[[3L]], compactness = 0.2)
 

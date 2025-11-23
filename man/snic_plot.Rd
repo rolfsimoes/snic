@@ -45,13 +45,10 @@ image must contain at least three bands.}
 Determines how band values are scaled to the \eqn{[0, 1]} range before
 plotting. One of:
 \itemize{
-  \item \code{"none"}: no scaling; input values are used directly.
   \item \code{"lin"}: linear stretch based on the minimum and maximum
     values (default).
   \item \code{"hist"}: histogram equalization (redistribute values to
     equalize the color histogram).
-  \item \code{"sd"}: standard deviation stretch (clip to
-    \eqn{\text{mean} \pm 2 \times \text{sd}}, then scale).
 }
 Non-numeric arrays or bands with only constant values are plotted as-is.}
 
@@ -90,8 +87,10 @@ seed points and segmentation boundaries.
 }
 \examples{
 if (requireNamespace("terra", quietly = TRUE)) {
-    tiff_dir <- system.file("demo-geotiff", package = "snic",
-        mustWork = TRUE)
+    tiff_dir <- system.file("demo-geotiff",
+        package = "snic",
+        mustWork = TRUE
+    )
     files <- file.path(
         tiff_dir,
         c(
@@ -111,8 +110,10 @@ if (requireNamespace("terra", quietly = TRUE)) {
 
 # Simple array example using bundled JPEG
 if (requireNamespace("jpeg", quietly = TRUE)) {
-    img_path <- system.file("demo-jpeg/clownfish.jpeg", package = "snic",
-        mustWork = TRUE)
+    img_path <- system.file("demo-jpeg/clownfish.jpeg",
+        package = "snic",
+        mustWork = TRUE
+    )
 
     # Load
     rgb <- jpeg::readJPEG(img_path)

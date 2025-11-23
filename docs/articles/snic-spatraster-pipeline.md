@@ -3,7 +3,7 @@
 ## Introduction
 
 This vignette revisits the SNIC segmentation pipeline, originally
-proposed by Achanta and Süsstrunk (2017). It works with
+proposed by Achanta and Susstrunk (2017). It works with
 [`terra::SpatRaster`](https://rspatial.github.io/terra/reference/SpatRaster-class.html)
 objects, instead of a small in-memory RGB array. We will use the
 Sentinel-2 subset (`demo-geotiff`) that ships with the package. Every
@@ -270,7 +270,7 @@ Sentinel-2 scene at different aggregation factors (1, 2, 4,
 
 ## References
 
-Achanta, R., & Süsstrunk, S. (2017). Superpixels and polygons using
+Achanta, R., & Susstrunk, S. (2017). Superpixels and polygons using
 simple non-iterative clustering. *Proceedings of the IEEE Conference on
 Computer Vision and Pattern Recognition (CVPR)*.
 <doi:10.1109/CVPR.2017.520>
