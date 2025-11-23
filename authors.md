@@ -3,12 +3,14 @@
 ## Authors
 
 - **Rolf Simoes**. Author, maintainer.
+  [](https://orcid.org/0000-0003-0953-4132)
 
 - **Felipe Souza**. Author.
 
 - **Felipe Carlos**. Author.
 
 - **Gilberto Camara**. Author, research team head.
+  [](https://orcid.org/0000-0002-3681-487X)
 
 ## Citation
 
