@@ -31,7 +31,7 @@ Suggests:
     png,
     knitr,
     rmarkdown
-URL: https://github.com/rolfsimoes/snic, https://rolfsimoes.github.io/snic, https://rolfsimoes.github.io/snic/
+URL: https://github.com/rolfsimoes/snic, https://rolfsimoes.github.io/snic/
 BugReports: https://github.com/rolfsimoes/snic/issues
 ByteCompile: true
 VignetteBuilder: knitr

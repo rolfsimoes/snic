@@ -4,7 +4,8 @@
 <!-- badges: start -->
 
 [![Check](https://github.com/rolfsimoes/snic/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/rolfsimoes/snic/actions/workflows/R-CMD-check.yaml)
-[![Codecov](https://codecov.io/gh/rolfsimoes/snic/branch/main/graph/badge.svg)](https://app.codecov.io/gh/rolfsimoes/snic?branch=main)
+[![Code
+Coverage](https://codecov.io/gh/rolfsimoes/snic/branch/dev/graph/badge.svg)](https://app.codecov.io/gh/rolfsimoes/snic?branch=dev)
 <!-- badges: end -->
 
 Efficient superpixel segmentation for multi-band imagery using the
