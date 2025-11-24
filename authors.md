@@ -15,7 +15,7 @@
 ## Citation
 
 Source:
-[`DESCRIPTION`](https://github.com/rolfsimoes/snic/blob/dev/DESCRIPTION)
+[`DESCRIPTION`](https://github.com/rolfsimoes/snic/blob/v0.5.0/DESCRIPTION)
 
 Simoes R, Souza F, Carlos F, Camara G (2025). *snic: Superpixel
 Segmentation with the SNIC Algorithm*. R package version 0.5.0,
