@@ -23,6 +23,12 @@ knitr::opts_chunk$set(
 library(snic)
 ```
 
+```{css, echo=FALSE}
+.figcaption {
+  font-size: 0.75em;
+}
+```
+
 ## Introduction
 
 This vignette revisits the SNIC segmentation pipeline, originally proposed by Achanta and Susstrunk (2017). It works with `terra::SpatRaster` objects, instead of a small in-memory RGB array. We will use the Sentinel-2 subset (`demo-geotiff`) that ships with the package. Every step reflects a typical remote-sensing workflow: load raster bands, seed the image, run `snic()`, and visualize the resulting segments.
@@ -53,7 +59,7 @@ s2
 
 The four bands cover the blue (B02), red (B04), near-infrared (B08), and short-wave infrared (B12) portions of the spectrum. `snic` package comes with a helper function to plot false-color composites easily. `snic_plot()` understands both `arrays` and `SpatRaster` inputs.
 
-```{r plot-s2, fig.width = 8, fig.height = 6, fig.cap = "A false-color composite of a Sentinel-2 scene."}
+```{r plot-s2, fig.width = 8, fig.height = 6, fig.cap = "Figure 1 - A false-color composite of a Sentinel-2 scene."}
 snic_plot(s2, r = "B08", g = "B04", b = "B02")
 ```
 
@@ -84,7 +90,7 @@ The result is a `snic` object that contains a `SpatRaster` with same spatial ext
 
 Here we plot the seed locations and the resulting segments on top of a false-color composite.
 
-```{r plot-seg, fig.width = 8, fig.height = 6, fig.cap = "The Sentinel-2 false-color composite with superpixel segmentation boundaries overlaid in yellow and seed points marked with cyan crosses."}
+```{r plot-seg, fig.width = 8, fig.height = 6, fig.cap = "Figure 2 - The Sentinel-2 false-color composite with superpixel segmentation boundaries overlaid in yellow and seed points marked with cyan crosses."}
 snic_plot(
   s2,
   r = "B08", g = "B04", b = "B02",
@@ -123,8 +129,8 @@ results <- lapply(grids, function(seeds) {
 })
 ```
 
-```{r grid-types-plot, fig.width = 8, fig.height = 12, fig.cap = "Superpixel segmentation results on the Sentinel-2 scene. Rows correspond to different seed grid types (rectangular, diamond, hexagonal, random) and columns correspond to different compactness values (0.1 and 0.4)."}
-par(mfrow = c(4, 2), oma = c(2, 2, 2, 0))
+```{r grid-types-plot, fig.width = 8, fig.height = 12, fig.cap = "Figure 3 - Superpixel segmentation results on the Sentinel-2 scene. Rows correspond to different seed grid types (rectangular, diamond, hexagonal, random) and columns correspond to different compactness values (0.1 and 0.4)."}
+op <- par(mfrow = c(4, 2), oma = c(2, 2, 2, 0))
 
 for (res in results) {
   snic_plot(
@@ -147,9 +153,11 @@ for (res in results) {
 mtext("Compactness = 0.1", side = 3, outer = TRUE, at = 0.25, line = 0.5)
 mtext("Compactness = 0.4", side = 3, outer = TRUE, at = 0.75, line = 0.5)
 mtext("Rectangular", side = 2, outer = TRUE, at = 3.5 / 4, line = 0.5, las = 3)
-mtext("Diamond",    side = 2, outer = TRUE, at = 2.5 / 4, line = 0.5, las = 3)
-mtext("Hexagonal",  side = 2, outer = TRUE, at = 1.5 / 4, line = 0.5, las = 3)
-mtext("Random",     side = 2, outer = TRUE, at = 0.5 / 4, line = 0.5, las = 3)
+mtext("Diamond", side = 2, outer = TRUE, at = 2.5 / 4, line = 0.5, las = 3)
+mtext("Hexagonal", side = 2, outer = TRUE, at = 1.5 / 4, line = 0.5, las = 3)
+mtext("Random", side = 2, outer = TRUE, at = 0.5 / 4, line = 0.5, las = 3)
+
+par(op)
 ```
 
 Rectangular and diamond layouts align segments with cardinal directions, whereas hexagonal and random seeds spread centers more evenly in all directions. Higher compactness induces smoother, more rounded superpixels, so the right column contains fewer jagged boundaries than the left one. Regardless of the seed geometry, the workflow stays the same: read the multi-band raster, place seeds in geographic space, and call `snic()` with the desired compactness.
@@ -169,9 +177,9 @@ seeds_hex <- snic_grid(
 
 The figure below compares the resulting segments.
 
-```{r hex-seeds-res-plot, fig.width = 7, fig.height = 6.5, fig.cap = "Superpixel segmentation results on the Sentinel-2 scene at different spatial resolutions (60 m, 120 m, 240 m, 480 m)."}
+```{r hex-seeds-res-plot, fig.width = 8, fig.height = 6.5, fig.cap = "Figure 4 - Superpixel segmentation results on the Sentinel-2 scene at different spatial resolutions (20 m, 40 m, 80 m, 160 m)."}
 
-par(mfrow = c(2, 2), oma = c(0, 0, 2, 0))
+op <- par(mfrow = c(2, 2), oma = c(0, 0, 2, 0))
 
 agg_facts <- c(1L, 2L, 4L, 8L)
 for (fact in agg_facts) {
@@ -185,6 +193,8 @@ for (fact in agg_facts) {
     main = sprintf("resolution %d m", fact * 20)
   )
 }
+
+par(op)
 ```
 
 ## References

@@ -19,7 +19,7 @@ numeric arrays (and back) for input to the SNIC core."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">snic</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.6.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -146,6 +146,81 @@ numeric arrays (and back) for input to the SNIC core.</p>
     </div>
 
     <div class="section level2">
+    <h2 id="arguments">Arguments<a class="anchor" aria-label="anchor" href="#arguments"></a></h2>
+
+
+<dl><dt id="arg-x">x<a class="anchor" aria-label="anchor" href="#arg-x"></a></dt>
+<dd><p>Backend-specific raster/array object that implements these
+conversions.</p></dd>
+
+
+<dt id="arg-param-name">param_name<a class="anchor" aria-label="anchor" href="#arg-param-name"></a></dt>
+<dd><p>Parameter name to echo in validation errors for
+<code>.check_x()</code>.</p></dd>
+
+
+<dt id="arg-seeds-wgs-">seeds_wgs84<a class="anchor" aria-label="anchor" href="#arg-seeds-wgs-"></a></dt>
+<dd><p>Two-column seed object with columns <code>lat</code> and
+<code>lon</code> (<code>EPSG:4326</code>).</p></dd>
+
+
+<dt id="arg-seeds-xy">seeds_xy<a class="anchor" aria-label="anchor" href="#arg-seeds-xy"></a></dt>
+<dd><p>Two-column seed object with columns <code>x</code> and <code>y</code>
+expressed in the CRS of <code>x</code>.</p></dd>
+
+
+<dt id="arg-seeds-rc">seeds_rc<a class="anchor" aria-label="anchor" href="#arg-seeds-rc"></a></dt>
+<dd><p>Two-column seed object with 1-based pixel indices
+<code>r</code> (row) and <code>c</code> (column).</p></dd>
+
+
+<dt id="arg-arr">arr<a class="anchor" aria-label="anchor" href="#arg-arr"></a></dt>
+<dd><p>Numeric array with dimensions <code>(height, width, bands)</code>.</p></dd>
+
+
+<dt id="arg-names">names<a class="anchor" aria-label="anchor" href="#arg-names"></a></dt>
+<dd><p>Optional character vector of band names applied by
+<code>.arr_to_x()</code> when the target backend supports them.</p></dd>
+
+
+<dt id="arg-idx">idx<a class="anchor" aria-label="anchor" href="#arg-idx"></a></dt>
+<dd><p>Numeric or character band identifiers to resolve via
+<code>.get_idx()</code>.</p></dd>
+
+</dl></div>
+    <div class="section level2">
+    <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
+    <p>Results depend on the generic:</p><ul><li><p><code>.check_x()</code>: the validated backend object (usually <code>x</code>)
+  returned invisibly; errors if unsupported.</p></li>
+<li><p><code>.has_crs()</code>: logical flag indicating whether <code>x</code> carries
+  a CRS.</p></li>
+<li><p><code>.wgs84_to_xy()</code>: seed data frame with columns <code>x</code> and
+  <code>y</code> in the CRS of <code>x</code>.</p></li>
+<li><p><code>.xy_to_wgs84()</code>: seed data frame with columns <code>lat</code> and
+  <code>lon</code> in <code>EPSG:4326</code>.</p></li>
+<li><p><code>.xy_to_rc()</code>: seed data frame with 1-based integer columns
+  <code>r</code> and <code>c</code>; values outside the raster extent may be
+  <code>NA_integer_</code>.</p></li>
+<li><p><code>.rc_to_xy()</code>: seed data frame with columns <code>x</code> and
+  <code>y</code> in the CRS of <code>x</code>, with coordinates set to <code>NA</code> when
+  indices fall outside the extent.</p></li>
+<li><p><code>.rc_to_wgs84()</code>: seed data frame with columns <code>lat</code> and
+  <code>lon</code> obtained by composing <code>.rc_to_xy()</code> and
+  <code>.xy_to_wgs84()</code>.</p></li>
+<li><p><code>.wgs84_to_rc()</code>: seed data frame with columns <code>r</code> and
+  <code>c</code> obtained by composing <code>.wgs84_to_xy()</code> and
+  <code>.xy_to_rc()</code>.</p></li>
+<li><p><code>.x_to_arr()</code>: numeric array shaped <code>(height, width,
+  bands)</code> in column-major order.</p></li>
+<li><p><code>.arr_to_x()</code>: object of the same backend type as <code>x</code>
+  containing the supplied array data, with band names applied when
+  provided.</p></li>
+<li><p><code>.x_bbox()</code>: numeric vector <code>c(xmin, xmax, ymin, ymax)</code>
+  in the coordinate system of <code>x</code>.</p></li>
+<li><p><code>.get_idx()</code>: numeric vector of band indices resolved from
+  numeric or name-based input.</p></li>
+</ul></div>
+    <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>The SNIC algorithm itself only works with:</p><ul><li><p>a numeric array <code>arr</code> with dimensions
      <code>(height, width, bands)</code>, and</p></li>
@@ -168,9 +243,10 @@ methods form a consistent round-trip:
 
 
 <ul><li><p><code>.check_x(x)</code>
-  Validate that <code>x</code> is a supported input type. Return <code>TRUE</code>
-  invisibly if supported, or throw an error with a helpful message if not.
-  This is the entry point for SNIC algorithm compatibility.</p></li>
+  Validate that <code>x</code> is a supported input type. Return the validated
+  object (usually <code>x</code>) invisibly if supported, or throw an error with a
+  helpful message if not. This is the entry point for SNIC algorithm
+  compatibility.</p></li>
 <li><p><code>.has_crs(x)</code>
   Return <code>TRUE</code> if <code>x</code> carries a spatial reference system. Used
   to decide whether seeds are interpreted as pixel coordinates or
@@ -189,9 +265,16 @@ methods form a consistent round-trip:
   <code>(height, width, bands)</code> in column-major order. No normalization,
   scale adjustments, or band selection should be performed here.</p></li>
 <li><p><code>.arr_to_x(x, arr, names = NULL)</code>
-  Wrap a <code>(height, width)</code> unlabeled array back into the native data
-  type of <code>x</code>, preserving extent, CRS, resolution, and metadata where
-  possible.</p></li>
+  Wrap a <code>(height, width, bands)</code> numeric array (often single-band
+  output from SNIC) back into the native data type of <code>x</code>, preserving
+  extent, CRS, resolution, and metadata where possible.</p></li>
+<li><p><code>.xy_to_wgs84(x, seeds_xy)</code> and <code>.rc_to_xy(x, seeds_rc)</code>
+  Inverse conversions that return geographic or projected map coordinates
+  from the respective inputs.</p></li>
+<li><p><code>.x_bbox(x)</code> Return <code>c(xmin, xmax, ymin, ymax)</code> in the
+  CRS (or pixel) coordinate system of <code>x</code>.</p></li>
+<li><p><code>.get_idx(x, idx)</code> Resolve character band names or numeric
+  indices into explicit numeric positions for use in downstream helpers.</p></li>
 </ul></div>
 
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

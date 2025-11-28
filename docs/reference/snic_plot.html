@@ -15,7 +15,7 @@ seed points and segmentation boundaries."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">snic</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.6.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -109,13 +109,10 @@ image must contain at least three bands.</p></dd>
 <dt id="arg-stretch">stretch<a class="anchor" aria-label="anchor" href="#arg-stretch"></a></dt>
 <dd><p>Character string indicating the contrast-stretching method.
 Determines how band values are scaled to the \([0, 1]\) range before
-plotting. One of:</p><ul><li><p><code>"none"</code>: no scaling; input values are used directly.</p></li>
-<li><p><code>"lin"</code>: linear stretch based on the minimum and maximum
+plotting. One of:</p><ul><li><p><code>"lin"</code>: linear stretch based on the minimum and maximum
     values (default).</p></li>
 <li><p><code>"hist"</code>: histogram equalization (redistribute values to
     equalize the color histogram).</p></li>
-<li><p><code>"sd"</code>: standard deviation stretch (clip to
-    \(\text{mean} \pm 2 \times \text{sd}\), then scale).</p></li>
 </ul><p>Non-numeric arrays or bands with only constant values are plotted as-is.</p></dd>
 
 
@@ -143,8 +140,8 @@ be drawn over the image.</p></dd>
 
 <dt id="arg-seg-plot-args">seg_plot_args<a class="anchor" aria-label="anchor" href="#arg-seg-plot-args"></a></dt>
 <dd><p>Named list of arguments forwarded to
-<code><a href="https://rspatial.github.io/terra/reference/plot.html" class="external-link">terra::snic_plot()</a></code> for the <code>seg</code> overlay. The
-argument <code>add = TRUE</code> is set automatically when not supplied.
+<code><a href="https://rspatial.github.io/terra/reference/plot.html" class="external-link">terra::snic_plot()</a></code> for the <code>seg</code> overlay.
+The argument <code>add = TRUE</code> is set automatically when not supplied.
 Defaults to <code>getOption("snic.seg_plot")</code>, falling back to
 <code>list(border = "#FFD700", col = NA, lwd = 0.6)</code> which matches the
 defaults used inside <code><a href="internal_plot_helpers.html">.plot_segments()</a></code>.</p></dd>
@@ -158,8 +155,10 @@ defaults used inside <code><a href="internal_plot_helpers.html">.plot_segments()
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"terra"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
-<span class="r-in"><span>    <span class="va">tiff_dir</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"demo-geotiff"</span>, package <span class="op">=</span> <span class="st">"snic"</span>,</span></span>
-<span class="r-in"><span>        mustWork <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
+<span class="r-in"><span>    <span class="va">tiff_dir</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"demo-geotiff"</span>,</span></span>
+<span class="r-in"><span>        package <span class="op">=</span> <span class="st">"snic"</span>,</span></span>
+<span class="r-in"><span>        mustWork <span class="op">=</span> <span class="cn">TRUE</span></span></span>
+<span class="r-in"><span>    <span class="op">)</span></span></span>
 <span class="r-in"><span>    <span class="va">files</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span></span></span>
 <span class="r-in"><span>        <span class="va">tiff_dir</span>,</span></span>
 <span class="r-in"><span>        <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span></span>
@@ -180,8 +179,10 @@ defaults used inside <code><a href="internal_plot_helpers.html">.plot_segments()
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Simple array example using bundled JPEG</span></span></span>
 <span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"jpeg"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
-<span class="r-in"><span>    <span class="va">img_path</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"demo-jpeg/clownfish.jpeg"</span>, package <span class="op">=</span> <span class="st">"snic"</span>,</span></span>
-<span class="r-in"><span>        mustWork <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
+<span class="r-in"><span>    <span class="va">img_path</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"demo-jpeg/clownfish.jpeg"</span>,</span></span>
+<span class="r-in"><span>        package <span class="op">=</span> <span class="st">"snic"</span>,</span></span>
+<span class="r-in"><span>        mustWork <span class="op">=</span> <span class="cn">TRUE</span></span></span>
+<span class="r-in"><span>    <span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span>    <span class="co"># Load</span></span></span>
 <span class="r-in"><span>    <span class="va">rgb</span> <span class="op">&lt;-</span> <span class="fu">jpeg</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/jpeg/man/readJPEG.html" class="external-link">readJPEG</a></span><span class="op">(</span><span class="va">img_path</span><span class="op">)</span></span></span>

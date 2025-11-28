@@ -57,7 +57,6 @@
 #' \code{\link{snic_count_seeds}} for estimating seed counts.
 #'
 #' @examples
-#' \dontrun{
 #' # Example 1: Geospatial raster
 #' if (requireNamespace("terra", quietly = TRUE)) {
 #'     # Load example multi-band image (Sentinel-2 subset) and downsample
@@ -75,7 +74,7 @@
 #'
 #'     # Compare grid types visually using snic_plot for immediate feedback
 #'     types <- c("rectangular", "diamond", "hexagonal", "random")
-#'     par(mfrow = c(2, 2), mar = c(2, 2, 2, 2))
+#'     op <- par(mfrow = c(2, 2), mar = c(2, 2, 2, 2))
 #'     for (tp in types) {
 #'         seeds <- snic_grid(s2, type = tp, spacing = 12L, padding = 18L)
 #'         snic_plot(
@@ -89,6 +88,7 @@
 #'
 #'     # Estimate seed counts for planning
 #'     snic_count_seeds(s2, spacing = 12L, padding = 18L)
+#'     par(op)
 #' }
 #'
 #' # Example 2: In-memory image (JPEG)
@@ -102,7 +102,7 @@
 #'
 #'     # Compare grid types visually using snic_plot for immediate feedback
 #'     types <- c("rectangular", "diamond", "hexagonal", "random")
-#'     par(mfrow = c(2, 2), mar = c(2, 2, 2, 2))
+#'     op <- par(mfrow = c(2, 2), mar = c(2, 2, 2, 2))
 #'     for (tp in types) {
 #'         seeds <- snic_grid(rgb, type = tp, spacing = 12L, padding = 18L)
 #'         snic_plot(
@@ -113,7 +113,7 @@
 #'         )
 #'     }
 #'     par(mfrow = c(1, 1))
-#' }
+#'     par(op)
 #' }
 #' @export
 snic_grid <- function(x,
@@ -188,7 +188,6 @@ snic_grid <- function(x,
 #' \code{\link{snic}}, \code{\link{snic_grid}}, \code{\link{snic_animation}}.
 #'
 #' @examples
-#' \dontrun{
 #' if (interactive() && requireNamespace("terra", quietly = TRUE)) {
 #'     tiff_dir <- system.file("demo-geotiff",
 #'         package = "snic",
@@ -220,7 +219,6 @@ snic_grid <- function(x,
 #'         seeds = seeds,
 #'         seg = seg
 #'     )
-#' }
 #' }
 #' @export
 snic_grid_manual <- function(x,

@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">snic</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.6.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -65,6 +65,11 @@
 
     
     
+<style type="text/css">
+.figcaption {
+  font-size: 0.75em;
+}
+</style>
 <div class="section level2">
 <h2 id="introduction">Introduction<a class="anchor" aria-label="anchor" href="#introduction"></a>
 </h2>
@@ -120,7 +125,10 @@ false-color composites easily. <code><a href="../reference/snic_plot.html">snic_
 <code>arrays</code> and <code>SpatRaster</code> inputs.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/snic_plot.html">snic_plot</a></span><span class="op">(</span><span class="va">s2</span>, r <span class="op">=</span> <span class="st">"B08"</span>, g <span class="op">=</span> <span class="st">"B04"</span>, b <span class="op">=</span> <span class="st">"B02"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="snic-spatraster-pipeline_files/figure-html/plot-s2-1.png" class="r-plt" alt="A false-color composite of a Sentinel-2 scene, showing vegetation in shades of green and urban areas in shades of purple." width="576"></p>
+<div class="float">
+<img src="snic-spatraster-pipeline_files/figure-html/plot-s2-1.png" alt="Figure 1 - A false-color composite of a Sentinel-2 scene."><div class="figcaption">Figure 1 - A false-color composite of a
+Sentinel-2 scene.</div>
+</div>
 </div>
 <div class="section level2">
 <h2 id="seeds-creation">Seeds creation<a class="anchor" aria-label="anchor" href="#seeds-creation"></a>
@@ -189,7 +197,11 @@ a false-color composite.</p>
 <span>  seg <span class="op">=</span> <span class="va">seg_rect</span>,</span>
 <span>  seg_plot_args <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>border <span class="op">=</span> <span class="st">"#FFD700"</span>, col <span class="op">=</span> <span class="cn">NA</span>, lwd <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<p><img src="snic-spatraster-pipeline_files/figure-html/plot-seg-1.png" class="r-plt" alt="The Sentinel-2 false-color composite with superpixel segmentation boundaries overlaid in yellow and seed points marked with cyan crosses." width="624"></p>
+<div class="float">
+<img src="snic-spatraster-pipeline_files/figure-html/plot-seg-1.png" alt="Figure 2 - The Sentinel-2 false-color composite with superpixel segmentation boundaries overlaid in yellow and seed points marked with cyan crosses."><div class="figcaption">Figure 2 - The Sentinel-2 false-color composite
+with superpixel segmentation boundaries overlaid in yellow and seed
+points marked with cyan crosses.</div>
+</div>
 <p>The segmentation result is a single-band <code>SpatRaster</code>
 whose values correspond to integer labels. You can extract statistics
 per segment or convert them to polygons via
@@ -222,7 +234,7 @@ combined with two compactness settings.</p>
 <span>  <span class="op">)</span></span>
 <span><span class="op">}</span><span class="op">)</span></span></code></pre></div>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/par.html" class="external-link">par</a></span><span class="op">(</span>mfrow <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">4</span>, <span class="fl">2</span><span class="op">)</span>, oma <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2</span>, <span class="fl">2</span>, <span class="fl">2</span>, <span class="fl">0</span><span class="op">)</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">op</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/graphics/par.html" class="external-link">par</a></span><span class="op">(</span>mfrow <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">4</span>, <span class="fl">2</span><span class="op">)</span>, oma <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2</span>, <span class="fl">2</span>, <span class="fl">2</span>, <span class="fl">0</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
 <span><span class="kw">for</span> <span class="op">(</span><span class="va">res</span> <span class="kw">in</span> <span class="va">results</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="fu"><a href="../reference/snic_plot.html">snic_plot</a></span><span class="op">(</span></span>
@@ -245,10 +257,18 @@ combined with two compactness settings.</p>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/mtext.html" class="external-link">mtext</a></span><span class="op">(</span><span class="st">"Compactness = 0.1"</span>, side <span class="op">=</span> <span class="fl">3</span>, outer <span class="op">=</span> <span class="cn">TRUE</span>, at <span class="op">=</span> <span class="fl">0.25</span>, line <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/mtext.html" class="external-link">mtext</a></span><span class="op">(</span><span class="st">"Compactness = 0.4"</span>, side <span class="op">=</span> <span class="fl">3</span>, outer <span class="op">=</span> <span class="cn">TRUE</span>, at <span class="op">=</span> <span class="fl">0.75</span>, line <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/mtext.html" class="external-link">mtext</a></span><span class="op">(</span><span class="st">"Rectangular"</span>, side <span class="op">=</span> <span class="fl">2</span>, outer <span class="op">=</span> <span class="cn">TRUE</span>, at <span class="op">=</span> <span class="fl">3.5</span> <span class="op">/</span> <span class="fl">4</span>, line <span class="op">=</span> <span class="fl">0.5</span>, las <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/mtext.html" class="external-link">mtext</a></span><span class="op">(</span><span class="st">"Diamond"</span>,    side <span class="op">=</span> <span class="fl">2</span>, outer <span class="op">=</span> <span class="cn">TRUE</span>, at <span class="op">=</span> <span class="fl">2.5</span> <span class="op">/</span> <span class="fl">4</span>, line <span class="op">=</span> <span class="fl">0.5</span>, las <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/mtext.html" class="external-link">mtext</a></span><span class="op">(</span><span class="st">"Hexagonal"</span>,  side <span class="op">=</span> <span class="fl">2</span>, outer <span class="op">=</span> <span class="cn">TRUE</span>, at <span class="op">=</span> <span class="fl">1.5</span> <span class="op">/</span> <span class="fl">4</span>, line <span class="op">=</span> <span class="fl">0.5</span>, las <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/mtext.html" class="external-link">mtext</a></span><span class="op">(</span><span class="st">"Random"</span>,     side <span class="op">=</span> <span class="fl">2</span>, outer <span class="op">=</span> <span class="cn">TRUE</span>, at <span class="op">=</span> <span class="fl">0.5</span> <span class="op">/</span> <span class="fl">4</span>, line <span class="op">=</span> <span class="fl">0.5</span>, las <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span></code></pre></div>
-<p><img src="snic-spatraster-pipeline_files/figure-html/grid-types-plot-1.png" class="r-plt" alt="A 4x2 grid of plots showing superpixel segmentation results on the Sentinel-2 scene. Rows correspond to different seed grid types (rectangular, diamond, hexagonal, random) and columns correspond to different compactness values (0.1 and 0.4)." width="720"></p>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/mtext.html" class="external-link">mtext</a></span><span class="op">(</span><span class="st">"Diamond"</span>, side <span class="op">=</span> <span class="fl">2</span>, outer <span class="op">=</span> <span class="cn">TRUE</span>, at <span class="op">=</span> <span class="fl">2.5</span> <span class="op">/</span> <span class="fl">4</span>, line <span class="op">=</span> <span class="fl">0.5</span>, las <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/mtext.html" class="external-link">mtext</a></span><span class="op">(</span><span class="st">"Hexagonal"</span>, side <span class="op">=</span> <span class="fl">2</span>, outer <span class="op">=</span> <span class="cn">TRUE</span>, at <span class="op">=</span> <span class="fl">1.5</span> <span class="op">/</span> <span class="fl">4</span>, line <span class="op">=</span> <span class="fl">0.5</span>, las <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/mtext.html" class="external-link">mtext</a></span><span class="op">(</span><span class="st">"Random"</span>, side <span class="op">=</span> <span class="fl">2</span>, outer <span class="op">=</span> <span class="cn">TRUE</span>, at <span class="op">=</span> <span class="fl">0.5</span> <span class="op">/</span> <span class="fl">4</span>, line <span class="op">=</span> <span class="fl">0.5</span>, las <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span></code></pre></div>
+<div class="float">
+<img src="snic-spatraster-pipeline_files/figure-html/grid-types-plot-1.png" alt="Figure 3 - Superpixel segmentation results on the Sentinel-2 scene. Rows correspond to different seed grid types (rectangular, diamond, hexagonal, random) and columns correspond to different compactness values (0.1 and 0.4)."><div class="figcaption">Figure 3 - Superpixel segmentation results on
+the Sentinel-2 scene. Rows correspond to different seed grid types
+(rectangular, diamond, hexagonal, random) and columns correspond to
+different compactness values (0.1 and 0.4).</div>
+</div>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/par.html" class="external-link">par</a></span><span class="op">(</span><span class="va">op</span><span class="op">)</span></span></code></pre></div>
 <p>Rectangular and diamond layouts align segments with cardinal
 directions, whereas hexagonal and random seeds spread centers more
 evenly in all directions. Higher compactness induces smoother, more
@@ -269,7 +289,7 @@ across rasters that share the same extent and CRS. Below we generate a
 hexagonal grid once, then aggregate the Sentinel-2 raster to four
 different resolutions with <code><a href="https://rspatial.github.io/terra/reference/aggregate.html" class="external-link">terra::aggregate()</a></code> and run
 <code><a href="../reference/snic.html">snic()</a></code> on each version without touching the seeds.</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">seeds_hex</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/snic_grid.html">snic_grid</a></span><span class="op">(</span></span>
 <span>  <span class="va">s2</span>,</span>
 <span>  type <span class="op">=</span> <span class="st">"hexagonal"</span>,</span>
@@ -277,10 +297,9 @@ different resolutions with <code><a href="https://rspatial.github.io/terra/refer
 <span>  padding <span class="op">=</span> <span class="fl">5</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 <p>The figure below compares the resulting segments.</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span></span>
-<span><span class="va">op</span> <span class="op">&lt;-</span> <span class="fu">graphics</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/graphics/par.html" class="external-link">par</a></span><span class="op">(</span>mfrow <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2</span>, <span class="fl">2</span><span class="op">)</span>, oma <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">2</span>, <span class="fl">0</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="va">palette_seg</span> <span class="op">&lt;-</span> <span class="fu">grDevices</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/grDevices/palettes.html" class="external-link">hcl.colors</a></span><span class="op">(</span><span class="fl">48</span>, <span class="st">"Plasma"</span><span class="op">)</span></span>
+<span><span class="va">op</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/graphics/par.html" class="external-link">par</a></span><span class="op">(</span>mfrow <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2</span>, <span class="fl">2</span><span class="op">)</span>, oma <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">2</span>, <span class="fl">0</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">agg_facts</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1L</span>, <span class="fl">2L</span>, <span class="fl">4L</span>, <span class="fl">8L</span><span class="op">)</span></span>
 <span><span class="kw">for</span> <span class="op">(</span><span class="va">fact</span> <span class="kw">in</span> <span class="va">agg_facts</span><span class="op">)</span> <span class="op">{</span></span>
@@ -291,10 +310,17 @@ different resolutions with <code><a href="https://rspatial.github.io/terra/refer
 <span>    r <span class="op">=</span> <span class="st">"B08"</span>, g <span class="op">=</span> <span class="st">"B04"</span>, b <span class="op">=</span> <span class="st">"B02"</span>,</span>
 <span>    seg <span class="op">=</span> <span class="va">seg_agg</span>,</span>
 <span>    seg_plot_args <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>border <span class="op">=</span> <span class="st">"white"</span>, col <span class="op">=</span> <span class="cn">NA</span>, lwd <span class="op">=</span> <span class="fl">0.4</span><span class="op">)</span>,</span>
-<span>    main <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"agg. fact = %d"</span>, <span class="va">fact</span><span class="op">)</span></span>
+<span>    main <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"resolution %d m"</span>, <span class="va">fact</span> <span class="op">*</span> <span class="fl">20</span><span class="op">)</span></span>
 <span>  <span class="op">)</span></span>
 <span><span class="op">}</span></span></code></pre></div>
-<p><img src="snic-spatraster-pipeline_files/figure-html/hex-seeds-res-plot-1.png" class="r-plt" alt="A 2x2 grid of plots showing superpixel segmentation results on the Sentinel-2 scene at different aggregation factors (1, 2, 4, 8)." width="768"></p>
+<div class="float">
+<img src="snic-spatraster-pipeline_files/figure-html/hex-seeds-res-plot-1.png" alt="Figure 4 - Superpixel segmentation results on the Sentinel-2 scene at different spatial resolutions (20 m, 40 m, 80 m, 160 m)."><div class="figcaption">Figure 4 - Superpixel segmentation results on
+the Sentinel-2 scene at different spatial resolutions (20 m, 40 m, 80 m,
+160 m).</div>
+</div>
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/par.html" class="external-link">par</a></span><span class="op">(</span><span class="va">op</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>

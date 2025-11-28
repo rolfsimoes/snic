@@ -83,8 +83,8 @@ NULL
     plot_args <- .modify_list(default_args, plot_args)
 
     if (!add) {
-        oldpar <- graphics::par(mar = c(0, 0, 0, 0))
-        on.exit(graphics::par(oldpar), add = TRUE)
+        op <- graphics::par(mar = c(0, 0, 0, 0))
+        on.exit(graphics::par(op), add = TRUE)
         bbox <- .x_bbox(x)
         xlim <- c(bbox[[1L]], bbox[[2L]])
         ylim <- c(bbox[[3L]], bbox[[4L]])

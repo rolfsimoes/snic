@@ -1,24 +1,25 @@
 Package: snic
-Title: Superpixel Segmentation with the SNIC Algorithm
-Version: 0.5.0
+Title: Superpixel Segmentation with the Simple Non-Iterative Clustering Algorithm
+Version: 0.6.0
 Authors@R: c(
     person(given = "Rolf", family = "Simoes", email = "rolfsimoes@gmail.com", 
     role = c("aut", "cre"), comment = c(ORCID = "0000-0003-0953-4132")),
-    person('Felipe', 'Souza', role = c('aut'), email = 'felipe.carvalho@inpe.br'),
-    person('Felipe', 'Carlos', role = c('aut'), email = "efelipecarlos@gmail.com"),
+    person('Felipe', 'Souza', email = 'felipe.carvalho@inpe.br', 
+    role = c('aut'), comment = c(ORCID = "0000-0002-5826-1700")),
+    person('Felipe', 'Carlos', email = "efelipecarlos@gmail.com", 
+    role = c('aut'), comment = c(ORCID = "0000-0002-3334-4315")),
     person('Gilberto', 'Camara', email = 'gilberto.camara.inpe@gmail.com',
     role = c('aut', 'rth'), comment = c(ORCID = "0000-0002-3681-487X"))
     )
 Maintainer: Rolf Simoes <rolfsimoes@gmail.com>
-Description: Implements the Simple Non-Iterative Clustering (SNIC) algorithm 
-    for superpixel segmentation of multi-band images, as introduced by Achanta 
+Description: Implements the Simple Non-Iterative Clustering algorithm for 
+    superpixel segmentation of multi-band images, as introduced by Achanta 
     and Susstrunk (2017) <doi:10.1109/CVPR.2017.520>. Supports both standard 
     image arrays and geospatial raster objects, with a design that can be 
-    extended to other spatial data frameworks. SNIC rapidly groups adjacent 
+    extended to other spatial data frameworks. The algorithm groups adjacent 
     pixels into compact, coherent regions based on spectral similarity and 
-    spatial proximity. This high-performance C++ implementation supports 
-    images with arbitrary spectral bands and is exposed to R via a small 
-    interface.
+    spatial proximity. A high-performance implementation supports images 
+    with arbitrary spectral bands.
 Depends: R (>= 3.5.0)
 Suggests: 
     testthat (>= 3.0.0),

@@ -89,7 +89,6 @@ includes geographic coordinates (`lat`, `lon`) in `EPSG:4326`.
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
 # Example 1: Geospatial raster
 if (requireNamespace("terra", quietly = TRUE)) {
     # Load example multi-band image (Sentinel-2 subset) and downsample
@@ -107,7 +106,7 @@ if (requireNamespace("terra", quietly = TRUE)) {
 
     # Compare grid types visually using snic_plot for immediate feedback
     types <- c("rectangular", "diamond", "hexagonal", "random")
-    par(mfrow = c(2, 2), mar = c(2, 2, 2, 2))
+    op <- par(mfrow = c(2, 2), mar = c(2, 2, 2, 2))
     for (tp in types) {
         seeds <- snic_grid(s2, type = tp, spacing = 12L, padding = 18L)
         snic_plot(
@@ -121,7 +120,9 @@ if (requireNamespace("terra", quietly = TRUE)) {
 
     # Estimate seed counts for planning
     snic_count_seeds(s2, spacing = 12L, padding = 18L)
+    par(op)
 }
+
 
 # Example 2: In-memory image (JPEG)
 if (requireNamespace("jpeg", quietly = TRUE)) {
@@ -134,7 +135,7 @@ if (requireNamespace("jpeg", quietly = TRUE)) {
 
     # Compare grid types visually using snic_plot for immediate feedback
     types <- c("rectangular", "diamond", "hexagonal", "random")
-    par(mfrow = c(2, 2), mar = c(2, 2, 2, 2))
+    op <- par(mfrow = c(2, 2), mar = c(2, 2, 2, 2))
     for (tp in types) {
         seeds <- snic_grid(rgb, type = tp, spacing = 12L, padding = 18L)
         snic_plot(
@@ -145,6 +146,6 @@ if (requireNamespace("jpeg", quietly = TRUE)) {
         )
     }
     par(mfrow = c(1, 1))
+    par(op)
 }
-} # }
 ```

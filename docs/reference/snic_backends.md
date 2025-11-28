@@ -101,6 +101,84 @@ numeric arrays (and back) for input to the SNIC core.
 .get_idx(x, idx)
 ```
 
+## Arguments
+
+- x:
+
+  Backend-specific raster/array object that implements these
+  conversions.
+
+- param_name:
+
+  Parameter name to echo in validation errors for `.check_x()`.
+
+- seeds_wgs84:
+
+  Two-column seed object with columns `lat` and `lon` (`EPSG:4326`).
+
+- seeds_xy:
+
+  Two-column seed object with columns `x` and `y` expressed in the CRS
+  of `x`.
+
+- seeds_rc:
+
+  Two-column seed object with 1-based pixel indices `r` (row) and `c`
+  (column).
+
+- arr:
+
+  Numeric array with dimensions `(height, width, bands)`.
+
+- names:
+
+  Optional character vector of band names applied by `.arr_to_x()` when
+  the target backend supports them.
+
+- idx:
+
+  Numeric or character band identifiers to resolve via `.get_idx()`.
+
+## Value
+
+Results depend on the generic:
+
+- `.check_x()`: the validated backend object (usually `x`) returned
+  invisibly; errors if unsupported.
+
+- `.has_crs()`: logical flag indicating whether `x` carries a CRS.
+
+- `.wgs84_to_xy()`: seed data frame with columns `x` and `y` in the CRS
+  of `x`.
+
+- `.xy_to_wgs84()`: seed data frame with columns `lat` and `lon` in
+  `EPSG:4326`.
+
+- `.xy_to_rc()`: seed data frame with 1-based integer columns `r` and
+  `c`; values outside the raster extent may be `NA_integer_`.
+
+- `.rc_to_xy()`: seed data frame with columns `x` and `y` in the CRS of
+  `x`, with coordinates set to `NA` when indices fall outside the
+  extent.
+
+- `.rc_to_wgs84()`: seed data frame with columns `lat` and `lon`
+  obtained by composing `.rc_to_xy()` and `.xy_to_wgs84()`.
+
+- `.wgs84_to_rc()`: seed data frame with columns `r` and `c` obtained by
+  composing `.wgs84_to_xy()` and `.xy_to_rc()`.
+
+- `.x_to_arr()`: numeric array shaped `(height, width, bands)` in
+  column-major order.
+
+- `.arr_to_x()`: object of the same backend type as `x` containing the
+  supplied array data, with band names applied when provided.
+
+- `.x_bbox()`: numeric vector `c(xmin, xmax, ymin, ymax)` in the
+  coordinate system of `x`.
+
+- `.get_idx()`: numeric vector of band indices resolved from numeric or
+  name-based input.
+
 ## Details
 
 The SNIC algorithm itself only works with:
@@ -121,10 +199,10 @@ methods form a consistent round-trip:
 
 ## Required Methods for each backend
 
-- `.check_x(x)` Validate that `x` is a supported input type. Return
-  `TRUE` invisibly if supported, or throw an error with a helpful
-  message if not. This is the entry point for SNIC algorithm
-  compatibility.
+- `.check_x(x)` Validate that `x` is a supported input type. Return the
+  validated object (usually `x`) invisibly if supported, or throw an
+  error with a helpful message if not. This is the entry point for SNIC
+  algorithm compatibility.
 
 - `.has_crs(x)` Return `TRUE` if `x` carries a spatial reference system.
   Used to decide whether seeds are interpreted as pixel coordinates or
@@ -144,6 +222,17 @@ methods form a consistent round-trip:
   `(height, width, bands)` in column-major order. No normalization,
   scale adjustments, or band selection should be performed here.
 
-- `.arr_to_x(x, arr, names = NULL)` Wrap a `(height, width)` unlabeled
-  array back into the native data type of `x`, preserving extent, CRS,
-  resolution, and metadata where possible.
+- `.arr_to_x(x, arr, names = NULL)` Wrap a `(height, width, bands)`
+  numeric array (often single-band output from SNIC) back into the
+  native data type of `x`, preserving extent, CRS, resolution, and
+  metadata where possible.
+
+- `.xy_to_wgs84(x, seeds_xy)` and `.rc_to_xy(x, seeds_rc)` Inverse
+  conversions that return geographic or projected map coordinates from
+  the respective inputs.
+
+- `.x_bbox(x)` Return `c(xmin, xmax, ymin, ymax)` in the CRS (or pixel)
+  coordinate system of `x`.
+
+- `.get_idx(x, idx)` Resolve character band names or numeric indices
+  into explicit numeric positions for use in downstream helpers.

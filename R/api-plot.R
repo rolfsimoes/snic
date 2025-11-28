@@ -44,8 +44,8 @@
 #'   segments (a \code{\link[terra:SpatVector-class]{terra::SpatVector}}) to
 #'   be drawn over the image.
 #' @param seg_plot_args Named list of arguments forwarded to
-#'   \code{\link[terra:plot]{terra::snic_plot()}} for the \code{seg} overlay. The
-#'   argument \code{add = TRUE} is set automatically when not supplied.
+#'   \code{\link[terra:plot]{terra::snic_plot()}} for the \code{seg} overlay.
+#'   The argument \code{add = TRUE} is set automatically when not supplied.
 #'   Defaults to \code{getOption("snic.seg_plot")}, falling back to
 #'   \code{list(border = "#FFD700", col = NA, lwd = 0.6)} which matches the
 #'   defaults used inside \code{.plot_segments()}.

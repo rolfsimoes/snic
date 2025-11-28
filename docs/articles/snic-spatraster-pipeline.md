@@ -60,9 +60,10 @@ understands both `arrays` and `SpatRaster` inputs.
 snic_plot(s2, r = "B08", g = "B04", b = "B02")
 ```
 
-![A false-color composite of a Sentinel-2 scene, showing vegetation in
-shades of green and urban areas in shades of
-purple.](snic-spatraster-pipeline_files/figure-html/plot-s2-1.png)
+![Figure 1 - A false-color composite of a Sentinel-2
+scene.](snic-spatraster-pipeline_files/figure-html/plot-s2-1.png)
+
+Figure 1 - A false-color composite of a Sentinel-2 scene.
 
 ## Seeds creation
 
@@ -138,9 +139,14 @@ snic_plot(
 )
 ```
 
-![The Sentinel-2 false-color composite with superpixel segmentation
-boundaries overlaid in yellow and seed points marked with cyan
+![Figure 2 - The Sentinel-2 false-color composite with superpixel
+segmentation boundaries overlaid in yellow and seed points marked with
+cyan
 crosses.](snic-spatraster-pipeline_files/figure-html/plot-seg-1.png)
+
+Figure 2 - The Sentinel-2 false-color composite with superpixel
+segmentation boundaries overlaid in yellow and seed points marked with
+cyan crosses.
 
 The segmentation result is a single-band `SpatRaster` whose values
 correspond to integer labels. You can extract statistics per segment or
@@ -177,7 +183,7 @@ results <- lapply(grids, function(seeds) {
 ```
 
 ``` r
-par(mfrow = c(4, 2), oma = c(2, 2, 2, 0))
+op <- par(mfrow = c(4, 2), oma = c(2, 2, 2, 0))
 
 for (res in results) {
   snic_plot(
@@ -200,16 +206,26 @@ for (res in results) {
 mtext("Compactness = 0.1", side = 3, outer = TRUE, at = 0.25, line = 0.5)
 mtext("Compactness = 0.4", side = 3, outer = TRUE, at = 0.75, line = 0.5)
 mtext("Rectangular", side = 2, outer = TRUE, at = 3.5 / 4, line = 0.5, las = 3)
-mtext("Diamond",    side = 2, outer = TRUE, at = 2.5 / 4, line = 0.5, las = 3)
-mtext("Hexagonal",  side = 2, outer = TRUE, at = 1.5 / 4, line = 0.5, las = 3)
-mtext("Random",     side = 2, outer = TRUE, at = 0.5 / 4, line = 0.5, las = 3)
+mtext("Diamond", side = 2, outer = TRUE, at = 2.5 / 4, line = 0.5, las = 3)
+mtext("Hexagonal", side = 2, outer = TRUE, at = 1.5 / 4, line = 0.5, las = 3)
+mtext("Random", side = 2, outer = TRUE, at = 0.5 / 4, line = 0.5, las = 3)
 ```
 
-![A 4x2 grid of plots showing superpixel segmentation results on the
-Sentinel-2 scene. Rows correspond to different seed grid types
-(rectangular, diamond, hexagonal, random) and columns correspond to
-different compactness values (0.1 and
+![Figure 3 - Superpixel segmentation results on the Sentinel-2 scene.
+Rows correspond to different seed grid types (rectangular, diamond,
+hexagonal, random) and columns correspond to different compactness
+values (0.1 and
 0.4).](snic-spatraster-pipeline_files/figure-html/grid-types-plot-1.png)
+
+Figure 3 - Superpixel segmentation results on the Sentinel-2 scene. Rows
+correspond to different seed grid types (rectangular, diamond,
+hexagonal, random) and columns correspond to different compactness
+values (0.1 and 0.4).
+
+``` r
+
+par(op)
+```
 
 Rectangular and diamond layouts align segments with cardinal directions,
 whereas hexagonal and random seeds spread centers more evenly in all
@@ -247,8 +263,7 @@ The figure below compares the resulting segments.
 
 ``` r
 
-op <- graphics::par(mfrow = c(2, 2), oma = c(0, 0, 2, 0))
-palette_seg <- grDevices::hcl.colors(48, "Plasma")
+op <- par(mfrow = c(2, 2), oma = c(0, 0, 2, 0))
 
 agg_facts <- c(1L, 2L, 4L, 8L)
 for (fact in agg_facts) {
@@ -259,14 +274,22 @@ for (fact in agg_facts) {
     r = "B08", g = "B04", b = "B02",
     seg = seg_agg,
     seg_plot_args = list(border = "white", col = NA, lwd = 0.4),
-    main = sprintf("agg. fact = %d", fact)
+    main = sprintf("resolution %d m", fact * 20)
   )
 }
 ```
 
-![A 2x2 grid of plots showing superpixel segmentation results on the
-Sentinel-2 scene at different aggregation factors (1, 2, 4,
-8).](snic-spatraster-pipeline_files/figure-html/hex-seeds-res-plot-1.png)
+![Figure 4 - Superpixel segmentation results on the Sentinel-2 scene at
+different spatial resolutions (20 m, 40 m, 80 m, 160
+m).](snic-spatraster-pipeline_files/figure-html/hex-seeds-res-plot-1.png)
+
+Figure 4 - Superpixel segmentation results on the Sentinel-2 scene at
+different spatial resolutions (20 m, 40 m, 80 m, 160 m).
+
+``` r
+
+par(op)
+```
 
 ## References
 
