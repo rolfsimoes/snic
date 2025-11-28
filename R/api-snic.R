@@ -144,7 +144,26 @@ snic <- function(x, seeds, compactness = 0.5, ...) {
 #' Objects returned by \code{\link{snic}} inherit from the \code{snic}
 #' S3 class. They are lightweight containers bundling the segmentation
 #' result together with per-cluster summaries produced by the SNIC
-#' algorithm.
+#' algorithm. Internally, a \code{snic} object is a named list with
+#' components:
+#' \describe{
+#'   \item{\code{seg}}{The segmentation map in the native type of the input
+#'   (either a 3D integer \code{array} with dimensions
+#'   \code{(height, width, 1)} or a single-layer
+#'   \code{\link[terra:SpatRaster-class]{SpatRaster}}—matching the input
+#'   given to \code{snic()}). Values are superpixel labels (positive integers);
+#'   \code{NA} marks pixels that were not assigned.}
+#'   \item{\code{means}}{Numeric matrix with one row per superpixel and one
+#'   column per input band (column names preserved when available), giving the
+#'   mean feature value of each cluster. May be \code{NULL} if the backend
+#'   cannot retain these summaries.}
+#'   \item{\code{centroids}}{Numeric matrix with columns \code{r} and \code{c}
+#'   giving the cluster centers in pixel coordinates (0-based indices used by
+#'   the SNIC core). May be \code{NULL} when centroids are unavailable.}
+#' }
+#' The list carries class \code{"snic"} to enable the accessors and print
+#' methods below; the segmentation labels index the corresponding rows of
+#' \code{means} and \code{centroids}.
 #'
 #' @section Accessors:
 #' \itemize{
@@ -168,6 +187,20 @@ snic <- function(x, seeds, compactness = 0.5, ...) {
 #' @param ... Additional arguments passed to or from methods.
 #'   Currently unused, but included for compatibility with
 #'   S3 method dispatch.
+#'
+#' @return
+#' \itemize{
+#'   \item \code{snic_get_means()}: Numeric matrix of per-cluster band means,
+#'   or \code{NULL} when not available.
+#'   \item \code{snic_get_centroids()}: Numeric matrix with columns
+#'   \code{r} and \code{c} giving cluster centers in pixel coordinates
+#'   (0-based), or \code{NULL} when not available.
+#'   \item \code{snic_get_seg()}: Segmentation map in the native type of the
+#'   input (\code{array} or \code{SpatRaster}) with integer labels and
+#'   possible \code{NA} for unassigned pixels.
+#'   \item \code{print.snic()}: Invisibly returns \code{x} after printing a
+#'   human-readable summary.
+#' }
 #'
 #' @name snic_class
 NULL

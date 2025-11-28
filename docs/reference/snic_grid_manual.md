@@ -81,7 +81,6 @@ clustering.
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
 if (interactive() && requireNamespace("terra", quietly = TRUE)) {
     tiff_dir <- system.file("demo-geotiff",
         package = "snic",
@@ -114,5 +113,5 @@ if (interactive() && requireNamespace("terra", quietly = TRUE)) {
         seg = seg
     )
 }
-} # }
+#> Error: 'snic_grid_manual()' can only be used in an interactive R session
 ```

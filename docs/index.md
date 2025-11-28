@@ -86,7 +86,6 @@ Sentinel-2 subset.
 ``` r
 library(snic)
 library(terra)
-#> terra 1.8.80
 
 # Sentinel-2 subset packaged with snic
 data_dir <- system.file("demo-geotiff", package = "snic", mustWork = TRUE)
@@ -107,7 +106,9 @@ snic_plot(
 ```
 
 ![RGB composite of the Sentinel-2 subset with SNIC superpixel
-boundaries.](reference/figures/README-quick-start-1.png)
+boundaries.](reference/figures/quick-start-1.png)
+
+RGB composite of the Sentinel-2 subset with SNIC superpixel boundaries.
 
 ## Step 1 - Seed placement
 
@@ -154,7 +155,7 @@ for (i in seq_along(seed_examples)) {
 ```
 
 ![Seed placement strategies on the Sentinel-2 example (spacing =
-30).](reference/figures/README-seed-strategies-1.png)
+30).](reference/figures/seed-strategies-1.png)
 
 Seed placement strategies on the Sentinel-2 example (spacing = 30).
 
@@ -211,7 +212,9 @@ snic_plot(
 ```
 
 ![SNIC segmentation output overlaid on the Sentinel-2
-composite.](reference/figures/README-segmentation-plot-1.png)
+composite.](reference/figures/segmentation-plot-1.png)
+
+SNIC segmentation output overlaid on the Sentinel-2 composite.
 
 ## Animated seeding review
 
@@ -244,7 +247,6 @@ gif_path <- snic_animation(
   snic_args = list(compactness = 0.1),
   device_args = list(height = 192, width = 256, res = 120, bg = "white")
 )
-#> Saved animation to man/figures/segmentation-animation.gif (6.0 s, 3.3 fps)
 ```
 
 ![Animated SNIC seeding and segmentation over the Sentinel-2

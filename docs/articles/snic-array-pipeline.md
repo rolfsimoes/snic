@@ -39,8 +39,10 @@ begins.
 snic_plot(rgb, r = 1, g = 2, b = 3)
 ```
 
-![An RGB image of a
-clownfish.](snic-array-pipeline_files/figure-html/image-rgb-1.png)
+![Figure 1 - An RGB image of a
+clownfish.](snic-array-pipeline_files/figure-html/array-image-rgb-1.png)
+
+Figure 1 - An RGB image of a clownfish.
 
 ### Lab color space
 
@@ -73,7 +75,7 @@ comparing Lab channels with RGB channels as follows.
 gray <- grDevices::gray.colors(256)
 
 # Prepare figure layout
-par(mfrow = c(2, 3))
+op <- par(mfrow = c(2, 3))
 
 # Plot Lab channels
 snic_plot(lab, band = 1, col = gray, main = "L")
@@ -86,9 +88,17 @@ snic_plot(rgb, band = 2, col = gray, main = "G")
 snic_plot(rgb, band = 3, col = gray, main = "B")
 ```
 
-![Comparison of the L, a, b channels (Lab color space) with the R, G, B
-channels (RGB color
-space).](snic-array-pipeline_files/figure-html/compare-lab-rgb-1.png)
+![Figure 2 - Comparison of the L, a, b channels (Lab color space) with
+the R, G, B channels (RGB color
+space).](snic-array-pipeline_files/figure-html/array-image-lab-rgb-1.png)
+
+Figure 2 - Comparison of the L, a, b channels (Lab color space) with the
+R, G, B channels (RGB color space).
+
+``` r
+
+par(op)
+```
 
 The Lab transformation cannot be done if one want use multispectral
 images like satellite images, which have more than three channels and
@@ -136,14 +146,14 @@ will balance compactness and connectivity.
 ## Segments visualization
 
 ``` r
-# Prepare figure layout
-par(mfrow = c(1, 1))
-
 snic_plot(rgb, r = 1, g = 2, b = 3, seg = segs)
 ```
 
-![The clownfish image with superpixel segmentation boundaries
-overlaid.](snic-array-pipeline_files/figure-html/pipeline-step-3-1.png)
+![Figure 3 - The clownfish image with superpixel segmentation boundaries
+overlaid.](snic-array-pipeline_files/figure-html/array-image-seg-1.png)
+
+Figure 3 - The clownfish image with superpixel segmentation boundaries
+overlaid.
 
 The variable `segs` is an array of the same dimensions as the input
 image, containing the segment labels for each pixel. It can be used to
@@ -201,57 +211,36 @@ overlaid for each grid type (rows) and compactness value (columns).
 ``` r
 
 # Prepare figure layout
-par(mfrow = c(4, 2), oma = c(2, 2, 2, 0))
+op <- par(mfrow = c(4, 2), oma = c(2, 2, 2, 0))
 
 # Plot results
 for (res in results) {
-  snic_plot(
-      rgb, r = 1, g = 2, b = 3, seg = res[[1]], mar = c(1, 0, 0, 0)
-  )
-  snic_plot(
-      rgb, r = 1, g = 2, b = 3, seg = res[[2]], mar = c(1, 0, 0, 0)
-  )
+  snic_plot(rgb, r = 1, g = 2, b = 3, seg = res[[1]], mar = c(1, 0, 0, 0))
+  snic_plot(rgb, r = 1, g = 2, b = 3, seg = res[[2]], mar = c(1, 0, 0, 0))
 }
 
-# Add column labels (compactness)
-mtext(
-  "Compactness = 0.1", side = 3,
-  outer = TRUE, at = 0.25,
-  line = 0.5, font = 1
-)
-mtext(
-  "Compactness = 0.5", side = 3,
-  outer = TRUE, at = 0.75,
-  line = 0.5, font = 1
-)
-
-# Add row labels (grid types)
-mtext(
-  "Rectangular", side = 2,
-  outer = TRUE, at = 3.5 / 4,
-  line = 0.5, font = 1, las = 3
-)
-mtext(
-  "Diamond", side = 2,
-  outer = TRUE, at = 2.5 / 4,
-  line = 0.5, font = 1, las = 3
-)
-mtext(
-  "Hexagonal", side = 2,
-  outer = TRUE, at = 1.5 / 4,
-  line = 0.5, font = 1, las = 3
-)
-mtext(
-  "Random", side = 2,
-  outer = TRUE, at = 0.5 / 4,
-  line = 0.5, font = 1, las = 3
-)
+mtext("Compactness = 0.1", side = 3, outer = TRUE, at = 0.25, line = 0.5)
+mtext("Compactness = 0.5", side = 3, outer = TRUE, at = 0.75, line = 0.5)
+mtext("Rectangular", side = 2, outer = TRUE, at = 3.5 / 4, line = 0.5, las = 3)
+mtext("Diamond", side = 2, outer = TRUE, at = 2.5 / 4, line = 0.5, las = 3)
+mtext("Hexagonal", side = 2, outer = TRUE, at = 1.5 / 4, line = 0.5, las = 3)
+mtext("Random", side = 2, outer = TRUE, at = 0.5 / 4, line = 0.5, las = 3)
 ```
 
-![Superpixel segmentation results on the clownfish image. Rows
+![Figure 4 - Superpixel segmentation results on the clownfish image.
+Rows correspond to different seed grid types (rectangular, diamond,
+hexagonal, random) and columns to different compactness values (0.1 and
+0.5).](snic-array-pipeline_files/figure-html/array-image-grid-types-1.png)
+
+Figure 4 - Superpixel segmentation results on the clownfish image. Rows
 correspond to different seed grid types (rectangular, diamond,
 hexagonal, random) and columns to different compactness values (0.1 and
-0.5).](snic-array-pipeline_files/figure-html/grid-types-plot-1.png)
+0.5).
+
+``` r
+
+par(op)
+```
 
 Under moderate to high compactness condition, the rectangular and
 diamond arrangements yield more axis-aligned boundary structure, while

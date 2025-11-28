@@ -101,6 +101,64 @@
 
 \method{.get_idx}{SpatRaster}(x, idx)
 }
+\arguments{
+\item{x}{Backend-specific raster/array object that implements these
+conversions.}
+
+\item{param_name}{Parameter name to echo in validation errors for
+\code{.check_x()}.}
+
+\item{seeds_wgs84}{Two-column seed object with columns \code{lat} and
+\code{lon} (\code{EPSG:4326}).}
+
+\item{seeds_xy}{Two-column seed object with columns \code{x} and \code{y}
+expressed in the CRS of \code{x}.}
+
+\item{seeds_rc}{Two-column seed object with 1-based pixel indices
+\code{r} (row) and \code{c} (column).}
+
+\item{arr}{Numeric array with dimensions \code{(height, width, bands)}.}
+
+\item{names}{Optional character vector of band names applied by
+\code{.arr_to_x()} when the target backend supports them.}
+
+\item{idx}{Numeric or character band identifiers to resolve via
+\code{.get_idx()}.}
+}
+\value{
+Results depend on the generic:
+\itemize{
+  \item \code{.check_x()}: the validated backend object (usually \code{x})
+  returned invisibly; errors if unsupported.
+  \item \code{.has_crs()}: logical flag indicating whether \code{x} carries
+  a CRS.
+  \item \code{.wgs84_to_xy()}: seed data frame with columns \code{x} and
+  \code{y} in the CRS of \code{x}.
+  \item \code{.xy_to_wgs84()}: seed data frame with columns \code{lat} and
+  \code{lon} in \code{EPSG:4326}.
+  \item \code{.xy_to_rc()}: seed data frame with 1-based integer columns
+  \code{r} and \code{c}; values outside the raster extent may be
+  \code{NA_integer_}.
+  \item \code{.rc_to_xy()}: seed data frame with columns \code{x} and
+  \code{y} in the CRS of \code{x}, with coordinates set to \code{NA} when
+  indices fall outside the extent.
+  \item \code{.rc_to_wgs84()}: seed data frame with columns \code{lat} and
+  \code{lon} obtained by composing \code{.rc_to_xy()} and
+  \code{.xy_to_wgs84()}.
+  \item \code{.wgs84_to_rc()}: seed data frame with columns \code{r} and
+  \code{c} obtained by composing \code{.wgs84_to_xy()} and
+  \code{.xy_to_rc()}.
+  \item \code{.x_to_arr()}: numeric array shaped \code{(height, width,
+  bands)} in column-major order.
+  \item \code{.arr_to_x()}: object of the same backend type as \code{x}
+  containing the supplied array data, with band names applied when
+  provided.
+  \item \code{.x_bbox()}: numeric vector \code{c(xmin, xmax, ymin, ymax)}
+  in the coordinate system of \code{x}.
+  \item \code{.get_idx()}: numeric vector of band indices resolved from
+  numeric or name-based input.
+}
+}
 \description{
 These generics define the minimal interface required for SNIC to operate on
 different raster / array backends. Implementations must convert between:
@@ -135,9 +193,10 @@ methods form a consistent round-trip:
 
 \itemize{
   \item \code{.check_x(x)}
-  Validate that \code{x} is a supported input type. Return \code{TRUE}
-  invisibly if supported, or throw an error with a helpful message if not.
-  This is the entry point for SNIC algorithm compatibility.
+  Validate that \code{x} is a supported input type. Return the validated
+  object (usually \code{x}) invisibly if supported, or throw an error with a
+  helpful message if not. This is the entry point for SNIC algorithm
+  compatibility.
 
   \item \code{.has_crs(x)}
   Return \code{TRUE} if \code{x} carries a spatial reference system. Used
@@ -162,9 +221,19 @@ methods form a consistent round-trip:
   scale adjustments, or band selection should be performed here.
 
   \item \code{.arr_to_x(x, arr, names = NULL)}
-  Wrap a \code{(height, width)} unlabeled array back into the native data
-  type of \code{x}, preserving extent, CRS, resolution, and metadata where
-  possible.
+  Wrap a \code{(height, width, bands)} numeric array (often single-band
+  output from SNIC) back into the native data type of \code{x}, preserving
+  extent, CRS, resolution, and metadata where possible.
+
+  \item \code{.xy_to_wgs84(x, seeds_xy)} and \code{.rc_to_xy(x, seeds_rc)}
+  Inverse conversions that return geographic or projected map coordinates
+  from the respective inputs.
+
+  \item \code{.x_bbox(x)} Return \code{c(xmin, xmax, ymin, ymax)} in the
+  CRS (or pixel) coordinate system of \code{x}.
+
+  \item \code{.get_idx(x, idx)} Resolve character band names or numeric
+  indices into explicit numeric positions for use in downstream helpers.
 }
 }
 
