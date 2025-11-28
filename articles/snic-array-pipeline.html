@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">snic</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.6.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -59,12 +59,17 @@
       <h1>SNIC Segmentation Pipeline - Arrays</h1>
             
       
-      <small class="dont-index">Source: <a href="https://github.com/rolfsimoes/snic/blob/v0.5.0/vignettes/snic-array-pipeline.Rmd" class="external-link"><code>vignettes/snic-array-pipeline.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/rolfsimoes/snic/blob/dev/vignettes/snic-array-pipeline.Rmd" class="external-link"><code>vignettes/snic-array-pipeline.Rmd</code></a></small>
       <div class="d-none name"><code>snic-array-pipeline.Rmd</code></div>
     </div>
 
     
     
+<style type="text/css">
+.figcaption {
+  font-size: 0.75em;
+}
+</style>
 <div class="section level2">
 <h2 id="introduction">Introduction<a class="anchor" aria-label="anchor" href="#introduction"></a>
 </h2>
@@ -102,7 +107,7 @@ begins.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/snic_plot.html">snic_plot</a></span><span class="op">(</span><span class="va">rgb</span>, r <span class="op">=</span> <span class="fl">1</span>, g <span class="op">=</span> <span class="fl">2</span>, b <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span></code></pre></div>
 <div class="float">
-<img src="snic-array-pipeline_files/figure-html/array-image-rgb-1.png" alt="An RGB image of a clownfish."><div class="figcaption">An RGB image of a clownfish.</div>
+<img src="snic-array-pipeline_files/figure-html/array-image-rgb-1.png" alt="Figure 1 - An RGB image of a clownfish."><div class="figcaption">Figure 1 - An RGB image of a clownfish.</div>
 </div>
 <div class="section level3">
 <h3 id="lab-color-space">Lab color space<a class="anchor" aria-label="anchor" href="#lab-color-space"></a>
@@ -129,7 +134,7 @@ RGB channels as follows.</p>
 <span><span class="va">gray</span> <span class="op">&lt;-</span> <span class="fu">grDevices</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/grDevices/gray.colors.html" class="external-link">gray.colors</a></span><span class="op">(</span><span class="fl">256</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Prepare figure layout</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/par.html" class="external-link">par</a></span><span class="op">(</span>mfrow <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2</span>, <span class="fl">3</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">op</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/graphics/par.html" class="external-link">par</a></span><span class="op">(</span>mfrow <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2</span>, <span class="fl">3</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Plot Lab channels</span></span>
 <span><span class="fu"><a href="../reference/snic_plot.html">snic_plot</a></span><span class="op">(</span><span class="va">lab</span>, band <span class="op">=</span> <span class="fl">1</span>, col <span class="op">=</span> <span class="va">gray</span>, main <span class="op">=</span> <span class="st">"L"</span><span class="op">)</span></span>
@@ -141,9 +146,12 @@ RGB channels as follows.</p>
 <span><span class="fu"><a href="../reference/snic_plot.html">snic_plot</a></span><span class="op">(</span><span class="va">rgb</span>, band <span class="op">=</span> <span class="fl">2</span>, col <span class="op">=</span> <span class="va">gray</span>, main <span class="op">=</span> <span class="st">"G"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/snic_plot.html">snic_plot</a></span><span class="op">(</span><span class="va">rgb</span>, band <span class="op">=</span> <span class="fl">3</span>, col <span class="op">=</span> <span class="va">gray</span>, main <span class="op">=</span> <span class="st">"B"</span><span class="op">)</span></span></code></pre></div>
 <div class="float">
-<img src="snic-array-pipeline_files/figure-html/array-image-lab-rgb-1.png" alt="Comparison of the L, a, b channels (Lab color space) with the R, G, B channels (RGB color space)."><div class="figcaption">Comparison of the L, a, b channels (Lab color
-space) with the R, G, B channels (RGB color space).</div>
+<img src="snic-array-pipeline_files/figure-html/array-image-lab-rgb-1.png" alt="Figure 2 - Comparison of the L, a, b channels (Lab color space) with the R, G, B channels (RGB color space)."><div class="figcaption">Figure 2 - Comparison of the L, a, b channels
+(Lab color space) with the R, G, B channels (RGB color space).</div>
 </div>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/par.html" class="external-link">par</a></span><span class="op">(</span><span class="va">op</span><span class="op">)</span></span></code></pre></div>
 <p>The Lab transformation cannot be done if one want use multispectral
 images like satellite images, which have more than three channels and
 comprise of different wavelengths other than red, green and blue.</p>
@@ -158,7 +166,7 @@ SNIC following the pipeline described below.</p>
 function to create seeds on a grid: <code><a href="../reference/snic_grid.html">snic_grid()</a></code>. The
 function takes the image, the type of grid, and the spacing between
 seeds as arguments.</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">seeds</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/snic_grid.html">snic_grid</a></span><span class="op">(</span><span class="va">lab</span>, type <span class="op">=</span> <span class="st">"rectangular"</span>, spacing <span class="op">=</span> <span class="fl">22L</span><span class="op">)</span></span></code></pre></div>
 <p>The seeds are stored as data frame with columns <code>r</code> and
 <code>c</code>, representing the row and column indices of the seeds in
@@ -177,7 +185,7 @@ parameter controls the trade-off between geometric distance and feature
 similarity. The greater the compactness, more weight is given to
 geometric distance between pixels, and less to feature similarity. The
 default value is 0.5.</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">segs</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/snic.html">snic</a></span><span class="op">(</span><span class="va">lab</span>, <span class="va">seeds</span>, compactness <span class="op">=</span> <span class="fl">0.25</span><span class="op">)</span></span></code></pre></div>
 <p>Here, we defined a compactness of 0.25, which means that the
 algorithm will balance compactness and connectivity.</p>
@@ -185,20 +193,17 @@ algorithm will balance compactness and connectivity.</p>
 <div class="section level2">
 <h2 id="segments-visualization">Segments visualization<a class="anchor" aria-label="anchor" href="#segments-visualization"></a>
 </h2>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Prepare figure layout</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/par.html" class="external-link">par</a></span><span class="op">(</span>mfrow <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span>
-<span></span>
-<span><span class="fu"><a href="../reference/snic_plot.html">snic_plot</a></span><span class="op">(</span><span class="va">rgb</span>, r <span class="op">=</span> <span class="fl">1</span>, g <span class="op">=</span> <span class="fl">2</span>, b <span class="op">=</span> <span class="fl">3</span>, seg <span class="op">=</span> <span class="va">segs</span><span class="op">)</span></span></code></pre></div>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/snic_plot.html">snic_plot</a></span><span class="op">(</span><span class="va">rgb</span>, r <span class="op">=</span> <span class="fl">1</span>, g <span class="op">=</span> <span class="fl">2</span>, b <span class="op">=</span> <span class="fl">3</span>, seg <span class="op">=</span> <span class="va">segs</span><span class="op">)</span></span></code></pre></div>
 <div class="float">
-<img src="snic-array-pipeline_files/figure-html/array-image-seg-1.png" alt="The clownfish image with superpixel segmentation boundaries overlaid."><div class="figcaption">The clownfish image with superpixel segmentation
-boundaries overlaid.</div>
+<img src="snic-array-pipeline_files/figure-html/array-image-seg-1.png" alt="Figure 3 - The clownfish image with superpixel segmentation boundaries overlaid."><div class="figcaption">Figure 3 - The clownfish image with superpixel
+segmentation boundaries overlaid.</div>
 </div>
 <p>The variable <code>segs</code> is an array of the same dimensions as
 the input image, containing the segment labels for each pixel. It can be
 used to extract features from the image, or to apply other image
 processing operations.</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="va">segs</span><span class="op">)</span></span>
 <span><span class="co">#&gt; NULL</span></span></code></pre></div>
 <p>Now that we followed the entire pipeline, we can explore different
@@ -211,7 +216,7 @@ segmentation.</p>
 <p>We consider four seed arrangements generated by
 <code><a href="../reference/snic_grid.html">snic_grid()</a></code>: rectangular, diamond, hexagonal, and random.
 All are built with the same expected spacing.</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span></span>
 <span><span class="va">seeds_rect</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/snic_grid.html">snic_grid</a></span><span class="op">(</span><span class="va">rgb</span>, type <span class="op">=</span> <span class="st">"rectangular"</span>, spacing <span class="op">=</span> <span class="fl">22L</span><span class="op">)</span></span>
 <span><span class="va">seeds_diam</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/snic_grid.html">snic_grid</a></span><span class="op">(</span><span class="va">rgb</span>, type <span class="op">=</span> <span class="st">"diamond"</span>, spacing <span class="op">=</span> <span class="fl">22L</span><span class="op">)</span></span>
@@ -224,7 +229,7 @@ All are built with the same expected spacing.</p>
 are similar given the same spacing. This may differ slightly due to
 geometrical boundary effects.</p>
 <p>For comparison, we use two compactness values: 0.1 and 0.5.</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">grids</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>  <span class="va">seeds_rect</span>, <span class="va">seeds_diam</span>, <span class="va">seeds_hex</span>, <span class="va">seeds_rand</span></span>
 <span><span class="op">)</span></span>
@@ -237,60 +242,32 @@ geometrical boundary effects.</p>
 <span><span class="op">}</span><span class="op">)</span></span></code></pre></div>
 <p>The panels below display the RGB image with superpixel boundaries
 overlaid for each grid type (rows) and compactness value (columns).</p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span></span>
 <span><span class="co"># Prepare figure layout</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/par.html" class="external-link">par</a></span><span class="op">(</span>mfrow <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">4</span>, <span class="fl">2</span><span class="op">)</span>, oma <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2</span>, <span class="fl">2</span>, <span class="fl">2</span>, <span class="fl">0</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">op</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/graphics/par.html" class="external-link">par</a></span><span class="op">(</span>mfrow <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">4</span>, <span class="fl">2</span><span class="op">)</span>, oma <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2</span>, <span class="fl">2</span>, <span class="fl">2</span>, <span class="fl">0</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Plot results</span></span>
 <span><span class="kw">for</span> <span class="op">(</span><span class="va">res</span> <span class="kw">in</span> <span class="va">results</span><span class="op">)</span> <span class="op">{</span></span>
-<span>  <span class="fu"><a href="../reference/snic_plot.html">snic_plot</a></span><span class="op">(</span></span>
-<span>      <span class="va">rgb</span>, r <span class="op">=</span> <span class="fl">1</span>, g <span class="op">=</span> <span class="fl">2</span>, b <span class="op">=</span> <span class="fl">3</span>, seg <span class="op">=</span> <span class="va">res</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span>, mar <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span><span class="op">)</span></span>
-<span>  <span class="op">)</span></span>
-<span>  <span class="fu"><a href="../reference/snic_plot.html">snic_plot</a></span><span class="op">(</span></span>
-<span>      <span class="va">rgb</span>, r <span class="op">=</span> <span class="fl">1</span>, g <span class="op">=</span> <span class="fl">2</span>, b <span class="op">=</span> <span class="fl">3</span>, seg <span class="op">=</span> <span class="va">res</span><span class="op">[[</span><span class="fl">2</span><span class="op">]</span><span class="op">]</span>, mar <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span><span class="op">)</span></span>
-<span>  <span class="op">)</span></span>
+<span>  <span class="fu"><a href="../reference/snic_plot.html">snic_plot</a></span><span class="op">(</span><span class="va">rgb</span>, r <span class="op">=</span> <span class="fl">1</span>, g <span class="op">=</span> <span class="fl">2</span>, b <span class="op">=</span> <span class="fl">3</span>, seg <span class="op">=</span> <span class="va">res</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span>, mar <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span><span class="op">)</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="../reference/snic_plot.html">snic_plot</a></span><span class="op">(</span><span class="va">rgb</span>, r <span class="op">=</span> <span class="fl">1</span>, g <span class="op">=</span> <span class="fl">2</span>, b <span class="op">=</span> <span class="fl">3</span>, seg <span class="op">=</span> <span class="va">res</span><span class="op">[[</span><span class="fl">2</span><span class="op">]</span><span class="op">]</span>, mar <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="op">}</span></span>
 <span></span>
-<span><span class="co"># Add column labels (compactness)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/mtext.html" class="external-link">mtext</a></span><span class="op">(</span></span>
-<span>  <span class="st">"Compactness = 0.1"</span>, side <span class="op">=</span> <span class="fl">3</span>,</span>
-<span>  outer <span class="op">=</span> <span class="cn">TRUE</span>, at <span class="op">=</span> <span class="fl">0.25</span>,</span>
-<span>  line <span class="op">=</span> <span class="fl">0.5</span>, font <span class="op">=</span> <span class="fl">1</span></span>
-<span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/mtext.html" class="external-link">mtext</a></span><span class="op">(</span></span>
-<span>  <span class="st">"Compactness = 0.5"</span>, side <span class="op">=</span> <span class="fl">3</span>,</span>
-<span>  outer <span class="op">=</span> <span class="cn">TRUE</span>, at <span class="op">=</span> <span class="fl">0.75</span>,</span>
-<span>  line <span class="op">=</span> <span class="fl">0.5</span>, font <span class="op">=</span> <span class="fl">1</span></span>
-<span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Add row labels (grid types)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/mtext.html" class="external-link">mtext</a></span><span class="op">(</span></span>
-<span>  <span class="st">"Rectangular"</span>, side <span class="op">=</span> <span class="fl">2</span>,</span>
-<span>  outer <span class="op">=</span> <span class="cn">TRUE</span>, at <span class="op">=</span> <span class="fl">3.5</span> <span class="op">/</span> <span class="fl">4</span>,</span>
-<span>  line <span class="op">=</span> <span class="fl">0.5</span>, font <span class="op">=</span> <span class="fl">1</span>, las <span class="op">=</span> <span class="fl">3</span></span>
-<span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/mtext.html" class="external-link">mtext</a></span><span class="op">(</span></span>
-<span>  <span class="st">"Diamond"</span>, side <span class="op">=</span> <span class="fl">2</span>,</span>
-<span>  outer <span class="op">=</span> <span class="cn">TRUE</span>, at <span class="op">=</span> <span class="fl">2.5</span> <span class="op">/</span> <span class="fl">4</span>,</span>
-<span>  line <span class="op">=</span> <span class="fl">0.5</span>, font <span class="op">=</span> <span class="fl">1</span>, las <span class="op">=</span> <span class="fl">3</span></span>
-<span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/mtext.html" class="external-link">mtext</a></span><span class="op">(</span></span>
-<span>  <span class="st">"Hexagonal"</span>, side <span class="op">=</span> <span class="fl">2</span>,</span>
-<span>  outer <span class="op">=</span> <span class="cn">TRUE</span>, at <span class="op">=</span> <span class="fl">1.5</span> <span class="op">/</span> <span class="fl">4</span>,</span>
-<span>  line <span class="op">=</span> <span class="fl">0.5</span>, font <span class="op">=</span> <span class="fl">1</span>, las <span class="op">=</span> <span class="fl">3</span></span>
-<span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/mtext.html" class="external-link">mtext</a></span><span class="op">(</span></span>
-<span>  <span class="st">"Random"</span>, side <span class="op">=</span> <span class="fl">2</span>,</span>
-<span>  outer <span class="op">=</span> <span class="cn">TRUE</span>, at <span class="op">=</span> <span class="fl">0.5</span> <span class="op">/</span> <span class="fl">4</span>,</span>
-<span>  line <span class="op">=</span> <span class="fl">0.5</span>, font <span class="op">=</span> <span class="fl">1</span>, las <span class="op">=</span> <span class="fl">3</span></span>
-<span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/mtext.html" class="external-link">mtext</a></span><span class="op">(</span><span class="st">"Compactness = 0.1"</span>, side <span class="op">=</span> <span class="fl">3</span>, outer <span class="op">=</span> <span class="cn">TRUE</span>, at <span class="op">=</span> <span class="fl">0.25</span>, line <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/mtext.html" class="external-link">mtext</a></span><span class="op">(</span><span class="st">"Compactness = 0.5"</span>, side <span class="op">=</span> <span class="fl">3</span>, outer <span class="op">=</span> <span class="cn">TRUE</span>, at <span class="op">=</span> <span class="fl">0.75</span>, line <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/mtext.html" class="external-link">mtext</a></span><span class="op">(</span><span class="st">"Rectangular"</span>, side <span class="op">=</span> <span class="fl">2</span>, outer <span class="op">=</span> <span class="cn">TRUE</span>, at <span class="op">=</span> <span class="fl">3.5</span> <span class="op">/</span> <span class="fl">4</span>, line <span class="op">=</span> <span class="fl">0.5</span>, las <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/mtext.html" class="external-link">mtext</a></span><span class="op">(</span><span class="st">"Diamond"</span>, side <span class="op">=</span> <span class="fl">2</span>, outer <span class="op">=</span> <span class="cn">TRUE</span>, at <span class="op">=</span> <span class="fl">2.5</span> <span class="op">/</span> <span class="fl">4</span>, line <span class="op">=</span> <span class="fl">0.5</span>, las <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/mtext.html" class="external-link">mtext</a></span><span class="op">(</span><span class="st">"Hexagonal"</span>, side <span class="op">=</span> <span class="fl">2</span>, outer <span class="op">=</span> <span class="cn">TRUE</span>, at <span class="op">=</span> <span class="fl">1.5</span> <span class="op">/</span> <span class="fl">4</span>, line <span class="op">=</span> <span class="fl">0.5</span>, las <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/mtext.html" class="external-link">mtext</a></span><span class="op">(</span><span class="st">"Random"</span>, side <span class="op">=</span> <span class="fl">2</span>, outer <span class="op">=</span> <span class="cn">TRUE</span>, at <span class="op">=</span> <span class="fl">0.5</span> <span class="op">/</span> <span class="fl">4</span>, line <span class="op">=</span> <span class="fl">0.5</span>, las <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span></code></pre></div>
 <div class="float">
-<img src="snic-array-pipeline_files/figure-html/array-image-grid-types-1.png" alt="Superpixel segmentation results on the clownfish image. Rows correspond to different seed grid types (rectangular, diamond, hexagonal, random) and columns to different compactness values (0.1 and 0.5)."><div class="figcaption">Superpixel segmentation results on the clownfish
-image. Rows correspond to different seed grid types (rectangular,
-diamond, hexagonal, random) and columns to different compactness values
-(0.1 and 0.5).</div>
+<img src="snic-array-pipeline_files/figure-html/array-image-grid-types-1.png" alt="Figure 4 - Superpixel segmentation results on the clownfish image. Rows correspond to different seed grid types (rectangular, diamond, hexagonal, random) and columns to different compactness values (0.1 and 0.5)."><div class="figcaption">Figure 4 - Superpixel segmentation results on
+the clownfish image. Rows correspond to different seed grid types
+(rectangular, diamond, hexagonal, random) and columns to different
+compactness values (0.1 and 0.5).</div>
 </div>
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/par.html" class="external-link">par</a></span><span class="op">(</span><span class="va">op</span><span class="op">)</span></span></code></pre></div>
 <p>Under moderate to high compactness condition, the rectangular and
 diamond arrangements yield more axis-aligned boundary structure, while
 the hexagonal and randomized seeds distribute initial cluster centers
