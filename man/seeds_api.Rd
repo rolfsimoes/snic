@@ -49,7 +49,7 @@ Only rasters with a defined coordinate reference system (CRS) can be
 }
 
 \examples{
-if (requireNamespace("terra", quietly = TRUE)) {
+if (requireNamespace("terra", quietly = TRUE) && terra_is_working()) {
     # Load a test Sentinel-2 band
     s2_file <- system.file(
         "demo-geotiff/S2_20LMR_B04_20220630.tif",

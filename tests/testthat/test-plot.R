@@ -1,3 +1,5 @@
+skip_if_terra_broken()
+
 make_plot_fixture <- function(h = 6L, w = 7L, b = 3L, crs = "EPSG:4326") {
     arr <- array(seq_len(h * w * b), dim = c(h, w, b))
     rast <- terra::rast(arr)
@@ -55,7 +57,6 @@ capture_seed_points <- function(expr) {
 }
 
 test_that("snic_plot rejects unsupported object types", {
-    skip_if_not_installed("terra")
     expect_error(
         snic_plot(list()),
         "no applicable method",
@@ -64,7 +65,6 @@ test_that("snic_plot rejects unsupported object types", {
 })
 
 test_that("invalid bands, seeds, and segments fail for both backends", {
-    skip_if_not_installed("terra")
     fixture <- make_plot_fixture()
     backends <- list(array = fixture$array, raster = fixture$raster)
 
@@ -90,7 +90,6 @@ test_that("invalid bands, seeds, and segments fail for both backends", {
 })
 
 test_that("snic_plot accepts band names for SpatRaster inputs", {
-    skip_if_not_installed("terra")
     fixture <- make_plot_fixture()
     names(fixture$raster) <- c("B02", "B04", "B08")
 
@@ -99,7 +98,6 @@ test_that("snic_plot accepts band names for SpatRaster inputs", {
 })
 
 test_that("RGB plots honor the raster extent", {
-    skip_if_not_installed("terra")
     fixture <- make_plot_fixture()
     backends <- list(array = fixture$array, raster = fixture$raster)
 
@@ -127,7 +125,6 @@ test_that("RGB plots honor the raster extent", {
 })
 
 test_that("seed overlays align for rc, xy, and wgs84 inputs", {
-    skip_if_not_installed("terra")
     fixture <- make_plot_fixture(crs = "EPSG:3857")
     backends <- list(array = fixture$array, raster = fixture$raster)
 

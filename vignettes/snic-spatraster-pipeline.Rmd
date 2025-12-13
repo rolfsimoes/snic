@@ -11,6 +11,10 @@ vignette: |
 ---
 
 ```{r setup, include = FALSE}
+library(snic)
+
+terra_available <- requireNamespace("terra", quietly = TRUE) && terra_is_working()
+
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
@@ -18,9 +22,9 @@ knitr::opts_chunk$set(
   warning = FALSE,
   fig.retina = 1,
   quality = 0.3,
-  dpi = 50
+  dpi = 50,
+  eval = terra_available
 )
-library(snic)
 ```
 
 ```{css, echo=FALSE}
@@ -34,6 +38,12 @@ library(snic)
 This vignette revisits the SNIC segmentation pipeline, originally proposed by Achanta and Susstrunk (2017). It works with `terra::SpatRaster` objects, instead of a small in-memory RGB array. We will use the Sentinel-2 subset (`demo-geotiff`) that ships with the package. Every step reflects a typical remote-sensing workflow: load raster bands, seed the image, run `snic()`, and visualize the resulting segments.
 
 > **Array workflow:** If you prefer to start from in-memory arrays, see the [SNIC Segmentation Pipeline - Arrays](snic-array-pipeline.html) vignette for a compact tutorial that mirrors this tutorial without the geospatial dependencies.
+
+```{r terra-note, echo=FALSE, results='asis', eval=TRUE}
+if (!terra_available) {
+  cat("> **Note:** This vignette requires the terra package with working CRS support. Code chunks are disabled on this platform.\n")
+}
+```
 
 ## Sentinel-2 preparation with terra
 

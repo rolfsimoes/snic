@@ -58,7 +58,7 @@
 #'
 #' @examples
 #' # Example 1: Geospatial raster
-#' if (requireNamespace("terra", quietly = TRUE)) {
+#' if (requireNamespace("terra", quietly = TRUE) && terra_is_working()) {
 #'     # Load example multi-band image (Sentinel-2 subset) and downsample
 #'     tiff_dir <- system.file("demo-geotiff",
 #'         package = "snic",
@@ -143,6 +143,9 @@ snic_grid <- function(x,
     if (!.has_crs(x)) {
         return(seeds)
     }
+    if (!terra_is_working()) {
+        stop(.msg("terra_projection_unavailable"), call. = FALSE)
+    }
     .rc_to_wgs84(x, seeds)
 }
 
@@ -188,7 +191,7 @@ snic_grid <- function(x,
 #' \code{\link{snic}}, \code{\link{snic_grid}}, \code{\link{snic_animation}}.
 #'
 #' @examples
-#' if (interactive() && requireNamespace("terra", quietly = TRUE)) {
+#' if (interactive() && requireNamespace("terra", quietly = TRUE) && terra_is_working()) {
 #'     tiff_dir <- system.file("demo-geotiff",
 #'         package = "snic",
 #'         mustWork = TRUE
@@ -243,6 +246,9 @@ snic_grid_manual <- function(x,
 
     if (!.has_crs(x)) {
         return(seeds)
+    }
+    if (!terra_is_working()) {
+        stop(.msg("terra_projection_unavailable"), call. = FALSE)
     }
     if (is.null(return_type)) {
         return(.rc_to_wgs84(x, seeds))

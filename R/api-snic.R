@@ -49,7 +49,7 @@
 #'
 #' @examples
 #' # Example 1: Geospatial raster
-#' if (requireNamespace("terra", quietly = TRUE)) {
+#' if (requireNamespace("terra", quietly = TRUE) && terra_is_working()) {
 #'     path <- system.file("demo-geotiff", package = "snic", mustWork = TRUE)
 #'     files <- file.path(
 #'         path,
@@ -321,6 +321,7 @@ print.snic <- function(x, ...) {
 #'
 #' @examples
 #' if (requireNamespace("terra", quietly = TRUE) &&
+#'     terra_is_working() &&
 #'     requireNamespace("magick", quietly = TRUE)) {
 #'     tif_dir <- system.file("demo-geotiff", package = "snic", mustWork = TRUE)
 #'     files <- file.path(
@@ -365,6 +366,9 @@ snic_animation <- function(x,
                            )) {
     if (!requireNamespace("terra", quietly = TRUE)) {
         stop(.msg("terra_required"), call. = FALSE)
+    }
+    if (!terra_is_working()) {
+        stop(.msg("terra_projection_unavailable"), call. = FALSE)
     }
     if (!requireNamespace("magick", quietly = TRUE)) {
         stop(.msg("magick_required"), call. = FALSE)

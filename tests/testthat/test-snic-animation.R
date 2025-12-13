@@ -1,5 +1,5 @@
 test_that("snic_animation creates gif from sequential seeds", {
-    skip_if_not_installed("terra")
+    skip_if_terra_broken()
     skip_if_not_installed("magick")
 
     terra::terraOptions(progress = 0)
@@ -52,7 +52,7 @@ test_that("snic_animation creates gif from sequential seeds", {
 })
 
 test_that("snic_animation validates inputs", {
-    skip_if_not_installed("terra")
+    skip_if_terra_broken()
     skip_if_not_installed("magick")
 
     img <- terra::rast(

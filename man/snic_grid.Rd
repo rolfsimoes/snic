@@ -74,7 +74,7 @@ includes geographic coordinates (\code{lat}, \code{lon}) in \code{EPSG:4326}.
 }
 \examples{
 # Example 1: Geospatial raster
-if (requireNamespace("terra", quietly = TRUE)) {
+if (requireNamespace("terra", quietly = TRUE) && terra_is_working()) {
     # Load example multi-band image (Sentinel-2 subset) and downsample
     tiff_dir <- system.file("demo-geotiff",
         package = "snic",

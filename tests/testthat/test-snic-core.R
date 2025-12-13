@@ -15,7 +15,7 @@ make_backends <- function(arr, crs = NULL) {
 }
 
 test_that("snic produces identical segments for arrays and rasters", {
-    skip_if_not_installed("terra")
+    skip_if_terra_broken()
 
     arr <- make_image(6L, 5L, 3L)
     backends <- make_backends(arr)
@@ -43,7 +43,7 @@ test_that("snic produces identical segments for arrays and rasters", {
 })
 
 test_that("SpatRaster inputs accept WGS84 seeds", {
-    skip_if_not_installed("terra")
+    skip_if_terra_broken()
 
     arr <- make_image(5L, 4L, 2L)
     backends <- make_backends(arr, crs = "EPSG:4326")
@@ -65,7 +65,7 @@ test_that("SpatRaster inputs accept WGS84 seeds", {
 })
 
 test_that("NA pixels remain NA after segmentation for every backend", {
-    skip_if_not_installed("terra")
+    skip_if_terra_broken()
 
     arr <- make_image(5L, 5L, 2L)
     na_positions <- matrix(

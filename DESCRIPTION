@@ -1,6 +1,6 @@
 Package: snic
 Title: Superpixel Segmentation with the Simple Non-Iterative Clustering Algorithm
-Version: 0.6.0
+Version: 0.6.1
 Authors@R: c(
     person(given = "Rolf", family = "Simoes", email = "rolfsimoes@gmail.com", 
     role = c("aut", "cre"), comment = c(ORCID = "0000-0003-0953-4132")),

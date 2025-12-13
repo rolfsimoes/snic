@@ -52,7 +52,7 @@ spectral similarity and spatial distance, weighted by \code{compactness}.
 }
 \examples{
 # Example 1: Geospatial raster
-if (requireNamespace("terra", quietly = TRUE)) {
+if (requireNamespace("terra", quietly = TRUE) && terra_is_working()) {
     path <- system.file("demo-geotiff", package = "snic", mustWork = TRUE)
     files <- file.path(
         path,

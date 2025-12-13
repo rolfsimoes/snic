@@ -86,7 +86,7 @@ single band or a three-channel RGB composite, with optional overlays for
 seed points and segmentation boundaries.
 }
 \examples{
-if (requireNamespace("terra", quietly = TRUE)) {
+if (requireNamespace("terra", quietly = TRUE) && terra_is_working()) {
     tiff_dir <- system.file("demo-geotiff",
         package = "snic",
         mustWork = TRUE

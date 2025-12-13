@@ -1,4 +1,4 @@
-skip_if_not_installed("terra")
+skip_if_terra_broken()
 
 make_grid_inputs <- function(h = 14L, w = 15L, b = 3L, with_crs = TRUE) {
     arr <- array(seq_len(h * w * b), dim = c(h, w, b))
