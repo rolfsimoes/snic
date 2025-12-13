@@ -105,6 +105,7 @@ the influence of seed placement and parameters such as `compactness`.
 
 ``` r
 if (requireNamespace("terra", quietly = TRUE) &&
+    terra_is_working() &&
     requireNamespace("magick", quietly = TRUE)) {
     tif_dir <- system.file("demo-geotiff", package = "snic", mustWork = TRUE)
     files <- file.path(
@@ -132,6 +133,6 @@ if (requireNamespace("terra", quietly = TRUE) &&
     )
     gif_file
 }
-#> Saved animation to /tmp/RtmpdLIM2b/snic-demo1e8c3a053f2e.gif (2.0 s, 10.0 fps)
-#> [1] "/tmp/RtmpdLIM2b/snic-demo1e8c3a053f2e.gif"
+#> Saved animation to /tmp/RtmpMnyhGv/snic-demo255cd58a600.gif (2.0 s, 10.0 fps)
+#> [1] "/tmp/RtmpMnyhGv/snic-demo255cd58a600.gif"
 ```

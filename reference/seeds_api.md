@@ -60,7 +60,7 @@ attempting to convert to WGS84 will result in an error.
 ## Examples
 
 ``` r
-if (requireNamespace("terra", quietly = TRUE)) {
+if (requireNamespace("terra", quietly = TRUE) && terra_is_working()) {
     # Load a test Sentinel-2 band
     s2_file <- system.file(
         "demo-geotiff/S2_20LMR_B04_20220630.tif",

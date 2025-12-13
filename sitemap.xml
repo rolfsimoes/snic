@@ -7,6 +7,7 @@
 <url><loc>https://rolfsimoes.github.io/snic/articles/snic-spatraster-pipeline.html</loc></url>
 <url><loc>https://rolfsimoes.github.io/snic/authors.html</loc></url>
 <url><loc>https://rolfsimoes.github.io/snic/index.html</loc></url>
+<url><loc>https://rolfsimoes.github.io/snic/news/index.html</loc></url>
 <url><loc>https://rolfsimoes.github.io/snic/reference/index.html</loc></url>
 <url><loc>https://rolfsimoes.github.io/snic/reference/internal_grid_helpers.html</loc></url>
 <url><loc>https://rolfsimoes.github.io/snic/reference/internal_plot_helpers.html</loc></url>
@@ -23,5 +24,6 @@
 <url><loc>https://rolfsimoes.github.io/snic/reference/snic_grid_manual.html</loc></url>
 <url><loc>https://rolfsimoes.github.io/snic/reference/snic_init_hooks.html</loc></url>
 <url><loc>https://rolfsimoes.github.io/snic/reference/snic_plot.html</loc></url>
+<url><loc>https://rolfsimoes.github.io/snic/reference/terra_is_working.html</loc></url>
 </urlset>
 

@@ -121,7 +121,7 @@ Invisibly, `NULL`.
 ## Examples
 
 ``` r
-if (requireNamespace("terra", quietly = TRUE)) {
+if (requireNamespace("terra", quietly = TRUE) && terra_is_working()) {
     tiff_dir <- system.file("demo-geotiff",
         package = "snic",
         mustWork = TRUE

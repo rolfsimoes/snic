@@ -19,12 +19,12 @@ Source:
 
 Simoes R, Souza F, Carlos F, Camara G (2025). *snic: Superpixel
 Segmentation with the Simple Non-Iterative Clustering Algorithm*. R
-package version 0.6.0, <https://github.com/rolfsimoes/snic>.
+package version 0.6.1, <https://github.com/rolfsimoes/snic>.
 
     @Manual{,
       title = {snic: Superpixel Segmentation with the Simple Non-Iterative Clustering Algorithm},
       author = {Rolf Simoes and Felipe Souza and Felipe Carlos and Gilberto Camara},
       year = {2025},
-      note = {R package version 0.6.0},
+      note = {R package version 0.6.1},
       url = {https://github.com/rolfsimoes/snic},
     }

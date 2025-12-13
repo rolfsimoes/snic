@@ -23,3 +23,5 @@
   : Interactive seed selection for SNIC segmentation
 - [`snic_plot()`](https://rolfsimoes.github.io/snic/reference/snic_plot.md)
   : Plot SNIC imagery
+- [`terra_is_working()`](https://rolfsimoes.github.io/snic/reference/terra_is_working.md)
+  : Check whether 'terra' CRS transformations are available

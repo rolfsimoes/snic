@@ -81,7 +81,7 @@ clustering.
 ## Examples
 
 ``` r
-if (interactive() && requireNamespace("terra", quietly = TRUE)) {
+if (interactive() && requireNamespace("terra", quietly = TRUE) && terra_is_working()) {
     tiff_dir <- system.file("demo-geotiff",
         package = "snic",
         mustWork = TRUE

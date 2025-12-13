@@ -90,7 +90,7 @@ includes geographic coordinates (`lat`, `lon`) in `EPSG:4326`.
 
 ``` r
 # Example 1: Geospatial raster
-if (requireNamespace("terra", quietly = TRUE)) {
+if (requireNamespace("terra", quietly = TRUE) && terra_is_working()) {
     # Load example multi-band image (Sentinel-2 subset) and downsample
     tiff_dir <- system.file("demo-geotiff",
         package = "snic",
