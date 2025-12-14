@@ -24,12 +24,12 @@ terra_is_working <- local({
         }
         cached <<- tryCatch(
             {
-                test_vect <- terra::vect(
+                test_vect <- suppressWarnings(terra::vect(
                     data.frame(x = 0, y = 0),
                     geom = c("x", "y"),
                     crs = "EPSG:3857"
-                )
-                terra::project(test_vect, "EPSG:4326")
+                ))
+                suppressWarnings(terra::project(test_vect, "EPSG:4326"))
                 TRUE
             },
             error = function(e) {
