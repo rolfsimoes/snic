@@ -9,6 +9,7 @@
     grid_no_valid_seed_positions = "Spacing/padding combination yields no valid seed positions",
     terra_required = "Package 'terra' must be installed to handle SpatRaster input",
     terra_check_invalid_raster = "argument '%s' must be a SpatRaster object",
+    terra_projection_unavailable = "terra CRS transformations are unavailable (missing PROJ/GDAL data?)",
     manual_grid_interactive_only = "'snic_grid_manual()' can only be used in an interactive R session",
     manual_grid_instructions = "Left-click to add points; press ESC or right-click to stop.",
     raster_invalid_index = "invalid band index; raster has %d bands.",

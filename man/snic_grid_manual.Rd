@@ -56,7 +56,7 @@ After each new seed is placed interactively, segmentation is recomputed to
 provide immediate feedback on how the seed placement affects clustering.
 }
 \examples{
-if (interactive() && requireNamespace("terra", quietly = TRUE)) {
+if (interactive() && requireNamespace("terra", quietly = TRUE) && terra_is_working()) {
     tiff_dir <- system.file("demo-geotiff",
         package = "snic",
         mustWork = TRUE

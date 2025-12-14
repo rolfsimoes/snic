@@ -1,5 +1,5 @@
 test_that("snic_grid_manual collects locator clicks into seed data frame", {
-    skip_if_not_installed("terra")
+    skip_if_terra_broken()
 
     img <- terra::rast(
         nrows = 4, ncols = 5, nlyrs = 3, xmin = 0,

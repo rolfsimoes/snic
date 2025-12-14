@@ -71,6 +71,7 @@ and parameters such as \code{compactness}.
 }
 \examples{
 if (requireNamespace("terra", quietly = TRUE) &&
+    terra_is_working() &&
     requireNamespace("magick", quietly = TRUE)) {
     tif_dir <- system.file("demo-geotiff", package = "snic", mustWork = TRUE)
     files <- file.path(

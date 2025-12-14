@@ -1,3 +1,45 @@
+#' Check whether 'terra' CRS transformations are available
+#'
+#' This helper attempts the same coordinate reprojection used elsewhere in
+#' the package (via \code{terra::project()}). When the bundled \code{PROJ} /
+#' \code{GDAL} data are missing, \code{terra} raises an error; here we catch
+#' it and return \code{FALSE} so that examples, tests, and vignettes can
+#' skip gracefully.
+#'
+#' Results are cached for the current R session to avoid repeatedly hitting
+#' \code{terra::project()} during a single run.
+#'
+#' @return A logical flag indicating whether \pkg{terra} can perform CRS
+#'   transformations.
+#' @export
+terra_is_working <- local({
+    cached <- NULL
+    function() {
+        if (!is.null(cached)) {
+            return(cached)
+        }
+        if (!requireNamespace("terra", quietly = TRUE)) {
+            cached <<- FALSE
+            return(FALSE)
+        }
+        cached <<- tryCatch(
+            {
+                test_vect <- suppressWarnings(terra::vect(
+                    data.frame(x = 0, y = 0),
+                    geom = c("x", "y"),
+                    crs = "EPSG:3857"
+                ))
+                suppressWarnings(terra::project(test_vect, "EPSG:4326"))
+                TRUE
+            },
+            error = function(e) {
+                FALSE
+            }
+        )
+        cached
+    }
+})
+
 #' @rdname snic_backends
 #' @export
 .check_x.SpatRaster <- function(x, param_name = "x") {
@@ -18,6 +60,9 @@
 #' @export
 .wgs84_to_xy.SpatRaster <- function(x, seeds_wgs84) {
     stopifnot(.seeds_type(seeds_wgs84) == "wgs84")
+    if (!terra_is_working()) {
+        stop(.msg("terra_projection_unavailable"), call. = FALSE)
+    }
     v <- terra::vect(seeds_wgs84, geom = c("lon", "lat"), crs = "EPSG:4326")
     v <- terra::project(v, terra::crs(x))
     as.data.frame(terra::crds(v))
@@ -27,6 +72,9 @@
 #' @export
 .xy_to_wgs84.SpatRaster <- function(x, seeds_xy) {
     stopifnot(.seeds_type(seeds_xy) == "xy")
+    if (!terra_is_working()) {
+        stop(.msg("terra_projection_unavailable"), call. = FALSE)
+    }
     v <- terra::vect(seeds_xy, geom = c("x", "y"), crs = terra::crs(x))
     v <- terra::project(v, "EPSG:4326")
     coords <- terra::crds(v)

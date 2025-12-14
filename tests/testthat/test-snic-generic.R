@@ -1,4 +1,4 @@
-skip_if_not_installed("terra")
+skip_if_terra_broken()
 
 make_img <- function(h = 6L, w = 7L, b = 2L) {
     arr <- array(seq_len(h * w * b), dim = c(h, w, b))
